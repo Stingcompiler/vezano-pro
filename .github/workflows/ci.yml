@@ -16,7 +16,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate shell scripts
-        run: bash -n deploy/standalone/upgrade.sh && bash -n deploy/standalone/backup.sh && bash -n deploy/ovh/install.sh
+        run: bash -n deploy/standalone/upgrade.sh && bash -n deploy/standalone/backup.sh && bash -n deploy/ovh/install.sh && bash -n deploy/docker/install-docker.sh && bash -n deploy/docker/vezano-docker.sh
       - name: Test deployment and recovery controls
         run: python3 -m unittest discover -s deploy/tests -v
 
@@ -257,6 +257,8 @@ jobs:
           persist-credentials: false
       - name: Validate docker-compose.yml
         run: docker compose config --quiet
+      - name: Validate deploy/docker/docker-compose.prod.yml (VPS parallel run)
+        run: python3 -m unittest deploy/tests/test_docker.py -v
       - name: Build the backend images (dev + runtime targets)
         run: |
           docker build -f backend/Dockerfile --target dev -t vezano-backend:dev .
