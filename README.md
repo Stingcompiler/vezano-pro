@@ -1,9 +1,10 @@
 # ERP Platform
 
 Multi-company ERP platform. Django 5 + DRF monolith backend, Next.js
-(App Router) frontend. Production runs natively (an OVH VPS under systemd
-from a packaged release, see `deploy/ovh/README.md`) — never in Docker. An
-optional Docker setup exists for local development only (`docs/docker.md`).
+(App Router) frontend. Docker is the standard environment: run the whole
+stack locally with `docker compose up` (`docs/docker.md`). Production
+currently runs on an OVH VPS under systemd from a packaged release
+(`deploy/ovh/README.md`); moving it into containers is planned.
 
 > For a full system overview — architecture, how every PROJECT_RULE is
 > enforced, the enhancement catalog, testing methodology, and a guide to all
@@ -52,7 +53,7 @@ With both running, the home page at `localhost:3000` pings
 
 ### Background worker (optional locally)
 
-Requires a locally running Redis (not via Docker — install natively, e.g.
+Requires a locally running Redis (natively or in a container, e.g.
 `apt install redis-server` / `brew install redis`):
 
 ```bash
@@ -72,8 +73,8 @@ make seed                     # demo company; prints a random owner password onc
 make test ARGS="core website accounts"   # backend tests on Postgres 16, as CI
 ```
 
-**Production does not use Docker** — it runs on the OVH VPS under systemd
-(`deploy/ovh/README.md`). Details, all commands and an Arabic summary:
+Production currently runs on the OVH VPS under systemd
+(`deploy/ovh/README.md`); its move to containers is planned. Details, all commands and an Arabic summary:
 [`docs/docker.md`](docs/docker.md).
 
 ## Deployment

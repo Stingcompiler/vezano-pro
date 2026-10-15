@@ -1,12 +1,12 @@
 # Docker (local development)
 
-Docker in this repository is **for local development and test parity only**.
+Docker is the project's standard environment (owner decision, 2026-10-15).
+This stack is for local development and test parity.
 
-> **Production does not use Docker.** The hosted service runs on an OVH VPS
-> under systemd from a packaged, signed release (`deploy/standalone/`,
-> `deploy/ovh/`). See **[`deploy/ovh/README.md`](../deploy/ovh/README.md)** for
-> how production is deployed. Nothing below is used by CI's deploy job or by
-> `render.yaml`, and none of the values here are production settings.
+> **Production today** runs on an OVH VPS under systemd from a packaged release
+> (`deploy/ovh/README.md`); moving it into containers is a planned, separate
+> change. Nothing below is used by CI's deploy job yet, and none of the values
+> here are production settings.
 
 ## What you get
 

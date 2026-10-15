@@ -11,9 +11,10 @@ explains how the pieces fit and where to look.
 A commercial, multi-company ERP for small and mid-sized businesses (built with
 Sudan and the Gulf in mind: English/Arabic, RTL, manual bank-transfer payments).
 It is a Django 5 + DRF monolith that also serves the Next.js (App Router)
-frontend as a static export — one deployable service — on Render with native
-runtimes only — **no Docker in production**, per PROJECT_RULES (an optional
-local-development stack lives in `docs/docker.md`). Locally,
+frontend as a static export — one deployable service. Docker is the project's
+standard environment (`docker-compose.yml`, `docs/docker.md`); production
+currently runs on an OVH VPS as a native packaged release under systemd
+(`deploy/ovh/README.md`) until its planned move to containers. Locally,
 the frontend still runs via `next dev` against the API over CORS for fast
 refresh; see `backend/core/frontend.py` for the production serving path.
 

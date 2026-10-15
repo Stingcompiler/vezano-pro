@@ -16,11 +16,6 @@ import os
 import re
 import sys
 
-# Docker is for local development only (docs/docker.md, PROJECT_RULES.md).
-LOCAL_DEV_DOCKER_FILES = {
-    "../backend/Dockerfile", "../frontend/Dockerfile", "../docker-compose.yml",
-}
-
 LOCAL_APPS = {
     "core", "accounts", "org", "inventory", "sales", "purchasing",
     "returns", "sync", "website", "reports", "ops", "tax",
@@ -92,38 +87,6 @@ def main():
         print(f"FAIL: broken migration dependencies: {problems}")
     else:
         print(f"OK: migration graph ({count} migrations)")
-
-    # No Docker in production. The only Docker files allowed are the
-    # local-development ones (docs/docker.md) at these exact paths; any other
-    # Dockerfile or compose file, or a Docker runtime in render.yaml or
-    # deploy/, fails the audit.
-    docker = glob.glob("../**/Dockerfile*", recursive=True) + glob.glob(
-        "../**/docker-compose*", recursive=True
-    )
-    docker = [
-        d for d in docker if "node_modules" not in d and d not in LOCAL_DEV_DOCKER_FILES
-    ]
-    if docker:
-        ok = False
-        print(f"FAIL: Docker artifacts outside local development: {docker}")
-    else:
-        print("OK: Docker files limited to local development")
-    production_docker = []
-    if os.path.exists("../render.yaml") and re.search(
-        r"^\s*(runtime:\s*docker|dockerfilePath|dockerContext)",
-        open("../render.yaml").read(), re.M | re.I,
-    ):
-        production_docker.append("../render.yaml")
-    for path in glob.glob("../deploy/**/*", recursive=True):
-        if os.path.isfile(path) and re.search(
-            r"\bdocker(-compose)?\s", open(path, errors="ignore").read()
-        ):
-            production_docker.append(path)
-    if production_docker:
-        ok = False
-        print(f"FAIL: production deployment uses Docker: {production_docker}")
-    else:
-        print("OK: production deployment is native (no Docker)")
 
     print("AUDIT PASSED" if ok else "AUDIT FAILED")
     sys.exit(0 if ok else 1)
