@@ -2,7 +2,7 @@
 
 **التاريخ:** 13 سبتمبر 2026  
 **الحالة:** مسودة للمناقشة والاعتماد قبل التنفيذ  
-**المشروع المعتمد:** `/Users/macbookairm1/Documents/ChatGPT/enterprice/erp-plaform`  
+**المشروع المعتمد:** `/Users/macbookairm1/Documents/ChatGPT/enterprice/vezano-pro`  
 **الجمهور:** مالك المنتج، مدير المشروع، فريق التطوير والاختبار، ومسؤولو تشغيل المنصة.
 
 ## 1. الغرض وحدود الوثيقة

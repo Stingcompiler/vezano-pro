@@ -1,6 +1,6 @@
 # مراجعة منطق وظائف فيزانو — 12 سبتمبر 2026
 
-المجلد المعتمد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/erp-plaform`.
+المجلد المعتمد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/vezano-pro`.
 النسخة: `6e886c9`، فرع `main`.
 
 > حالة المتابعة: نُفذت إصلاحات النتائج المؤكدة في 12 سبتمبر 2026. تُرك وصف الخلل أدناه كسجل تدقيق، وتوجد اختبارات انحدار دائمة في `backend/core/test_functional_review_2026.py`.
