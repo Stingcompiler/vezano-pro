@@ -10,7 +10,10 @@ import multiprocessing
 import os
 
 # Render provides $PORT; bind to it (fallback for local runs).
-bind = f"0.0.0.0:{os.environ.get('PORT', '8000')}"
+# GUNICORN_BIND overrides the whole address: the parallel container on the VPS
+# (deploy/docker/docker-compose.prod.yml) uses host networking and must listen
+# on 127.0.0.1:8001 only, never on all interfaces.
+bind = os.environ.get("GUNICORN_BIND", "").strip() or f"0.0.0.0:{os.environ.get('PORT', '8000')}"
 
 # 2*CPU+1 is the standard sync-worker heuristic; overridable via WEB_CONCURRENCY.
 # Default capped at 3: the container reports the HOST's CPU count (8 on

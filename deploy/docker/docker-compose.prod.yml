@@ -1,0 +1,65 @@
+# Vezano Pro production container, phase 2 of the container plan: a PARALLEL
+# run next to the systemd release. See deploy/docker/README.md.
+#
+# Run it through vezano-docker.sh (as root), which sets VEZANO_IMAGE (pinned
+# by digest, from /var/lib/vezano-docker/current.env) and VEZANO_UID/GID
+# (from `id vezano`). Production traffic is untouched: Caddy keeps proxying
+# to the systemd gunicorn on 127.0.0.1:8000; this container listens on
+# 127.0.0.1:8001 only and nothing routes to it.
+#
+# The container never migrates: the image has no entrypoint and the command
+# below is gunicorn only. Migrations stay with the deploy controller.
+
+name: vezano-docker
+
+services:
+  web:
+    image: ${VEZANO_IMAGE:?VEZANO_IMAGE is required (run vezano-docker.sh pull first)}
+    container_name: vezano-docker-web
+    # gunicorn and nothing else: no migrate, no createcachetable, no
+    # collectstatic. An image ENTRYPOINT would be refused by vezano-docker.sh.
+    command: ["gunicorn", "config.wsgi:application", "-c", "gunicorn.conf.py"]
+    # Host networking: reaches the native PostgreSQL on 127.0.0.1 exactly
+    # like the systemd service, and binds 127.0.0.1 only (GUNICORN_BIND).
+    # No ports are published.
+    network_mode: host
+    env_file:
+      - /etc/vezano/vezano.env
+    # These win over the env file.
+    environment:
+      GUNICORN_BIND: "127.0.0.1:8001"
+      PORT: "8001"                      # the image HEALTHCHECK probes $PORT
+      MEDIA_ROOT: /var/lib/vezano/media
+      WEB_CONCURRENCY: "2"              # the systemd release keeps its own 3
+      VEZANO_ENV_FILE: /dev/null        # settings come from env_file only
+    # The host `vezano` user's ids, so uploads keep the systemd ownership.
+    user: "${VEZANO_UID:?VEZANO_UID is required}:${VEZANO_GID:?VEZANO_GID is required}"
+    volumes:
+      - type: bind
+        source: /var/lib/vezano/media
+        target: /var/lib/vezano/media
+        read_only: false
+    read_only: true
+    tmpfs:
+      - /tmp:rw,nosuid,nodev,size=64m,mode=1777
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    restart: unless-stopped
+    stop_grace_period: 30s
+    healthcheck:
+      test: ["CMD", "vezano-healthcheck"]
+      interval: 30s
+      timeout: 5s
+      start_period: 30s
+      retries: 3
+    # About 8 GB RAM on the VPS, shared with PostgreSQL and the systemd
+    # release: a moderate cap for 2 sync workers.
+    mem_limit: 1g
+    memswap_limit: 1g
+    cpus: 1.5
+    pids_limit: 256
+    logging:
+      driver: journald
+      options:
+        tag: vezano-docker-web
