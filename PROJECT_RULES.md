@@ -11,7 +11,8 @@ You are building a commercial, multi-company ERP platform. This file is the fixe
 
 ## Deployment — native runtimes, no containers
 
-- Do not create a Dockerfile, docker-compose.yml, or any containerization config, ever, even if it seems like good practice. This is a hard rule, not a default you can override for convenience.
+- Production never runs in containers: no Dockerfile, compose file or container runtime in `render.yaml`, `deploy/` or the deploy job, ever, even if it seems like good practice. This is a hard rule, not a default you can override for convenience.
+- The single exception is the local-development stack the owner asked for on 2026-10-15 (`backend/Dockerfile`, `frontend/Dockerfile`, `docker-compose.yml`; see `docs/docker.md`). It is optional, never deployed, and `backend/scripts/repo_audit.py` fails CI on any other Docker file or on Docker in the deployment path.
 - The hosted SaaS uses one web service, deployed the traditional way (Render builds directly from the Git repo, no Docker):
   - `erp-api` — Python native runtime, Django + DRF via Gunicorn. Its build step also builds the Next.js frontend as a static export and Django serves it directly (`backend/core/frontend.py`) — no separate frontend service, no cross-service CORS in production. Locally, `next dev` on `:3000` against this API on `:8000` over CORS is still the dev workflow (fast refresh); the static-export serving path only activates when `DEBUG=False`.
 - `erp-backup-cron` — Render Cron Job (Python native), nightly per-company backups
@@ -61,7 +62,7 @@ company API or used as a substitute for shop/company presentation mode.
 - Full general ledger / double-entry accounting (track AR/AP balances at the document level only)
 - Manufacturing, BOM, or work orders
 - Multi-currency accounting beyond a currency field + exchange-rate snapshot per transaction
-- Docker or any containerization
+- Docker or any containerization in production (local development only: `docs/docker.md`)
 
 ## How you must work
 

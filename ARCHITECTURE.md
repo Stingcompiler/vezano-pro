@@ -12,7 +12,8 @@ A commercial, multi-company ERP for small and mid-sized businesses (built with
 Sudan and the Gulf in mind: English/Arabic, RTL, manual bank-transfer payments).
 It is a Django 5 + DRF monolith that also serves the Next.js (App Router)
 frontend as a static export — one deployable service — on Render with native
-runtimes only — **no Docker anywhere** in the repo, per PROJECT_RULES. Locally,
+runtimes only — **no Docker in production**, per PROJECT_RULES (an optional
+local-development stack lives in `docs/docker.md`). Locally,
 the frontend still runs via `next dev` against the API over CORS for fast
 refresh; see `backend/core/frontend.py` for the production serving path.
 
