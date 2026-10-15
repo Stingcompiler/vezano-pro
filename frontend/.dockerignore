@@ -1,0 +1,13 @@
+# Build context of frontend/Dockerfile (local development only).
+node_modules
+.next
+.next-dev
+out
+playwright-report
+test-results
+.env.local
+.env*.local
+Dockerfile
+.dockerignore
+.DS_Store
+*.log

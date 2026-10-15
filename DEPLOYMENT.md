@@ -1,8 +1,10 @@
 # Deployment Runbook
 
 The ERP platform deploys to **Render** as a Blueprint — all services run
-natively from source. **There is no Docker anywhere** in this repo, by design
-(`PROJECT_RULES.md`).
+natively from source (history; production now runs on OVH, see the OVH
+section below). Docker is the project's standard environment
+(`PROJECT_RULES.md`, `docs/docker.md`); production moves into containers as a
+planned, separate change.
 
 ## Services (from `render.yaml`)
 

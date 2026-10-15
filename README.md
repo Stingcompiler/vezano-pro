@@ -1,8 +1,10 @@
 # ERP Platform
 
 Multi-company ERP platform. Django 5 + DRF monolith backend, Next.js
-(App Router) frontend, deployed on Render with native runtimes only — no
-Docker anywhere in this repo (see `PROJECT_RULES.md`).
+(App Router) frontend. Docker is the standard environment: run the whole
+stack locally with `docker compose up` (`docs/docker.md`). Production
+currently runs on an OVH VPS under systemd from a packaged release
+(`deploy/ovh/README.md`); moving it into containers is planned.
 
 > For a full system overview — architecture, how every PROJECT_RULE is
 > enforced, the enhancement catalog, testing methodology, and a guide to all
@@ -51,13 +53,29 @@ With both running, the home page at `localhost:3000` pings
 
 ### Background worker (optional locally)
 
-Requires a locally running Redis (not via Docker — install natively, e.g.
+Requires a locally running Redis (natively or in a container, e.g.
 `apt install redis-server` / `brew install redis`):
 
 ```bash
 cd backend
 celery -A config worker --loglevel=info
 ```
+
+### Docker (local development)
+
+An optional, local-only alternative to the steps above: PostgreSQL 16, the
+backend (hot reload) and `next dev` in containers.
+
+```bash
+cp .env.docker.example .env   # optional
+make up                       # → http://localhost:3000 and :8000/api/health/
+make seed                     # demo company; prints a random owner password once
+make test ARGS="core website accounts"   # backend tests on Postgres 16, as CI
+```
+
+Production currently runs on the OVH VPS under systemd
+(`deploy/ovh/README.md`); its move to containers is planned. Details, all commands and an Arabic summary:
+[`docs/docker.md`](docs/docker.md).
 
 ## Deployment
 

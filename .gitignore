@@ -27,6 +27,8 @@ frontend/.next-dev/
 frontend/.env.local
 
 # --- General ---
+# Local Docker settings (copied from .env.docker.example; see docs/docker.md).
+/.env
 .DS_Store
 *.log
 

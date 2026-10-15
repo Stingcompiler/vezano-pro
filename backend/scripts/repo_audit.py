@@ -88,17 +88,6 @@ def main():
     else:
         print(f"OK: migration graph ({count} migrations)")
 
-    # No Docker anywhere.
-    docker = glob.glob("../**/Dockerfile*", recursive=True) + glob.glob(
-        "../**/docker-compose*", recursive=True
-    )
-    docker = [d for d in docker if "node_modules" not in d]
-    if docker:
-        ok = False
-        print(f"FAIL: Docker artifacts present: {docker}")
-    else:
-        print("OK: no Docker artifacts")
-
     print("AUDIT PASSED" if ok else "AUDIT FAILED")
     sys.exit(0 if ok else 1)
 
