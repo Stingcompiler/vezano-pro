@@ -158,7 +158,7 @@ stage), the backend code with the test modules, `pytest.ini`, `scripts/` and
 requirements files pruned, `VERSION`, the Next.js export in
 `/srv/vezano/frontend/out`, and `collectstatic` output. No `.git`,
 `node_modules`, `.venv`, `.env` or media (`.dockerignore`). The smoke test
-and the `docker-dev` job's "Image sizes" step print the size (SIZE_PLACEHOLDER).
+and the `docker-dev` job's "Image sizes" step print the size (297 MB uncompressed on the first CI build, PR #244).
 
 - **Process:** exec-form `CMD ["gunicorn", "config.wsgi:application", "-c",
   "gunicorn.conf.py"]`, binding `0.0.0.0:$PORT` (`PORT=8000`). Any other
