@@ -1,0 +1,171 @@
+# Vezano Pro: LOCAL DEVELOPMENT AND TEST PARITY ONLY.
+#
+# Production does NOT use Docker. It runs on an OVH VPS under systemd from a
+# packaged release: see deploy/ovh/README.md and deploy/standalone/. Nothing
+# in this file is a production configuration, and its secrets are dev-only.
+#
+#   cp .env.docker.example .env      # optional: ports, uid, seed email
+#   make up                          # db + backend + frontend (hot reload)
+#   make seed                        # demo company, random owner password
+#   make test ARGS="core website accounts"
+#
+# Docs: docs/docker.md
+
+name: vezano-dev
+
+x-backend-build: &backend-build
+  context: .
+  dockerfile: backend/Dockerfile
+  target: dev
+  args:
+    APP_UID: ${HOST_UID:-1000}
+    APP_GID: ${HOST_GID:-1000}
+
+x-backend-env: &backend-env
+  DEBUG: "True"
+  # DEV-ONLY secret. Never reuse it anywhere else; production keeps its own
+  # secret in the protected env file on the VPS.
+  DJANGO_SECRET_KEY: ${DJANGO_SECRET_KEY:-dev-only-docker-secret-NOT-FOR-PRODUCTION}
+  DATABASE_URL: postgres://${POSTGRES_USER:-vezano}:${POSTGRES_PASSWORD:-vezano-dev-only}@db:5432/${POSTGRES_DB:-vezano}
+  DJANGO_ALLOWED_HOSTS: localhost,127.0.0.1,backend
+  # The dev frontend runs on another port, so the API must allow it (CORS +
+  # CSRF trusted origins are derived from this list in settings.py).
+  CORS_ALLOWED_ORIGINS: http://localhost:${FRONTEND_PORT:-3000},http://127.0.0.1:${FRONTEND_PORT:-3000}
+  PUBLIC_APP_ORIGIN: http://localhost:${FRONTEND_PORT:-3000}
+  # No EMAIL_HOST + DEBUG = Django's console backend: mail is printed to
+  # `make logs`, never sent.
+  EMAIL_HOST: ""
+  MEDIA_ROOT: /srv/vezano-data/media
+  # Ignore a backend/.env from the host checkout (it may hold real settings).
+  VEZANO_ENV_FILE: /dev/null
+  FRONTEND_PORT: ${FRONTEND_PORT:-3000}
+
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-vezano}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-vezano-dev-only}
+      POSTGRES_DB: ${POSTGRES_DB:-vezano}
+    ports:
+      # 5433 on the host so a local PostgreSQL on 5432 keeps working.
+      - "${POSTGRES_PORT:-5433}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U \"$$POSTGRES_USER\" -d \"$$POSTGRES_DB\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    build: *backend-build
+    image: vezano-backend:dev
+    environment:
+      <<: *backend-env
+      # runserver (hot reload) by default; gunicorn mirrors the VPS process model.
+      VEZANO_DOCKER_MODE: ${VEZANO_DOCKER_MODE:-runserver}
+    ports:
+      - "${BACKEND_PORT:-8000}:8000"
+    volumes:
+      # The whole checkout, so code edits reload and Django serves the
+      # committed frontend/out exactly like production does.
+      - .:/srv/vezano
+      - media:/srv/vezano-data/media
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health/', timeout=5)"
+      interval: 10s
+      timeout: 6s
+      retries: 6
+      # First start runs every migration on an empty database.
+      start_period: 180s
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NODE_VERSION: ${NODE_VERSION:-20}
+    image: vezano-frontend:dev
+    environment:
+      # Read by the browser, so it is the host-published backend port.
+      NEXT_PUBLIC_API_BASE_URL: http://localhost:${BACKEND_PORT:-8000}/api
+      NEXT_TELEMETRY_DISABLED: "1"
+      # Set to true if edits are not picked up (some Docker file-sharing modes).
+      WATCHPACK_POLLING: ${WATCHPACK_POLLING:-false}
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    volumes:
+      - ./frontend:/app
+      # Linux node_modules and the dev cache stay in the container, not the host tree.
+      - /app/node_modules
+      - /app/.next-dev
+    depends_on:
+      - backend
+
+  # --- optional profiles ------------------------------------------------
+
+  # `make build-frontend`: the production export, written to frontend/out
+  # through the bind mount (uses frontend/.env.production: API base /api).
+  frontend-build:
+    profiles: ["build"]
+    image: vezano-frontend:dev
+    build:
+      context: ./frontend
+      args:
+        NODE_VERSION: ${NODE_VERSION:-20}
+    user: "${HOST_UID:-1000}:${HOST_GID:-1000}"
+    environment:
+      NEXT_TELEMETRY_DISABLED: "1"
+      NODE_ENV: production
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    command: ["npm", "run", "build"]
+
+  # `make seed`: demo company + owner with a random password printed once.
+  seed:
+    profiles: ["seed"]
+    build: *backend-build
+    image: vezano-backend:dev
+    environment:
+      <<: *backend-env
+      SEED_OWNER_EMAIL: ${SEED_OWNER_EMAIL:-dev-owner@vezano.test}
+      SEED_RESET_PASSWORD: ${SEED_RESET_PASSWORD:-}
+    volumes:
+      - .:/srv/vezano
+      - media:/srv/vezano-data/media
+    depends_on:
+      backend:
+        condition: service_healthy
+    command: ["python", "/srv/vezano/docker/seed_local.py"]
+
+  # `make test`: the backend suite against Postgres 16, as CI's postgres leg
+  # runs it (same secret/DEBUG env; pytest-django creates test_<db>).
+  test:
+    profiles: ["test"]
+    build: *backend-build
+    image: vezano-backend:dev
+    environment:
+      DJANGO_SECRET_KEY: ci-test-secret-key
+      DEBUG: "True"
+      DATABASE_URL: postgres://${POSTGRES_USER:-vezano}:${POSTGRES_PASSWORD:-vezano-dev-only}@db:5432/${POSTGRES_DB:-vezano}
+      VEZANO_ENV_FILE: /dev/null
+      MEDIA_ROOT: /tmp/vezano-test-media
+      PYTEST_ADDOPTS: "-p no:cacheprovider"
+    volumes:
+      - .:/srv/vezano
+    depends_on:
+      db:
+        condition: service_healthy
+    command: ["pytest", "-q"]
+
+volumes:
+  pgdata:
+  media:

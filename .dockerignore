@@ -1,0 +1,45 @@
+# Build context of backend/Dockerfile (the repository root; local development
+# only). The image needs backend/, VERSION, docker/ and the committed Next.js
+# export in frontend/out; everything else stays out.
+.git
+.github
+.claude
+.gitignore
+.dockerignore
+docker-compose.yml
+Makefile
+*.md
+design
+docs
+deploy
+render.yaml
+
+# Python / Django
+**/.venv
+**/.venv*
+**/venv
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/*.sqlite3
+**/*.sqlite3.*
+backend/media
+backend/staticfiles
+backend/Dockerfile
+
+# Secrets and local env files
+**/.env
+**/.env.*
+
+# Frontend: only the static export Django serves
+frontend/*
+!frontend/out
+**/node_modules
+**/.next
+**/.next-dev
+
+# Release packaging output and OS noise
+release-manifest.json
+SHA256SUMS
+**/.DS_Store
+**/*.log

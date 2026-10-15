@@ -229,6 +229,33 @@ jobs:
             frontend/test-results
             /tmp/django.log
 
+  docker-dev:
+    # The Docker files are for local development only (docs/docker.md);
+    # production does not use Docker. This job only keeps them valid. It runs
+    # in parallel and is NOT a dependency of deploy-ovh, so it never gates or
+    # delays a deployment.
+    name: Docker dev files (compose config + images)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - name: Validate docker-compose.yml
+        run: docker compose config --quiet
+      - name: Build the backend images (dev + runtime targets)
+        run: |
+          docker build -f backend/Dockerfile --target dev -t vezano-backend:dev .
+          docker build -f backend/Dockerfile -t vezano-backend:runtime .
+      - name: Django system check inside the image
+        run: >-
+          docker run --rm -e DEBUG=True -e DJANGO_SECRET_KEY=ci-test-secret-key
+          vezano-backend:dev python manage.py check
+      - name: Build the frontend dev image
+        run: docker build -t vezano-frontend:dev frontend
+      - name: Image sizes
+        run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep vezano
+
   deploy-ovh:
     name: Deploy Vezano Pro to OVH
     needs: [backend, frontend, e2e-offline, deployment-checks]
