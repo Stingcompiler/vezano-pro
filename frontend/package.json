@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "next lint",
     "test": "node --test tests/*.test.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "shots": "node scripts/shots.mjs",
+    "lint:ui": "node scripts/lint-ui.mjs"
   },
   "dependencies": {
     "axios": "^1.7.0",
