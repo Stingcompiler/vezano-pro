@@ -1,6 +1,7 @@
-# Build context of backend/Dockerfile (the repository root; local development
-# only). The image needs backend/, VERSION, docker/ and the committed Next.js
-# export in frontend/out; everything else stays out.
+# Build context of backend/Dockerfile (the repository root), for the local
+# development targets and the production target alike. The images need
+# backend/, VERSION, docker/ and the Next.js export in frontend/out (committed,
+# or CI's tested artifact for the production image); everything else stays out.
 .git
 .github
 .claude

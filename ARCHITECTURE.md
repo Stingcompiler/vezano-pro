@@ -14,7 +14,8 @@ It is a Django 5 + DRF monolith that also serves the Next.js (App Router)
 frontend as a static export — one deployable service. Docker is the project's
 standard environment (`docker-compose.yml`, `docs/docker.md`); production
 currently runs on an OVH VPS as a native packaged release under systemd
-(`deploy/ovh/README.md`) until its planned move to containers. Locally,
+(`deploy/ovh/README.md`) until its phased move to containers (phase 1, the
+GHCR production image, is done; see `docs/docker.md`). Locally,
 the frontend still runs via `next dev` against the API over CORS for fast
 refresh; see `backend/core/frontend.py` for the production serving path.
 
