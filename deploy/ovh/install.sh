@@ -36,7 +36,7 @@ printf 'command="/usr/local/libexec/vezano/gateway.py",restrict %s\n' "$PUBLIC_K
 chmod 0644 /var/lib/vezano-deploy/.ssh/authorized_keys
 cat > /etc/vezano-deploy.json <<JSON
 {
-  "repository": "Stingcompiler/erp-plaform",
+  "repository": "Stingcompiler/vezano-pro",
   "incoming": "/srv/vezano-deploy/incoming",
   "private_stage": "/srv/vezano-deploy/private",
   "releases": "/opt/vezano/releases",

@@ -2,7 +2,7 @@
 
 التاريخ: 2026-09-12. النسخة المراجعة: `a28751f`.
 
-المجلد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/erp-plaform`.
+المجلد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/vezano-pro`.
 
 ## النتيجة
 

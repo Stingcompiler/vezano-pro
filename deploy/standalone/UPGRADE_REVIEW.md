@@ -1,7 +1,7 @@
 # OVH Vezano Pro SaaS upgrade review
 
 Reviewed 2026-09-30 against repository commit `b37fcfd6` in
-[Stingcompiler/erp-plaform](https://github.com/Stingcompiler/erp-plaform).
+[Stingcompiler/vezano-pro](https://github.com/Stingcompiler/vezano-pro).
 The initial VPS state below comes from the user and the referenced conversation.
 The user subsequently promoted the packaged candidate and confirmed active web,
 the packaged current link and public HTTP 200. The automatic deployment follow-up
@@ -41,7 +41,7 @@ manifest at the candidate's exact path still need verification.
 | No deployment lock | Concurrent promotions can interleave | Nonblocking flock on a file alongside the current link |
 | Backup application Python or health parsing can execute an app-owned venv as root | A dedicated deployment key's application-code permissions could become root access | Run all application Python, database and media readers as the application account; use isolated system Python for health parsing and protected backup hashes |
 
-The repository's [README](https://github.com/Stingcompiler/erp-plaform/blob/b37fcfd6/deploy/standalone/README.md)
+The repository's [README](https://github.com/Stingcompiler/vezano-pro/blob/b37fcfd6/deploy/standalone/README.md)
 explicitly says current features do not need Celery/Redis and that the worker
 must not be enabled alongside the scheduled timers, which would duplicate scans.
 The absence of `vezano-worker.service` is therefore a supported deployment

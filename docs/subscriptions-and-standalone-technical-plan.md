@@ -13,7 +13,7 @@
 قاعدة ووسائط فعلية، والتحقق التشغيلي من systemd وTLS وحزمة موقعة. الاختبارات
 المحلية لا تعد بديلًا عن هذا القبول الإنتاجي.
 
-المشروع المعتمد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/erp-plaform`
+المشروع المعتمد: `/Users/macbookairm1/Documents/ChatGPT/enterprice/vezano-pro`
 
 ## 1. الهدف والقرار المعماري
 
