@@ -10,6 +10,11 @@ upgrade already in progress.
 Backend and E2E dependency installation is constrained by `requirements.lock`,
 so their runtime versions match the packaged release and the VPS installation.
 
+This job still deploys the systemd packaged release. A separate `prod-image`
+job (phase 1 of the container plan, `docs/docker.md`) builds and pushes a
+production image to `ghcr.io/stingcompiler/vezano-pro` in parallel; nothing
+deploys that image yet, and neither job waits for the other.
+
 The deployment uses the frontend export produced by the successful frontend
 job in the same workflow run. It checks out the exact tested commit, installs
 the runtime pins, creates the existing release manifest/archive, and uploads

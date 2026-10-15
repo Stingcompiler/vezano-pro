@@ -4,7 +4,9 @@ Multi-company ERP platform. Django 5 + DRF monolith backend, Next.js
 (App Router) frontend. Docker is the standard environment: run the whole
 stack locally with `docker compose up` (`docs/docker.md`). Production
 currently runs on an OVH VPS under systemd from a packaged release
-(`deploy/ovh/README.md`); moving it into containers is planned.
+(`deploy/ovh/README.md`); moving it into containers is phased: CI already
+pushes the production image to GHCR (phase 1), but the deploy is still the
+systemd release until phases 2-4 land (`docs/docker.md`).
 
 > For a full system overview — architecture, how every PROJECT_RULE is
 > enforced, the enhancement catalog, testing methodology, and a guide to all

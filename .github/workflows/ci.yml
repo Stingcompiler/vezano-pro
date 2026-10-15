@@ -230,13 +230,27 @@ jobs:
             /tmp/django.log
 
   docker-dev:
-    # The Docker files are for local development only (docs/docker.md);
-    # production does not use Docker. This job only keeps them valid. It runs
-    # in parallel and is NOT a dependency of deploy-ovh, so it never gates or
-    # delays a deployment.
-    name: Docker dev files (compose config + images)
+    # Keeps the Docker files valid: the local development stack
+    # (docs/docker.md) and, build-only, the production image target, which is
+    # then smoke-tested exactly like prod-image does on main. Nothing is
+    # pushed here. It runs in parallel and is NOT a dependency of deploy-ovh,
+    # so it never gates or delays a deployment.
+    name: Docker files (compose config + dev and production images)
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: vezano_smoke
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -253,8 +267,130 @@ jobs:
           vezano-backend:dev python manage.py check
       - name: Build the frontend dev image
         run: docker build -t vezano-frontend:dev frontend
+      - uses: docker/setup-buildx-action@v3
+      - name: Build the production image (build only, not pushed)
+        # Uses the committed frontend/out; prod-image on main uses the
+        # frontend job's tested artifact instead.
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: production
+          load: true
+          push: false
+          provenance: false
+          sbom: false
+          tags: vezano-pro:ci
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ github.event.head_commit.timestamp || github.event.pull_request.updated_at }}
+          cache-from: type=gha,scope=prod-image
+      - name: Smoke-test the production image
+        run: bash docker/smoke-prod-image.sh vezano-pro:ci "$GITHUB_SHA"
       - name: Image sizes
         run: docker image ls --format '{{.Repository}}:{{.Tag}} {{.Size}}' | grep vezano
+
+  prod-image:
+    # Phase 1 of the production container plan: build the production image
+    # from the tested commit and frontend artifact, push it to GHCR, then
+    # smoke-test the pushed digest. Production still deploys the systemd
+    # release (deploy-ovh); this job runs beside it and never blocks it.
+    name: Production image (GHCR push + smoke test)
+    needs: [backend, frontend, e2e-offline]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    concurrency:
+      group: prod-image-main
+      cancel-in-progress: false
+    env:
+      IMAGE: ghcr.io/stingcompiler/vezano-pro
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ci
+          POSTGRES_PASSWORD: ci
+          POSTGRES_DB: vezano_smoke
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+      - name: Remove the checkout export before restoring the tested artifact
+        run: rm -rf -- frontend/out
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: frontend-${{ github.sha }}
+          path: frontend/out/
+      - name: Tags and labels
+        id: meta
+        shell: bash
+        run: |
+          set -euo pipefail
+          short="${GITHUB_SHA:0:8}"
+          {
+            echo "short=$short"
+            echo "created=$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo 'tags<<EOF'
+            echo "$IMAGE:sha-$GITHUB_SHA"
+            echo "$IMAGE:sha-$short"
+            echo "$IMAGE:main"
+            echo 'EOF'
+          } >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build and push
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          target: production
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          build-args: |
+            GIT_COMMIT=${{ github.sha }}
+            BUILD_DATE=${{ steps.meta.outputs.created }}
+          provenance: mode=max
+          sbom: true
+          cache-from: type=gha,scope=prod-image
+          cache-to: type=gha,scope=prod-image,mode=max
+      - name: Print the image digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          echo "Image: $IMAGE@$DIGEST"
+          {
+            echo "### Production image"
+            echo
+            echo "\`$IMAGE@$DIGEST\`"
+            echo
+            echo "Tags: \`sha-$GITHUB_SHA\`, \`sha-${{ steps.meta.outputs.short }}\`, \`main\`."
+            echo "Production still deploys the systemd release; this image is not deployed yet."
+          } >> "$GITHUB_STEP_SUMMARY"
+      - name: Smoke-test the pushed digest
+        env:
+          DIGEST: ${{ steps.build.outputs.digest }}
+        run: |
+          docker pull "$IMAGE@$DIGEST"
+          bash docker/smoke-prod-image.sh "$IMAGE@$DIGEST" "$GITHUB_SHA"
 
   deploy-ovh:
     name: Deploy Vezano Pro to OVH

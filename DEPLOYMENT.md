@@ -3,8 +3,10 @@
 The ERP platform deploys to **Render** as a Blueprint — all services run
 natively from source (history; production now runs on OVH, see the OVH
 section below). Docker is the project's standard environment
-(`PROJECT_RULES.md`, `docs/docker.md`); production moves into containers as a
-planned, separate change.
+(`PROJECT_RULES.md`, `docs/docker.md`); production moves into containers in
+phases. Phase 1 is done: CI's `prod-image` job pushes a production image to
+`ghcr.io/stingcompiler/vezano-pro` (`docs/docker.md`, "Production image"), but
+until phases 2-4 land the deploy is still the systemd packaged release.
 
 ## Services (from `render.yaml`)
 
