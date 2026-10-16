@@ -219,7 +219,7 @@ export default function PartyRecords({
                     </Badge>
                     <div className="mt-2 text-xs text-muted">{t("records.balance")}</div>
                     <div className="tabular text-lg font-semibold text-ink">
-                      {money(profile.balance)}
+                      <NumText value={money(profile.balance)} />
                     </div>
                   </div>
                 </div>
@@ -303,13 +303,13 @@ export default function PartyRecords({
                       <tbody>
                         {events.map((e, i) => (
                           <tr key={i} className="border-b border-line last:border-0">
-                            <td className="tabular whitespace-nowrap px-4 py-3 text-muted">{dt(e.date)}</td>
+                            <td className="tabular whitespace-nowrap px-4 py-3 text-muted"><NumText value={dt(e.date)} /></td>
                             <td className="px-4 py-3">
                               <Badge tone={TYPE_TONE[e.type] || "muted"}>
                                 {t(TYPE_KEY[e.type] || e.type)}
                               </Badge>
                             </td>
-                            <td className="tabular px-4 py-3 text-ink">{e.reference || "—"}</td>
+                            <td className="tabular px-4 py-3 text-ink"><NumText value={e.reference || "—"} /></td>
                             <td className="tabular px-4 py-3 text-end text-ink"><NumText value={money(e.amount)} /></td>
                             <td className="px-4 py-3 text-xs text-muted">{e.meta || "—"}</td>
                             <td className="px-4 py-3 text-end">

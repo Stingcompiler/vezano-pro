@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { formatAmount } from "@/lib/money";
 import { prefersReducedMotion } from "@/lib/useReducedMotionSafe";
+import { NumText } from "@/components/ui/kit";
 
 const money = (v) =>
   formatAmount(v);
@@ -59,7 +60,7 @@ export default function BarList({ items, valueKey = "value", labelKey = "label",
               />
             </div>
             <div className="tabular min-w-20 shrink-0 whitespace-nowrap text-end text-sm text-ink">
-              {format(value)}
+              <NumText value={format(value)} />
             </div>
           </div>
         );

@@ -5,7 +5,7 @@ import { Check, Pencil, Plus, RotateCcw, Trash2, X } from "lucide-react";
 
 import { inventory } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Button, Input } from "@/components/ui/kit";
+import { Button, Input, NumText } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 
 const EMPTY = { name: "", quantity: "", barcode: "", sale_price: "" };
@@ -107,7 +107,7 @@ export default function PackEditor({ product, baseUnit }) {
               <li key={p.id} className="flex items-center justify-between gap-2 py-1.5">
                 <span>{p.name} <span className="text-muted">= {Number(p.quantity)} {baseUnit || ""}</span>{p.barcode && <span className="ms-2 font-mono text-xs text-muted">{p.barcode}</span>}</span>
                 <span className="flex items-center gap-2">
-                  <span className="tabular">{p.effective_price}</span>
+                  <span className="tabular"><NumText value={p.effective_price} /></span>
                   <button type="button" aria-label={t("common.edit")} disabled={busy} onClick={() => startEdit(p)} className="rounded-control p-1 text-muted hover:text-ink"><Pencil size={14} /></button>
                   <button type="button" aria-label={t("common.remove")} disabled={busy} onClick={() => archive(p)} className="rounded-control p-1 text-muted hover:text-danger"><Trash2 size={14} /></button>
                 </span>

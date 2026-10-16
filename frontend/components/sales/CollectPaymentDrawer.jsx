@@ -9,7 +9,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import { useOfflineMutation } from "@/components/sync/useOfflineMutation";
 import DocumentDrawer from "@/components/print/DocumentDrawer";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 import { formatAmount, round2 } from "@/lib/money";
@@ -230,7 +230,7 @@ export default function CollectPaymentDrawer({ open, onClose, customer, invoice,
             </div>
             <div className="mt-1 flex justify-between">
               <span className="text-muted">{t("debts.totalDue")}</span>
-              <span className="tabular font-semibold text-ink">{money(totalDue)}</span>
+              <span className="tabular font-semibold text-ink"><NumText value={money(totalDue)} /></span>
             </div>
           </div>
 

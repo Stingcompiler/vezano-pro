@@ -137,7 +137,7 @@ function VarianceTable({ budgetId }) {
             <td className="px-3 py-2"><span className="inline-flex items-center gap-2">{expenseCategory(r.category, t)}<Badge tone="muted">{t(`budgets.${r.kind}`)}</Badge></span></td>
             <td className="tabular px-3 py-2 text-end text-muted"><NumText value={money(r.planned)} /></td>
             <td className="tabular px-3 py-2 text-end"><NumText value={money(r.actual)} /></td>
-            <td className={`tabular px-3 py-2 text-end font-medium ${r.favourable ? "text-ok" : "text-danger"}`}><NumText value={money(r.variance)} />{r.variance_pct != null && <span className="ms-1 text-xs text-muted">({r.variance_pct}%)</span>}</td>
+            <td className={`tabular px-3 py-2 text-end font-medium ${r.favourable ? "text-ok" : "text-danger"}`}><NumText value={money(r.variance)} />{r.variance_pct != null && <span className="ms-1 text-xs text-muted">(<bdi dir="ltr">{r.variance_pct}%</bdi>)</span>}</td>
           </tr>
         ))}</tbody>
       </table>

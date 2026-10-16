@@ -57,7 +57,7 @@ export default function GuidePage({ slug }) {
           ))}
         </div>
 
-        <aside className="mt-12 rounded-card border-s-4 border-accent bg-surface p-6 shadow-card">
+        <aside className="mt-12 border-y border-line py-6">
           <div className="text-xs font-semibold uppercase tracking-wide text-accent">{t("content.takeaway")}</div>
           <p className="mt-2 text-lg font-medium">{copy.takeaway}</p>
         </aside>

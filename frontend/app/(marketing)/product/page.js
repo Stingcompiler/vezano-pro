@@ -38,7 +38,7 @@ function Offline() {
       <div className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
         <div className="grid gap-10 lg:grid-cols-2">
           <div>
-            <span className="grid h-10 w-10 place-items-center rounded-control bg-accent/10 text-accent"><CloudOff size={20} /></span>
+            <CloudOff size={28} aria-hidden="true" className="text-accent" />
             <h2 className="mt-4 font-display text-2xl font-bold tracking-tight sm:text-3xl">{t("product.offlineTitle")}</h2>
             <p className="mt-4 text-muted sm:text-lg">{t("product.offlineBody")}</p>
           </div>
@@ -62,7 +62,7 @@ function Security() {
   return (
     <section className="mx-auto max-w-6xl px-4 py-16 sm:px-6 sm:py-20">
       <div className="flex items-center gap-3">
-        <span className="grid h-10 w-10 place-items-center rounded-control bg-accent/10 text-accent"><ShieldCheck size={20} /></span>
+        <ShieldCheck size={28} aria-hidden="true" className="shrink-0 text-accent" />
         <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{t("product.securityTitle")}</h2>
       </div>
       <div className="mt-8 grid gap-4 sm:grid-cols-2">

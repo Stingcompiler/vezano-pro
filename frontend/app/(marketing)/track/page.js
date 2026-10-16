@@ -479,9 +479,7 @@ export default function TrackPage() {
     <MarketingPage>
       <section className="mx-auto max-w-3xl px-4 py-12 sm:px-6 sm:py-16">
         <div className="text-center">
-          <span className="mx-auto grid h-12 w-12 place-items-center rounded-card bg-accent/10 text-accent">
-            <PackageSearch size={24} aria-hidden="true" />
-          </span>
+          <PackageSearch size={32} aria-hidden="true" className="mx-auto text-accent" />
           <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-4xl">{t("track.title")}</h1>
           <p className="mx-auto mt-3 max-w-xl text-muted">{t("track.subtitle")}</p>
         </div>

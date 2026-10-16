@@ -82,6 +82,17 @@ const SCREENS = [
   { name: "reports-purchasing", account: "owner", path: "/reports/?t=purchasing#purchasing", ready: "main h1" },
   { name: "reports-finance", account: "owner", path: "/reports/?t=finance#finance", ready: "main h1" },
   { name: "reports-hr", account: "owner", path: "/reports/?t=hr#hr", ready: "main h1" },
+  // Public pages: no login. `localized`: the English copy lives under /en.
+  { name: "landing", account: "public", path: "/", ready: "main h1", localized: true },
+  { name: "product", account: "public", path: "/product/", ready: "main h1", localized: true },
+  { name: "register", account: "public", path: "/register/", ready: "main h1", localized: true },
+  { name: "register-hosting", account: "public", path: "/register/hosting/", ready: "main h1", localized: true },
+  { name: "pricing", account: "public", path: "/pricing/", ready: "main h1", localized: true },
+  { name: "guide", account: "public", path: "/guides/sell-during-outages/", ready: "main h1", localized: true },
+  // The seeded company's public page (seed_demo publishes it; seed_e2e's slug).
+  { name: "company-page", account: "public", path: `/s/${process.env.SHOTS_SLUG || "e2e-shop"}/`, ready: "h1" },
+  // The public page editor (photo gallery) inside the app.
+  { name: "website", account: "owner", path: "/website/", ready: "main h1" },
   // The till with a line in the cart and more cash tendered than the bill
   // (the change-due row). Last of the owner's screens: a till with a cart
   // asks before the page is left.
@@ -149,6 +160,7 @@ try {
   mkdirSync(AUTH, { recursive: true });
   const states = {};
   for (const account of new Set(SCREENS.map((s) => s.account))) {
+    if (account === "public") { states.public = undefined; continue; }
     if (!ACCOUNTS[account].email || !ACCOUNTS[account].password) {
       console.warn(`no credentials for the ${account} account: skipping its screens`);
       continue;
@@ -180,7 +192,8 @@ try {
           for (const screen of SCREENS.filter((s) => s.account === account)) {
             const file = join(OUT, `${screen.name}--${width}--${scheme}--${lang}.png`);
             try {
-              await shoot(page, screen, file);
+              const path = screen.localized && lang === "en" ? `/en${screen.path}` : screen.path;
+              await shoot(page, { ...screen, path }, file);
               shot += 1;
             } catch (err) {
               failed.push(`${screen.name}--${width}--${scheme}--${lang}: ${err.message.split("\n")[0]}`);

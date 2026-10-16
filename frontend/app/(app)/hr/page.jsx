@@ -9,7 +9,7 @@ import { localToday } from "@/lib/dates";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Field, Figure, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Figure, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import Drawer from "@/components/ui/Drawer";
 import SuccessCheck from "@/components/ui/SuccessCheck";
 import EmployeeDrawer from "@/components/hr/EmployeeDrawer";
@@ -438,7 +438,7 @@ function PayrollEntryRow({ entry, money }) {
     <div className="py-2 text-sm">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div><span className="font-medium text-ink">{entry.employee_name}</span><span className="text-muted"> · {entry.department_name || "—"} · {entry.position_title || "—"}</span></div>
-        <div className="tabular font-medium text-ink">{money(entry.net_salary)}</div>
+        <div className="tabular font-medium text-ink"><NumText value={money(entry.net_salary)} /></div>
       </div>
       <div className="tabular mt-0.5 text-xs text-muted">{parts.join(" · ")}</div>
     </div>
@@ -711,7 +711,7 @@ export default function HrPage() {
                 {p.description && <div className="truncate text-sm text-muted">{p.description}</div>}
               </div>
               {Number(p.base_salary) > 0 && (
-                <span className="tabular text-sm text-muted">{money(p.base_salary)}</span>
+                <span className="tabular text-sm text-muted"><NumText value={money(p.base_salary)} /></span>
               )}
               <Badge tone="muted">{p.employee_count ?? 0} {t("hr.employeesUsing")}</Badge>
             </button>
@@ -798,7 +798,7 @@ export default function HrPage() {
               <div className="min-w-0 flex-1">
                 <div className="truncate font-medium text-ink">{a.employee_name}</div>
                 <div className="text-sm text-muted">
-                  <span className="tabular">{money(a.amount)}</span>
+                  <span className="tabular"><NumText value={money(a.amount)} /></span>
                   {a.reason ? ` · ${a.reason}` : ""}
                 </div>
               </div>
@@ -851,7 +851,7 @@ export default function HrPage() {
                   {d.note ? ` · ${d.note}` : ""}
                 </div>
               </div>
-              <span className="tabular text-sm font-medium text-danger">-{money(d.amount)}</span>
+              <span className="tabular text-sm font-medium text-danger"><NumText value={`-${money(d.amount)}`} /></span>
             </div>
           ))}
         </div>

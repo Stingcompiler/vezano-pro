@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { bankAccounts as bankApi, cashShifts } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import Drawer from "@/components/ui/Drawer";
-import { Button, Field, Input, Select } from "@/components/ui/kit";
+import { Button, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { formatAmount } from "@/lib/money";
 
@@ -100,7 +100,7 @@ export default function VoidDrawer({ open, onClose, onDone, title, summary, paid
           <div className="space-y-3 rounded-card border border-line p-3">
             <div className="flex justify-between text-sm">
               <span className="text-muted">{t("corrections.toRefund")}</span>
-              <span className="tabular text-ink">{money(paidAmount)}</span>
+              <span className="tabular text-ink"><NumText value={money(paidAmount)} /></span>
             </div>
             <Field label={t("common.method")}>
               <Select value={method} onChange={(e) => setMethod(e.target.value)}>

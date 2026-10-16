@@ -10,7 +10,7 @@ import { useI18n } from "../../providers/I18nProvider";
 import { useAttention } from "@/components/attention/AttentionProvider";
 import { webOrders as api, inventory as inventoryApi } from "@/lib/api";
 import { whatsappUrl } from "@/lib/phone";
-import { Badge, Button, Card, Input, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, Input, NumText, PageHeader } from "@/components/ui/kit";
 import PhoneLink from "@/components/ui/PhoneLink";
 import Drawer from "@/components/ui/Drawer";
 import PushPrompt from "@/components/orders/PushPrompt";
@@ -218,8 +218,8 @@ function WebOrders() {
             </div>
             <ul className="divide-y divide-line rounded-control border border-line">
               {open.lines.map((l) => <li key={l.id} className="flex justify-between gap-3 px-3 py-2"><span>{l.name} <span className="text-muted">×{Number(l.quantity)}</span></span><span className="tabular">{l.unit_price == null ? <span className="text-muted">{t("webOrders.askPrice")}</span> : money(Number(l.unit_price) * Number(l.quantity), open.currency, language)}</span></li>)}
-              {Number(open.tax_amount) > 0 && <li className="flex justify-between px-3 py-2 text-muted"><span>{t("webOrders.tax")}</span><span className="tabular">{money(open.tax_amount, open.currency, language)}</span></li>}
-              <li className="flex justify-between px-3 py-2 font-semibold"><span>{Number(open.tax_amount) > 0 ? t("webOrders.totalWithTax") : t("webOrders.total")}</span><span className="tabular">{open.total == null ? t("webOrders.confirmPrices") : money(open.total, open.currency, language)}</span></li>
+              {Number(open.tax_amount) > 0 && <li className="flex justify-between px-3 py-2 text-muted"><span>{t("webOrders.tax")}</span><span className="tabular"><NumText value={money(open.tax_amount, open.currency, language)} /></span></li>}
+              <li className="flex justify-between px-3 py-2 font-semibold"><span>{Number(open.tax_amount) > 0 ? t("webOrders.totalWithTax") : t("webOrders.total")}</span><span className="tabular"><NumText value={open.total == null ? t("webOrders.confirmPrices") : money(open.total, open.currency, language)} /></span></li>
             </ul>
             {open.payments?.length > 0 && (
               <div className="space-y-3">
@@ -228,7 +228,7 @@ function WebOrders() {
                   <div key={c.id} className="rounded-control border border-line p-3">
                     <div className="flex flex-wrap items-center gap-2">
                       <Badge tone={PAY_TONE[c.status]}>{t(`webOrders.pay.status.${c.status}`)}</Badge>
-                      <span className="font-semibold tabular">{money(c.amount, open.currency, language)}</span>
+                      <span className="font-semibold tabular"><NumText value={money(c.amount, open.currency, language)} /></span>
                       <span className="text-muted">{c.sender_bank_name} → {c.bank_name || "—"} · ****{c.reference_last4}</span>
                       <span className="text-xs text-muted">{fmt(c.created_at)}</span>
                     </div>

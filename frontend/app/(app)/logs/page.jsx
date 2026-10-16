@@ -8,7 +8,7 @@ import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { translateRole } from "@/lib/i18n";
 import { activityActionLabel, entityTypeLabel, metaKeyLabel, metaValueLabel } from "@/lib/labels";
-import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 
 const ACTION_TONE = {
@@ -304,7 +304,7 @@ export default function LogsPage() {
               <tbody>
                 {rows.map((r) => (
                   <tr key={r.id} className="border-b border-line last:border-0 align-top">
-                    <td className="tabular whitespace-nowrap px-4 py-3 text-muted">{dt(r.created_at)}</td>
+                    <td className="tabular whitespace-nowrap px-4 py-3 text-muted"><NumText value={dt(r.created_at)} /></td>
                     <td className="px-4 py-3"><Person log={r} /></td>
                     <td className="px-4 py-3">
                       <Badge tone={ACTION_TONE[r.action] || "muted"}>
@@ -315,7 +315,7 @@ export default function LogsPage() {
                       {r.entity_type ? `${entityTypeLabel(t, r.entity_type)}${r.entity_id ? ` #${r.entity_id}` : ""}` : "—"}
                     </td>
                     <td className="px-4 py-3"><Details log={r} /></td>
-                    <td className="tabular px-4 py-3 text-xs text-muted">{r.ip_address || "—"}</td>
+                    <td className="tabular px-4 py-3 text-xs text-muted"><NumText value={r.ip_address || "—"} /></td>
                   </tr>
                 ))}
               </tbody>

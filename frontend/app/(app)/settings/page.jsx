@@ -7,7 +7,7 @@ import api, { settings, users } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { errorText } from "@/lib/errors";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import TabBar from "@/components/ui/TabBar";
 import { useHashTab } from "@/lib/useHashTab";
@@ -461,7 +461,7 @@ export default function SettingsPage() {
                 {company.exchange_rate ? (
                   <>
                     <span className="tabular text-lg font-semibold text-ink">
-                      {Number(company.exchange_rate).toLocaleString(undefined, { maximumFractionDigits: 4 })}
+                      <NumText value={Number(company.exchange_rate).toLocaleString(undefined, { maximumFractionDigits: 4 })} />
                     </span>
                     <span className="ms-2 text-muted">
                       {company.currency} / 1 {company.reference_currency}
@@ -616,7 +616,7 @@ export default function SettingsPage() {
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                     <Badge tone={b.status === "success" ? "ok" : "danger"}>{kindLabel}</Badge>
                     <span className="tabular whitespace-nowrap text-ink">
-                      {new Date(b.created_at).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" })}
+                      <NumText value={new Date(b.created_at).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" })} />
                     </span>
                     <span className="tabular whitespace-nowrap text-xs text-muted">
                       {b.record_count} {t("settings.records")} · {bytes(b.size_bytes)}

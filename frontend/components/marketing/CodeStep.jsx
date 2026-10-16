@@ -101,9 +101,7 @@ export default function CodeStep({
   return (
     <div className={`enter-rise rounded-card border border-line p-6 shadow-card sm:p-8 ${className}`}>
       <div className="flex items-start gap-3">
-        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-accent/10 text-accent">
-          <MailCheck size={22} aria-hidden="true" />
-        </span>
+        <MailCheck size={26} aria-hidden="true" className="mt-0.5 shrink-0 text-accent" />
         <div className="min-w-0">
           <h2 className="font-display text-xl font-semibold">{title || t("otp.title")}</h2>
           <p className="mt-1 break-words text-sm text-muted">{sentText}</p>

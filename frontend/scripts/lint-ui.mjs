@@ -55,7 +55,7 @@ const BAR = /(?:^|\s)(?:w-(?:0\.5|1|1\.5|\[[2-6]px\])|h-(?:0\.5|1|\[[2-6]px\]))(
 const BAR_POS = /(?:^|\s)(?:inset-y-0|inset-x-0|top-0|bottom-0|start-0|end-0|left-0|right-0)(?=\s|$)/;
 const PSEUDO_BAR = new RegExp(`(?:before|after):(?:w-(?:0\\.5|1|1\\.5)|h-(?:0\\.5|1))\\b[\\s\\S]*(?:before|after):bg-${COLOR}|(?:before|after):bg-${COLOR}[\\s\\S]*(?:before|after):(?:w-(?:0\\.5|1|1\\.5)|h-(?:0\\.5|1))\\b`);
 const SQUARE = /(?:^|\s)(?:h-(\d+) w-(\d+)|w-(\d+) h-(\d+)|size-(\d+))(?=\s|$)/;
-const ROUNDED = /(?:^|\s)rounded-(?:full|md|lg|xl|2xl|3xl|control)(?=\s|$)/;
+const ROUNDED = /(?:^|\s)rounded-(?:full|md|lg|xl|2xl|3xl|control|card)(?=\s|$)/;
 const CENTERED = /\b(?:place-items-center|justify-center)\b/;
 const GRADIENT = /\b(?:bg-gradient-to-\w+|bg-\[(?:linear|radial|conic)-gradient)/;
 const PULSE = /(?:^|\s|:)animate-(?:pulse|ping|bounce)(?=\s|$)/;

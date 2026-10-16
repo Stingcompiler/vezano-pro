@@ -7,7 +7,7 @@ import { inventory } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useOfflineMutation } from "@/components/sync/useOfflineMutation";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useStableIds } from "@/lib/useStableIds";
 
@@ -196,7 +196,7 @@ export default function StockDrawer({ open, onClose, product, warehouses, canWri
           {stock ? (
           <div>
             <div className="text-sm text-muted">{t("inventory.onHand")}</div>
-            <div className="tabular mt-1 text-3xl font-medium text-ink">{stock.on_hand}</div>
+            <div className="tabular mt-1 text-3xl font-medium text-ink"><NumText value={stock.on_hand} /></div>
           </div>
           ) : (
             <p className="rounded-control bg-warn/10 p-3 text-sm text-ink">{t("inventory.stockUnavailableOffline")}</p>
@@ -211,7 +211,7 @@ export default function StockDrawer({ open, onClose, product, warehouses, canWri
                 {stock.by_warehouse.map((row) => (
                   <div key={row.warehouse} className="flex items-center justify-between px-3 py-2 text-sm">
                     <span className="text-ink">{row.warehouse__name}</span>
-                    <span className="tabular text-ink">{row.on_hand}</span>
+                    <span className="tabular text-ink"><NumText value={row.on_hand} /></span>
                   </div>
                 ))}
               </div>
@@ -235,7 +235,7 @@ export default function StockDrawer({ open, onClose, product, warehouses, canWri
                           </span>
                         )}
                       </span>
-                      <span className="tabular text-ink">{row.on_hand}</span>
+                      <span className="tabular text-ink"><NumText value={row.on_hand} /></span>
                     </div>
                   ))}
                 </div>
@@ -353,7 +353,7 @@ export default function StockDrawer({ open, onClose, product, warehouses, canWri
                       </Badge>
                       <span className="text-xs text-muted">{dateFmt(m.created_at)}</span>
                     </div>
-                    <span className="tabular text-ink">{m.quantity}</span>
+                    <span className="tabular text-ink"><NumText value={m.quantity} /></span>
                   </div>
                 ))}
               </div>

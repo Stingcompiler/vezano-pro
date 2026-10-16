@@ -317,7 +317,7 @@ export default function InventoryPage() {
                     onClick={() => setStockFor(p)}
                     className="cursor-pointer border-b border-line last:border-0 hover:bg-paper"
                   >
-                    <td className="tabular px-4 py-3 text-ink">{p.sku}</td>
+                    <td className="tabular px-4 py-3 text-ink"><NumText value={p.sku} /></td>
                     <td className="px-4 py-3 text-ink">
                       <span className="hover:underline">{p.name}</span>
                       {p.is_active === false && (

@@ -7,7 +7,7 @@ import { bankAccounts as api } from "@/lib/api";
 import { errorText } from "@/lib/errors";
 import { useI18n } from "../../app/providers/I18nProvider";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { BANK_CHANNELS, channelLabel } from "@/lib/bankChannels";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 
@@ -133,7 +133,7 @@ export default function BankAccounts({ writable, onChanged }) {
                       )}
                     </td>
                     <td className="px-4 py-3 text-muted">{a.account_name}</td>
-                    <td className="tabular px-4 py-3 text-muted">{a.account_number || "—"}</td>
+                    <td className="tabular px-4 py-3 text-muted"><NumText value={a.account_number || "—"} /></td>
                     <td className="px-4 py-3 text-end">
                       <label className="me-3 inline-flex items-center gap-1 text-xs text-muted" title={t("sales.showToCustomersHint")}>
                         <input type="checkbox" checked={Boolean(a.show_to_customers)} disabled={!writable}
