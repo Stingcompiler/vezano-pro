@@ -1,13 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Banknote, CheckCircle2, LockKeyhole, Plus } from "lucide-react";
+import { Banknote, CheckCircle2, Plus } from "lucide-react";
 
 import { cashShifts } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select, isZeroFigure } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useSync } from "@/components/sync/SyncProvider";
 import { SkeletonCard } from "@/components/ui/Skeleton";
@@ -27,13 +27,18 @@ const MOVEMENT_KINDS = [
 ];
 
 function Row({ label, value, currency, strong, tone }) {
-  const toneClass =
-    tone === "danger" ? "text-danger" : tone === "ok" ? "text-ok" : "text-ink";
+  // A zero is quiet (muted, regular weight) and never takes a tone; the
+  // number is bidi-isolated so a negative movement total cannot flip in RTL.
+  const zero = isZeroFigure(value);
+  const toneClass = zero
+    ? "text-muted"
+    : tone === "danger" ? "text-danger" : tone === "ok" ? "text-ok" : "text-ink";
+  const weight = strong ? `text-base ${zero ? "" : "font-semibold"}` : "text-sm";
   return (
-    <div className="flex items-center justify-between py-1">
+    <div className="flex items-center justify-between gap-3 py-1">
       <span className="text-sm text-muted">{label}</span>
-      <span className={`tabular ${strong ? "text-base font-semibold" : "text-sm"} ${toneClass}`}>
-        {money(value)} {currency}
+      <span className={`tabular whitespace-nowrap ${weight} ${toneClass}`}>
+        <NumText value={`${money(value)} ${currency || ""}`.trim()} />
       </span>
     </div>
   );
@@ -321,9 +326,9 @@ export default function CashDrawer({ currency = "", onShiftChange }) {
   if (!shift) {
     return (
       <Card className="p-6">
-        <div className="mb-1 flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted">
-          <LockKeyhole size={15} /> {t("till.noOpenShift")}
-        </div>
+        <h2 className="mb-1 font-display text-base font-bold text-ink">
+          {t("till.noOpenShift")}
+        </h2>
         <p className="mb-4 text-sm text-muted">{t("till.openHint")}</p>
         <div className="flex flex-wrap items-end gap-3">
           <div className="w-40">
@@ -388,10 +393,11 @@ export default function CashDrawer({ currency = "", onShiftChange }) {
 
       {movements.length > 0 && (
         <div className="mt-4">
-          <div className="mb-2 text-xs uppercase tracking-wide text-muted">
+          <h3 className="mb-1 text-sm font-medium text-muted">
             {t("till.drawerMovements")}
-          </div>
-          <div className="divide-y divide-line rounded-card border border-line">
+          </h3>
+          {/* A list in the card, divided by hairlines — not a second box. */}
+          <div className="divide-y divide-line border-y border-line">
             {movements.map((m) => (
               <div
                 key={m.id}
@@ -406,7 +412,7 @@ export default function CashDrawer({ currency = "", onShiftChange }) {
                     Number(m.amount) < 0 ? "text-danger" : "text-ok"
                   }`}
                 >
-                  {money(m.amount)}
+                  <NumText value={money(m.amount)} />
                 </span>
               </div>
             ))}

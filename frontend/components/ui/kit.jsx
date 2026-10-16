@@ -176,10 +176,11 @@ export function Figure({ value, size = "lg", className = "", valueClassName = ""
 // primary block of a screen (PrimaryBlock below; docs/ui-profile.md, the chosen
 // direction). A card that is a link lifts a hair on hover
 // (`a > .workspace-card` in globals.css). `style` passes through, e.g. an
-// entrance delay (lib/motion.js enterStyle).
-export function Card({ className = "", style, children }) {
+// entrance delay (lib/motion.js enterStyle); so do `id` and other DOM
+// attributes (the till's phone bar scrolls to `#pos-payment`).
+export function Card({ className = "", style, children, ...rest }) {
   return (
-    <div className={`workspace-card rounded-card border border-line bg-surface ${className}`} style={style}>
+    <div {...rest} className={`workspace-card rounded-card border border-line bg-surface ${className}`} style={style}>
       {children}
     </div>
   );

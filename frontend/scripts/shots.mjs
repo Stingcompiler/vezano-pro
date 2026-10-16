@@ -64,6 +64,7 @@ const ACCOUNTS = {
 // The representative screens (docs/ui-profile.md). `ready`: a selector that
 // means the content is in; `hold`: a URL glob whose API calls are kept
 // pending, so the screen's loading state (skeletons) is what gets captured.
+// `act`: steps run once the content is in (fill a cart), before the shot.
 const SCREENS = [
   { name: "dashboard", account: "owner", path: "/dashboard/", ready: "main h1" },
   { name: "dashboard-loading", account: "owner", path: "/dashboard/", ready: "main", hold: "**/api/dashboard/**" },
@@ -92,6 +93,18 @@ const SCREENS = [
   { name: "company-page", account: "public", path: `/s/${process.env.SHOTS_SLUG || "e2e-shop"}/`, ready: "h1" },
   // The public page editor (photo gallery) inside the app.
   { name: "website", account: "owner", path: "/website/", ready: "main h1" },
+  // The till with a line in the cart and more cash tendered than the bill
+  // (the change-due row). Last of the owner's screens: a till with a cart
+  // asks before the page is left.
+  {
+    name: "pos-cart", account: "owner", path: "/sales/", ready: "main input[placeholder]",
+    act: async (page) => {
+      // The scan field and the product search both carry `ps-9`; the search is the second.
+      await page.locator("main input.ps-9:visible").nth(1).fill("E2E");
+      await page.getByRole("button", { name: /E2E Gadget/ }).first().click();
+      await page.locator("#pos-payment input[inputmode=decimal][placeholder]:visible").first().fill("100000");
+    },
+  },
   { name: "platform", account: "platform", path: "/platform/", ready: "main h1" },
   { name: "platform-companies", account: "platform", path: "/platform-companies/", ready: "main h1" },
 ].filter((s) => !ONLY.length || ONLY.includes(s.name));
@@ -126,6 +139,7 @@ async function shoot(page, screen, file) {
   try {
     await page.goto(`${BASE}${screen.path}`, { waitUntil: screen.hold ? "domcontentloaded" : "networkidle", timeout: 45000 });
     await page.locator(screen.ready).first().waitFor({ timeout: 20000 });
+    if (screen.act) await screen.act(page);
     await page.waitForTimeout(screen.hold ? 1500 : 700);
     await page.mouse.move(0, 0);
     await page.screenshot({ path: file, fullPage: true, animations: "disabled" });
