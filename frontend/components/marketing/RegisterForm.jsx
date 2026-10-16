@@ -72,7 +72,7 @@ function DuplicatePanel({ whatsapp, onEdit }) {
       <h2 className="mt-4 font-display text-xl font-semibold">{t("register.duplicateTitle")}</h2>
       <p className="mt-2 text-sm text-muted">{t("register.duplicateBody")}</p>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">
-        <Link href={`${href("/track")}#requests`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-accent px-5 py-2.5 font-medium text-white hover:bg-accent-strong">
+        <Link href={`${href("/track")}#requests`} className="inline-flex min-h-11 items-center justify-center gap-2 rounded-control bg-accent px-5 py-2.5 font-medium text-on-accent hover:bg-accent-strong">
           <PackageSearch size={17} aria-hidden="true" />{t("register.duplicateTrack")}
         </Link>
         {waHref && (
@@ -100,7 +100,7 @@ function Flow({ standalone }) {
       <ol className="grid gap-3 sm:grid-cols-3">
         {steps.map(([title, body], index) => (
           <li key={title} className="flex items-start gap-3 rounded-card border border-line bg-surface p-4">
-            <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent font-display text-sm font-bold text-white">{index + 1}</span>
+            <span aria-hidden="true" className="grid h-8 w-8 shrink-0 place-items-center rounded-full bg-accent font-display text-sm font-bold text-on-accent">{index + 1}</span>
             <span>
               <span className="block font-semibold text-ink">{title}</span>
               <span className="mt-1 block text-sm text-muted">{body}</span>
@@ -386,7 +386,7 @@ export default function RegisterForm() {
         <button
           type="submit"
           disabled={busy || (!standalone && !planId)}
-          className="mt-4 w-full rounded-control bg-accent py-3 font-medium text-white hover:bg-accent-strong disabled:opacity-50"
+          className="mt-4 w-full rounded-control bg-accent py-3 font-medium text-on-accent hover:bg-accent-strong disabled:opacity-50"
         >
           {busy ? t("registration.sending") : t(standalone ? "pricing.requestQuote" : "registration.submit")}
         </button>

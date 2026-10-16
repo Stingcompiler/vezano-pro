@@ -11,9 +11,9 @@ import { badgePops } from "@/lib/navMotion";
 import { useAttention } from "./AttentionProvider";
 
 const TONE_CLASS = {
-  info: "bg-accent text-white",
+  info: "bg-accent text-on-accent",
   warn: "bg-warn text-white",
-  danger: "bg-danger text-white",
+  danger: "bg-danger text-on-danger",
 };
 const RANK = { info: 0, warn: 1, danger: 2 };
 

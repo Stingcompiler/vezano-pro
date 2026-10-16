@@ -170,7 +170,7 @@ export default function DebtsPage() {
             {!loading && rows.length === 0 && <p className="px-2 py-8 text-center text-sm text-muted">{t("debts.noDebtors")}</p>}
             {rows.map((customer) => (
               <button key={customer.id} onClick={() => setSelected(customer)}
-                className={`w-full rounded-control px-3 py-3 text-start transition-colors ${selected?.id === customer.id ? "bg-accent text-white" : "hover:bg-paper"}`}>
+                className={`w-full rounded-control px-3 py-3 text-start transition-colors ${selected?.id === customer.id ? "bg-accent text-on-accent" : "hover:bg-paper"}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0"><div className="flex items-center gap-1.5"><span className="truncate font-medium">{customer.name}</span>{customer.is_active === false && <Badge tone="muted">{t("debts.archived")}</Badge>}</div><div className={`mt-0.5 truncate text-xs ${selected?.id === customer.id ? "text-white/75" : "text-muted"}`}>{customer.phone || "—"}</div></div>
                   <div className="text-end"><Badge tone={selected?.id === customer.id ? "muted" : STATUS_TONE[customer.status]}>{t(`debts.${customer.status}`)}</Badge><div className="mt-1 tabular text-sm font-semibold">{amount(customer.outstanding || customer.credit_balance)}</div></div>

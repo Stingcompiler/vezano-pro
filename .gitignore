@@ -40,3 +40,6 @@ frontend/.env.local
 # Playwright output (frontend/e2e)
 frontend/playwright-report/
 frontend/test-results/
+
+# UI review screenshots (frontend/scripts/shots.mjs) and their login state
+/shots/

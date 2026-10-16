@@ -51,7 +51,7 @@ export default function HostingPage() {
                 <Link
                   href={href(standalone ? "/register?mode=standalone" : "/register")}
                   className={`mt-6 rounded-control px-5 py-3 text-center font-medium ${
-                    standalone ? "border border-line bg-surface text-ink hover:border-accent" : "bg-accent text-white hover:bg-accent-strong"
+                    standalone ? "border border-line bg-surface text-ink hover:border-accent" : "bg-accent text-on-accent hover:bg-accent-strong"
                   }`}
                 >
                   {t(standalone ? "register.hosting.ctaStandalone" : "register.hosting.cta")}

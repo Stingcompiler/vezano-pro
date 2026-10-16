@@ -59,7 +59,7 @@ function CompactLayout({ plans, onSwitchCycle }) {
               <div className="flex flex-wrap items-center gap-2">
                 <h3 className="break-words font-display text-base font-semibold">{plan.name}</h3>
                 {plan.highlighted && (
-                  <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-white">{t("pricing.mostPopular")}</span>
+                  <span className="rounded-full bg-accent px-2 py-0.5 text-[11px] font-medium text-on-accent">{t("pricing.mostPopular")}</span>
                 )}
               </div>
               {plan.tagline && <p className="mt-0.5 text-sm text-muted">{plan.tagline}</p>}

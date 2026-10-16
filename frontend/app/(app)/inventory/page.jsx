@@ -8,7 +8,7 @@ import { offlineStore } from "@/lib/offlineStore";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Input, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, Input, NumText, PageHeader } from "@/components/ui/kit";
 import ProductForm from "@/components/inventory/ProductForm";
 import RepriceDrawer from "@/components/inventory/RepriceDrawer";
 import StockDrawer from "@/components/inventory/StockDrawer";
@@ -326,7 +326,7 @@ export default function InventoryPage() {
                         </span>
                       )}
                     </td>
-                    <td className="tabular px-4 py-3 text-end text-ink">{p.on_hand}</td>
+                    <td className="tabular px-4 py-3 text-end text-ink"><NumText value={p.on_hand} /></td>
                     <td className="tabular px-4 py-3 text-end text-muted">{p.reorder_level}</td>
                     <td className="tabular px-4 py-3 text-end text-ink">
                       {formatAmount(p.sale_price)}

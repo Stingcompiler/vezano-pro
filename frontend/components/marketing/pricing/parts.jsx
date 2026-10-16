@@ -75,7 +75,7 @@ export function PriceFigure({ plan, chars, size = "price", inverse = false }) {
 export function PopularBadge({ className = "" }) {
   const { t } = useI18n();
   return (
-    <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-white ${className}`}>
+    <span className={`inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full bg-accent px-2.5 py-1 text-xs font-medium text-on-accent ${className}`}>
       <Sparkles size={12} aria-hidden="true" /> {t("pricing.mostPopular")}
     </span>
   );
@@ -214,7 +214,7 @@ export function PlanCta({ plan, onSwitchCycle, size = "md", className = "" }) {
   const { t, href } = useI18n();
   const pad = size === "sm" ? "px-4 py-2 text-sm" : "px-4 py-2.5";
   const tone = plan.highlighted
-    ? "bg-accent text-white hover:bg-accent-strong"
+    ? "bg-accent text-on-accent hover:bg-accent-strong"
     : "border border-line bg-surface text-ink hover:border-accent";
   if (!plan.available) {
     const other = plan.offeredCycles[0];
@@ -254,7 +254,7 @@ export function CycleToggle({ value, options, onChange }) {
               role="radio"
               aria-checked={active}
               onClick={() => onChange(cycle)}
-              className={`min-w-24 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active ? "bg-accent text-white" : "text-muted hover:text-ink"}`}
+              className={`min-w-24 rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${active ? "bg-accent text-on-accent" : "text-muted hover:text-ink"}`}
             >
               {t(`pricing.cycleNames.${cycle}`)}
             </button>

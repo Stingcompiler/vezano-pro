@@ -1,6 +1,8 @@
 "use client";
 
 import { cloneElement, forwardRef, isValidElement, useId } from "react";
+import Link from "next/link";
+import { ChevronRight } from "lucide-react";
 
 import { figureFitStyle, splitFigure } from "../../lib/figureFit";
 import { useCountUp } from "../../lib/useCountUp";
@@ -16,10 +18,10 @@ export function Button({ variant = "primary", className = "", ...props }) {
   const base =
     `tap inline-flex items-center justify-center gap-2 min-h-10 rounded-control px-4 py-2 text-sm font-semibold ${BUTTON_MOTION} disabled:opacity-50 disabled:pointer-events-none`;
   const variants = {
-    primary: "bg-accent text-white shadow-sm hover:bg-accent-strong",
+    primary: "bg-accent text-on-accent shadow-sm hover:bg-accent-strong",
     ghost: "text-muted hover:bg-paper hover:text-ink",
     outline: "border border-line bg-surface text-ink shadow-sm hover:border-accent/40 hover:bg-paper",
-    danger: "bg-danger text-white hover:opacity-90",
+    danger: "bg-danger text-on-danger hover:opacity-90",
   };
   return <button className={`${base} ${variants[variant]} ${className}`} {...props} />;
 }
@@ -99,20 +101,52 @@ export function Badge({ tone = "muted", className = "", children }) {
   );
 }
 
-// A stat card's headline figure ("615,480.00 ج.س", "12"). It shrinks with
-// its length to fit the card on one line (lib/figureFit.js + .figure-fit in
-// globals.css). `size`: "xl" (20px phone → 30px wider), "lg" (24px), "md"
-// (20px) is the largest it gets; long figures go down to 11px. The number
-// itself never breaks; only on a card too narrow even at 11px does the
-// currency label move, whole, under the number.
+// A number in Latin digits that keeps its own left-to-right order inside
+// Arabic text. Without isolation a negative stock of -3 read "3-" in RTL:
+// the minus is a neutral character and took the paragraph's direction.
+// A bdi element with dir="ltr" isolates it (unicode-bidi: isolate; direction: ltr).
+const NUMERIC = /^[-+−]?[\d.,%/\s×]*\d[\d.,%/\s×]*$/u;
+
+export function isNumericText(value) {
+  return value !== null && value !== undefined && NUMERIC.test(String(value).trim());
+}
+
+// A figure's text with only its number isolated: "1,234.00 ج.س" keeps the
+// currency label after the number in the reading direction (to its left in
+// Arabic), while "-3" or "-1,234.00" can no longer flip. Text that is not a
+// number ("منشور", "—") passes through.
+export function NumText({ value }) {
+  const parts = splitFigure(value);
+  if (parts) return <><bdi dir="ltr">{parts[0]}</bdi> <span>{parts[1]}</span></>;
+  if (isNumericText(value)) return <bdi dir="ltr">{value}</bdi>;
+  return value ?? null;
+}
+
+// True for a figure that is zero: 0, "0", "0.00 ج.س". A zero is "nothing
+// to see", so rows of figures show it quietly (muted, regular weight)
+// instead of in the same voice as the day's takings.
+export function isZeroFigure(value) {
+  if (value === null || value === undefined || value === "") return false;
+  const text = String(value);
+  if (!/\d/.test(text)) return false;
+  const n = Number(text.replace(/−/g, "-").replace(/[^\d.-]/g, ""));
+  return Number.isFinite(n) && n === 0;
+}
+
+// A headline figure ("615,480.00 ج.س", "12"). It shrinks with its length to
+// fit its box on one line (lib/figureFit.js + .figure-fit in globals.css).
+// `size`: "xl" (20px phone → 30px wider), "lg" (24px), "md" (20px) is the
+// largest it gets; long figures go down to 11px. The number itself never
+// breaks; only in a box too narrow even at 11px does the currency label
+// move, whole, under the number. The number is bidi-isolated (NumText).
 //
 // It counts to its value when it appears and when the value changes
 // (lib/useCountUp.js): the count is drawn over the final text, which keeps
-// sizing the card, so nothing moves. `animate={false}` where a count would
-// distract (a receipt, anything inside a table or list); reduced motion and
+// sizing the box, so nothing moves. `animate={false}` where a count would
+// distract (a receipt, a row of figures, a list); reduced motion and
 // printing always show the final figure at once.
 // `chars`: size the figure as if it were that many cells long. A row of
-// cards passes the longest figure's length so every figure in it matches
+// figures passes the longest one's length so every figure in it matches
 // (lib/planDeck.js sharedFigureChars).
 export function Figure({ value, size = "lg", className = "", valueClassName = "", animate = true, chars }) {
   const parts = splitFigure(value);
@@ -124,12 +158,12 @@ export function Figure({ value, size = "lg", className = "", valueClassName = ""
         className={`figure-fit__value figure-${size} tabular ${parts ? "figure-fit__value--money" : ""} ${counting ? "figure-count" : ""} ${valueClassName}`}
         style={chars ? { "--figure-chars": chars } : figureFitStyle(value)}
       >
-        {parts ? <><span>{parts[0]}</span> <span>{parts[1]}</span></> : value}
+        <NumText value={value} />
         {counting && (
           <span className="figure-count__overlay" aria-hidden="true">
             {overlayParts
-              ? <><span ref={numberRef}>{overlayParts[0]}</span> <span>{overlayParts[1]}</span></>
-              : <span ref={numberRef}>{overlay}</span>}
+              ? <><bdi dir="ltr" ref={numberRef}>{overlayParts[0]}</bdi> <span>{overlayParts[1]}</span></>
+              : <bdi dir="ltr" ref={numberRef}>{overlay}</bdi>}
           </span>
         )}
       </span>
@@ -137,18 +171,172 @@ export function Figure({ value, size = "lg", className = "", valueClassName = ""
   );
 }
 
-// `interactive`: the card is a click target that is not a link (a card in a
-// <button> or <label>), so it lifts a hair on hover as a card in a link does
-// (.workspace-card--interactive / `a > .workspace-card` in globals.css).
-// `style` passes through, e.g. an entrance delay (lib/motion.js enterStyle).
-export function Card({ className = "", interactive = false, style, children }) {
+// A bordered surface: a hairline, no shadow. Depth is kept for the one
+// primary block of a screen (PrimaryBlock below; docs/ui-profile.md, the chosen
+// direction). A card that is a link lifts a hair on hover
+// (`a > .workspace-card` in globals.css). `style` passes through, e.g. an
+// entrance delay (lib/motion.js enterStyle).
+export function Card({ className = "", style, children }) {
   return (
-    <div
-      className={`workspace-card rounded-card border border-line bg-surface shadow-card ${interactive ? "workspace-card--interactive" : ""} ${className}`}
-      style={style}
-    >
+    <div className={`workspace-card rounded-card border border-line bg-surface ${className}`} style={style}>
       {children}
     </div>
+  );
+}
+
+// The screen's primary block: what matters now (today's takings, the next
+// action). The ONE raised surface on a screen: soft depth (shadow-raise),
+// no border, no tint. `title` is its heading, `meta` a quiet line under it
+// (a date, a branch), `actions` its own buttons or links.
+export function PrimaryBlock({ title, meta, actions, className = "", children, ...rest }) {
+  return (
+    <section className={`primary-block rounded-card bg-surface p-4 shadow-raise sm:p-6 ${className}`} {...rest}>
+      {(title || meta || actions) && (
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+          <div className="min-w-0">
+            {title && <h2 className="font-display text-lg font-bold text-ink">{title}</h2>}
+            {meta && <p className="mt-0.5 text-sm text-muted">{meta}</p>}
+          </div>
+          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+        </div>
+      )}
+      {children}
+    </section>
+  );
+}
+
+const FIGURE_TONE = { warn: "text-warn", danger: "text-danger", ok: "text-ok", accent: "text-accent" };
+const ROW_COLS = {
+  2: "grid-cols-2",
+  3: "grid-cols-2 sm:grid-cols-3",
+  4: "grid-cols-2 lg:grid-cols-4",
+};
+
+// Several figures of equal weight side by side, divided by hairlines: no
+// card per number, no icons. items: [{ key, label, value, href?, tone?,
+// hint? }]. A zero is quiet (muted, regular weight) and never takes its
+// tone; a non-zero `tone` (warn/danger/ok/accent) colours the figure, and
+// `hint` says in words what the colour means. An item with `href` is one
+// link, the whole cell (its only action). `cols`: 2, 3 or 4 on wide
+// screens (2 on a phone). Figures do not count up here.
+export function FigureRow({ items, cols = 4, size = "md", className = "" }) {
+  const shown = (items || []).filter(Boolean);
+  if (!shown.length) return null;
+  return (
+    <div className={`figure-row overflow-hidden ${className}`}>
+      <div className={`-ms-px -mt-px grid ${ROW_COLS[cols] || ROW_COLS[4]}`}>
+        {shown.map((item) => {
+          const zero = isZeroFigure(item.value);
+          const tone = zero ? "font-normal text-muted" : `font-semibold ${FIGURE_TONE[item.tone] || "text-ink"}`;
+          const body = (
+            <>
+              <div className="text-sm text-muted">{item.label}</div>
+              <Figure value={item.value} size={size} animate={false} className="mt-1" valueClassName={tone} />
+              {item.hint && <div className="mt-0.5 text-xs text-muted">{item.hint}</div>}
+            </>
+          );
+          const cell = "figure-row__cell block min-w-0 border-s border-t border-line px-3 py-3 sm:px-4";
+          return item.href ? (
+            <Link key={item.key || item.label} href={item.href} className={`${cell} tap transition-colors hover:bg-paper focus-visible:bg-paper`}>
+              {body}
+            </Link>
+          ) : (
+            <div key={item.key || item.label} className={cell}>{body}</div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// "Needs attention": a short list of things to act on, one row each.
+// It renders nothing without rows: an empty list is not shown, and the
+// caller says "nothing needs you" itself if it wants to.
+export function AttentionList({ title, children, className = "" }) {
+  const rows = [children].flat(Infinity).filter(Boolean);
+  if (!rows.length) return null;
+  return (
+    <section className={className}>
+      {title && <h2 className="mb-2 font-display text-base font-bold text-ink">{title}</h2>}
+      <ul className="divide-y divide-line border-y border-line">{rows}</ul>
+    </section>
+  );
+}
+
+// One attention row. `count` (in the row's tone) and `title` say what;
+// `detail` adds a line. Behaviour follows the actions:
+//   - `href` alone: the whole row is one link (its single action), with
+//     `action` as its visible verb and a direction-aware chevron;
+//   - `actions` (nodes): the row is not a link and each action is its own
+//     target, so clicks never overlap.
+// The status is in the words; the tone only colours the count.
+export function AttentionItem({ count, title, detail, tone = "warn", href, action, actions, onClick }) {
+  const toneClass = FIGURE_TONE[tone] || "text-ink";
+  const text = (
+    <>
+      {count !== undefined && count !== null && (
+        <span className={`tabular min-w-8 shrink-0 text-lg font-semibold ${toneClass}`}><NumText value={count} /></span>
+      )}
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-medium text-ink">{title}</span>
+        {detail && <span className="mt-0.5 block text-xs text-muted">{detail}</span>}
+      </span>
+    </>
+  );
+  if (href && !actions) {
+    return (
+      <li>
+        <Link href={href} onClick={onClick} className="tap flex min-h-12 items-center gap-3 px-1 py-3 transition-colors hover:bg-surface focus-visible:bg-surface sm:px-3">
+          {text}
+          {action && <span className="hidden shrink-0 text-sm font-medium text-accent sm:inline">{action}</span>}
+          <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-muted rtl:rotate-180" />
+        </Link>
+      </li>
+    );
+  }
+  return (
+    <li className="flex min-h-12 flex-wrap items-center gap-3 px-1 py-3 sm:px-3">
+      {text}
+      {actions && <span className="flex shrink-0 flex-wrap items-center gap-2">{actions}</span>}
+    </li>
+  );
+}
+
+// A reference section: a heading, an optional link at its end, and its
+// facts as a definition list (label at the start, value at the end, one per
+// row, hairlines between). Flat on the page: no card, no shadow.
+// items: [{ key, label, value, tone?, hint?, href? }]; a zero value is
+// quiet. `children` go under the list (a chart, a note).
+export function DefinitionSection({ title, link, items, className = "", children }) {
+  const shown = (items || []).filter(Boolean);
+  return (
+    <section className={`definition-section min-w-0 ${className}`}>
+      <div className="flex items-baseline justify-between gap-3 border-b border-line pb-2">
+        <h2 className="font-display text-base font-bold text-ink">{title}</h2>
+        {link && <Link href={link.href} className="tap inline-flex items-center text-sm font-medium text-accent hover:underline">{link.label}</Link>}
+      </div>
+      {shown.length > 0 && (
+        <dl className="divide-y divide-line">
+          {shown.map((item) => {
+            const zero = isZeroFigure(item.value);
+            const valueClass = zero ? "text-muted" : `font-semibold ${FIGURE_TONE[item.tone] || "text-ink"}`;
+            const value = <span className={`tabular whitespace-nowrap ${valueClass}`}><NumText value={item.value} /></span>;
+            return (
+              <div key={item.key || item.label} className="flex min-h-11 items-center justify-between gap-4 py-2">
+                <dt className="min-w-0 text-sm text-muted">
+                  {item.label}
+                  {item.hint && <span className="block text-xs">{item.hint}</span>}
+                </dt>
+                <dd className="shrink-0 text-end text-sm">
+                  {item.href ? <Link href={item.href} className="tap inline-flex items-center hover:underline">{value}</Link> : value}
+                </dd>
+              </div>
+            );
+          })}
+        </dl>
+      )}
+      {children}
+    </section>
   );
 }
 

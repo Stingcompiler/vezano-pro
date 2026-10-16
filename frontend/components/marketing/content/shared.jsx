@@ -65,7 +65,7 @@ export function CtaBand({ title }) {
     <section className="mt-14 rounded-card bg-ink p-8 text-paper sm:p-10">
       <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{title}</h2>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
-        <Link href={href("/register")} className="rounded-control bg-accent px-6 py-3 text-center font-medium text-white hover:bg-accent-strong">{t("content.startTrial")}</Link>
+        <Link href={href("/register")} className="rounded-control bg-accent px-6 py-3 text-center font-medium text-on-accent hover:bg-accent-strong">{t("content.startTrial")}</Link>
         <Link href={href("/pricing")} className="rounded-control border border-white/20 px-6 py-3 text-center font-medium text-paper hover:bg-white/10">{t("content.seePricing")}</Link>
       </div>
     </section>

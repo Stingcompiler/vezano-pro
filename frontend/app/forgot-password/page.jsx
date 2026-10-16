@@ -21,7 +21,7 @@ import { passwordChecks, passwordReady, resetDeepLink } from "@/lib/passwordRese
 import { useI18n } from "../providers/I18nProvider";
 
 const STEPS = ["email", "code", "password"];
-const LINK_BUTTON = "tap inline-flex min-h-11 w-full items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong";
+const LINK_BUTTON = "tap inline-flex min-h-11 w-full items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong";
 
 function Stepper({ step, t }) {
   const index = step === "done" ? STEPS.length : STEPS.indexOf(step);
@@ -32,7 +32,7 @@ function Stepper({ step, t }) {
         const current = i === index;
         return (
           <li key={name} className="flex min-w-0 flex-1 items-center gap-2" aria-current={current ? "step" : undefined}>
-            <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold transition-colors ${done ? "bg-ok text-white" : current ? "bg-accent text-white" : "border border-line bg-surface text-muted"}`}>
+            <span className={`grid h-6 w-6 shrink-0 place-items-center rounded-full text-xs font-bold transition-colors ${done ? "bg-ok text-on-accent" : current ? "bg-accent text-on-accent" : "border border-line bg-surface text-muted"}`}>
               {done ? <Check size={13} aria-hidden="true" /> : i + 1}
             </span>
             <span className={`truncate text-xs ${current ? "font-semibold text-ink" : "text-muted"}`}>{t(`passwordReset.steps.${name}`)}</span>

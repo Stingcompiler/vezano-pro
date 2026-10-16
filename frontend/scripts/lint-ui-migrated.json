@@ -1,0 +1,11 @@
+{
+  "about": "Files already migrated to the chosen UI direction (docs/ui-profile.md). `npm test` runs `lint-ui.mjs --migrated` over exactly these, so they cannot regress; add a screen's files here when its batch lands.",
+  "files": [
+    "app/globals.css",
+    "app/(app)/AppLayoutClient.jsx",
+    "components/ui/kit.jsx",
+    "components/ui/EmptyState.jsx",
+    "components/ui/Skeleton.jsx",
+    "components/ui/ConfirmDialog.jsx"
+  ]
+}

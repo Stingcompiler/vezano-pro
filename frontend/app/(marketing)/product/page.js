@@ -45,7 +45,7 @@ function Offline() {
           <ol className="space-y-3">
             {Array.isArray(steps) && steps.map((step, index) => (
               <li key={step} className="flex items-start gap-3 rounded-card border border-line bg-paper p-4 shadow-card">
-                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-white">{index + 1}</span>
+                <span className="grid h-7 w-7 shrink-0 place-items-center rounded-full bg-accent text-xs font-bold text-on-accent">{index + 1}</span>
                 <span className="text-sm sm:text-base">{step}</span>
               </li>
             ))}
@@ -138,7 +138,7 @@ export default function ProductPage() {
           <h2 className="font-display text-2xl font-bold tracking-tight sm:text-3xl">{t("product.ctaTitle")}</h2>
           <p className="mx-auto mt-3 max-w-xl text-muted">{t("product.ctaBody")}</p>
           <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link href={href("/register")} className="w-full rounded-control bg-accent px-6 py-3 font-medium text-white hover:bg-accent-strong sm:w-auto">{t("home.finalPrimary")}</Link>
+            <Link href={href("/register")} className="w-full rounded-control bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-strong sm:w-auto">{t("home.finalPrimary")}</Link>
             <Link href={href("/#contact")} className="w-full rounded-control border border-line bg-surface px-6 py-3 font-medium text-ink hover:border-accent sm:w-auto">{t("home.finalSecondary")}</Link>
           </div>
         </div>
