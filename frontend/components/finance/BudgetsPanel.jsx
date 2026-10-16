@@ -8,7 +8,7 @@ import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonLines, SkeletonRows } from "@/components/ui/Skeleton";
 import { expenseCategory } from "@/lib/expenseCategories";
@@ -135,9 +135,9 @@ function VarianceTable({ budgetId }) {
         <tbody>{data.rows.map((r) => (
           <tr key={`${r.kind}-${r.category}`} className="border-b border-line last:border-0">
             <td className="px-3 py-2"><span className="inline-flex items-center gap-2">{expenseCategory(r.category, t)}<Badge tone="muted">{t(`budgets.${r.kind}`)}</Badge></span></td>
-            <td className="tabular px-3 py-2 text-end text-muted">{money(r.planned)}</td>
-            <td className="tabular px-3 py-2 text-end">{money(r.actual)}</td>
-            <td className={`tabular px-3 py-2 text-end font-medium ${r.favourable ? "text-ok" : "text-danger"}`}>{money(r.variance)}{r.variance_pct != null && <span className="ms-1 text-xs text-muted">({r.variance_pct}%)</span>}</td>
+            <td className="tabular px-3 py-2 text-end text-muted"><NumText value={money(r.planned)} /></td>
+            <td className="tabular px-3 py-2 text-end"><NumText value={money(r.actual)} /></td>
+            <td className={`tabular px-3 py-2 text-end font-medium ${r.favourable ? "text-ok" : "text-danger"}`}><NumText value={money(r.variance)} />{r.variance_pct != null && <span className="ms-1 text-xs text-muted">({r.variance_pct}%)</span>}</td>
           </tr>
         ))}</tbody>
       </table>

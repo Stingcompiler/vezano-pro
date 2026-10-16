@@ -178,7 +178,7 @@ function WebOrders() {
       <Card className="overflow-x-auto">
         <table className="stack-sm w-full sm:min-w-[720px] text-sm">
           <thead className="bg-paper text-xs uppercase tracking-wide text-muted">
-            <tr><th className="px-4 py-3 text-start">{t("webOrders.reference")}</th><th className="px-3 py-3 text-start">{t("webOrders.customer")}</th><th className="px-3 py-3 text-start">{t("webOrders.branch")}</th><th className="px-3 py-3 text-start">{t("webOrders.items")}</th><th className="px-3 py-3 text-end">{t("webOrders.total")}</th><th className="px-3 py-3 text-start">{t("webOrders.received")}</th><th className="px-3 py-3 text-start">{t("common.status")}</th></tr>
+            <tr><th data-cell="lead" className="px-4 py-3 text-start">{t("webOrders.reference")}</th><th data-cell="primary" className="px-3 py-3 text-start">{t("webOrders.customer")}</th><th className="px-3 py-3 text-start">{t("webOrders.branch")}</th><th className="px-3 py-3 text-start">{t("webOrders.items")}</th><th data-cell="amount" className="px-3 py-3 text-end">{t("webOrders.total")}</th><th className="px-3 py-3 text-start">{t("webOrders.received")}</th><th data-cell="status" className="px-3 py-3 text-start">{t("common.status")}</th></tr>
           </thead>
           <tbody className="divide-y divide-line">
             {loading && <SkeletonTableRows cols={7} />}

@@ -47,11 +47,11 @@ export default function PurchaseReturnList({ writable }) {
           <table className="stack-sm w-full text-sm">
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 text-start font-medium">{t("returns.return")}</th>
+                <th data-cell="lead" className="px-4 py-3 text-start font-medium">{t("returns.return")}</th>
                 <th className="px-4 py-3 text-start font-medium">
                   {t("purchasing.supplier")}
                 </th>
-                <th className="px-4 py-3 text-start font-medium">{t("returns.reason")}</th>
+                <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("returns.reason")}</th>
                 <th className="px-4 py-3 text-end font-medium">{t("returns.lines")}</th>
               </tr>
             </thead>

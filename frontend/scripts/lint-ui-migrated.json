@@ -8,6 +8,20 @@
     "components/ui/Skeleton.jsx",
     "components/ui/ConfirmDialog.jsx",
     "app/(app)/dashboard/page.jsx",
-    "components/reports/BarList.jsx"
+    "components/reports/BarList.jsx",
+    "components/ui/TableCardLabels.jsx",
+    "components/sales/InvoiceList.jsx",
+    "app/(app)/inventory/page.jsx",
+    "components/purchasing/BillList.jsx",
+    "components/returns/NotesList.jsx",
+    "components/returns/PurchaseReturnList.jsx",
+    "app/(app)/returns/page.jsx",
+    "app/(app)/web-orders/page.jsx",
+    "app/(app)/purchasing/page.jsx",
+    "components/sales/ShiftHistory.jsx",
+    "components/sales/BankAccounts.jsx",
+    "components/finance/MoneyLedger.jsx",
+    "components/finance/BudgetsPanel.jsx",
+    "components/records/PartyRecords.jsx"
   ]
 }

@@ -9,7 +9,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import DocumentDrawer from "@/components/print/DocumentDrawer";
 import TabBar from "@/components/ui/TabBar";
-import { Badge, Button, Card, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
@@ -100,9 +100,9 @@ export default function MoneyLedger({ refreshKey }) {
             <thead><tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
               <th className="px-3 py-2 text-start font-medium">{t("finance.ledger.when")}</th>
               <th className="px-3 py-2 text-start font-medium">{tab === "supplier" ? t("finance.ledger.supplier") : t("finance.ledger.customer")}</th>
-              <th className="px-3 py-2 text-start font-medium">{t("finance.ledger.reference")}</th>
+              <th data-cell="primary" className="px-3 py-2 text-start font-medium">{t("finance.ledger.reference")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("finance.ledger.method")}</th>
-              <th className="px-3 py-2 text-end font-medium">{t("finance.ledger.amount")}</th>
+              <th data-cell="amount" className="px-3 py-2 text-end font-medium">{t("finance.ledger.amount")}</th>
               <th className="px-3 py-2 text-start font-medium">{t("finance.ledger.people")}</th>
               <th className="px-3 py-2" />
             </tr></thead>
@@ -112,7 +112,7 @@ export default function MoneyLedger({ refreshKey }) {
                 <td className="px-3 py-2">{who(r)}</td>
                 <td className="px-3 py-2 text-muted">{ref(r)}</td>
                 <td className="px-3 py-2"><div>{r.method === "cash" ? t("finance.ledger.cash") : r.method === "credit" ? t("finance.ledger.storeCredit") : t("finance.ledger.bank")}</div>{bank(r) && <div className="text-xs text-muted">{bank(r)}{r.reference_last4 ? ` · ${r.reference_last4}` : ""}</div>}{r.credit_note_number && <div className="text-xs text-muted">{r.credit_note_number}</div>}</td>
-                <td className={`tabular px-3 py-2 text-end font-medium ${SOURCES[tab].out ? "text-danger" : "text-ok"}`}>{SOURCES[tab].out ? "−" : "+"}{money(r.amount)}{r.currency && r.exchange_rate && Number(r.exchange_rate) !== 1 ? ` ${r.currency}` : ""}</td>
+                <td className={`tabular px-3 py-2 text-end font-medium ${SOURCES[tab].out ? "text-danger" : "text-ok"}`}><NumText value={`${SOURCES[tab].out ? "−" : "+"}${money(r.amount)}`} />{r.currency && r.exchange_rate && Number(r.exchange_rate) !== 1 ? ` ${r.currency}` : ""}</td>
                 <td className="px-3 py-2 text-xs text-muted">
                   <div>{t("finance.recordedByName", { name: r.recorded_by_name || "—" })}</div>
                   {tab !== "refunds" && r.method !== "credit" && (r.verified_at ? <Badge tone="ok">{t("finance.ledger.verifiedBy", { name: r.verified_by_name || "—" })}</Badge> : <Badge tone="warn">{t("finance.ledger.unverified")}</Badge>)}
