@@ -22,6 +22,7 @@ import SuccessCheck from "@/components/ui/SuccessCheck";
 import { publicTrack } from "@/lib/api";
 import { VIEW_KEY, codeError, isRequestReference, liveView, viewRecord } from "@/lib/otpCode";
 import { useHashTab } from "@/lib/useHashTab";
+import { formatDateTime } from "@/lib/dates";
 
 const LOOKUP_DAYS = 90;
 
@@ -43,9 +44,9 @@ function orderTone(item) {
 function when(value, language) {
   if (!value) return "";
   try {
-    return new Date(value).toLocaleString(language === "ar" ? "ar-u-nu-latn" : "en-GB", {
+    return formatDateTime(value, language, {
       dateStyle: "medium", timeStyle: "short",
-    });
+    }, "en-GB");
   } catch {
     return String(value);
   }

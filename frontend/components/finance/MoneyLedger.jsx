@@ -13,6 +13,7 @@ import { Badge, Button, Card, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDateTime } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -67,7 +68,7 @@ export default function MoneyLedger({ refreshKey }) {
     } finally { setBusy(null); }
   }
 
-  const fmt = (v) => (v ? new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—");
+  const fmt = (v) => (v ? formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" }) : "—");
   const who = (r) => (tab === "payments" ? r.customer_name : tab === "refunds" ? r.customer_name : r.supplier_name) || "—";
   const ref = (r) => (tab === "payments" ? r.invoice_number : tab === "refunds" ? r.credit_note_number : r.bill_number) || "—";
   const bank = (r) => r.bank_account_name || r.from_bank_account_name;

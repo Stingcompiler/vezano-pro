@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { Building2, ChevronDown, ChevronUp, Download, Lock, PauseCircle, PlayCircle, RotateCcw, Search, Trash2 } from "lucide-react";
 
 import { useAuth } from "../../providers/AuthProvider";
@@ -12,6 +12,7 @@ import PhoneLink from "@/components/ui/PhoneLink";
 import UsageMeter, { USAGE_KEYS, usageTone } from "@/components/subscription/UsageMeter";
 import DeviceList from "@/components/subscription/DeviceList";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { formatDate, formatDateTime } from "@/lib/dates";
 
 const STATUS_TONE = { active: "ok", trialing: "accent", grace: "warn", read_only: "warn", suspended: "danger", cancelled: "muted", legacy: "muted" };
 
@@ -22,6 +23,13 @@ const matchesCompany = (typed, row) => {
   const value = fold(typed);
   return Boolean(value) && (value === fold(row.name) || value === fold(row.slug));
 };
+
+// The phone row (globals.css, table.stack-sm) keeps two lines: the name,
+// then the plan and its status with the figure the platform watches
+// (devices). Users, branches and warehouses join it only when over the
+// plan; owner and activity move into the row's details, and every limit
+// is in the details' usage meter.
+const PHONE_FIGURES = ["devices"];
 
 // "1/∞": one isolated left-to-right run (bdi), so the Arabic table cannot
 // reorder it into "∞/1"; the limit's name is said for screen readers.
@@ -132,8 +140,8 @@ export default function PlatformCompaniesPage() {
     return [...filtered].sort((a, b) => (b.over_limit.length - a.over_limit.length) || a.name.localeCompare(b.name));
   }, [data, query]);
 
-  const fmt = (value) => value ? new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—";
-  const fmtDate = (value) => value ? new Date(value).toLocaleDateString(language === "ar" ? "ar" : "en") : "—";
+  const fmt = (value) => value ? formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" }) : "—";
+  const fmtDate = (value) => value ? formatDate(value, language) : "—";
 
   if (!canView) return <Card className="mx-auto mt-16 max-w-md p-8 text-center"><Lock className="mx-auto text-muted" /><p className="mt-3 text-muted">{t("platformCompanies.noAccess")}</p></Card>;
 
@@ -166,93 +174,122 @@ export default function PlatformCompaniesPage() {
         <Search size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
         <Input className="ps-9" placeholder={t("platformCompanies.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
       </div>
-      <Card className="overflow-x-auto">
-        <table className="stack-sm w-full sm:min-w-[880px] text-sm">
-          <thead className="bg-paper text-start text-xs uppercase tracking-wide text-muted">
-            <tr>
-              <th className="px-4 py-3 text-start">{t("platformCompanies.company")}</th>
-              <th className="px-4 py-3 text-start">{t("platformCompanies.plan")}</th>
-              {USAGE_KEYS.map((key) => <th key={key} className="px-3 py-3 text-center">{t(`usage.${key}`)}</th>)}
-              <th className="px-4 py-3 text-start">{t("platformCompanies.owner")}</th>
-              <th className="px-4 py-3 text-start">{t("platformCompanies.activity")}</th>
-              <th className="w-10" />
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-line">
-            {rows.map((r) => (
-              <>
-                <tr key={r.id} className={`cursor-pointer hover:bg-paper ${r.over_limit.length ? "bg-danger/5" : ""}`} onClick={() => toggle(r.id)}>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap items-center gap-2 font-medium"><Building2 size={15} className="text-muted" />{r.name}{r.is_demo && <Badge tone="warn">{t("platformCompanies.demoBadge")}</Badge>}
-                      {r.suspension && <Badge tone="danger">{t(r.suspension.kind === "unpaid" ? "platformCompanies.suspendedUnpaid" : "platformCompanies.suspendedManual")}</Badge>}
-                      {r.deletion && <Badge tone="danger">{t("platformCompanies.scheduledDeletion", { date: fmtDate(r.deletion.purge_after) })}</Badge>}
-                    </div>
-                    <div className="mt-0.5 text-xs text-muted">{t(`platformCompanies.type.${r.business_type}`)} · {t("platformCompanies.since")} {fmtDate(r.created_at)}{r.over_limit.length > 0 && <> · <span className="text-danger">{t("platformCompanies.overOn", { what: r.over_limit.map((k) => t(`usage.${k}`)).join("، ") })}</span></>}</div>
-                  </td>
-                  <td className="px-4 py-3">{r.plan ? <><div>{r.plan.name || "—"}</div><Badge tone={STATUS_TONE[r.plan.status] || "muted"}>{t(`platformCompanies.status.${r.plan.status}`)}</Badge></> : <Badge tone="muted">{t("platformCompanies.noPlan")}</Badge>}</td>
-                  {USAGE_KEYS.map((key) => <td key={key} className="px-3 py-3 text-center"><Cell cell={r.usage[key]} t={t} /></td>)}
-                  <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>{r.owner ? <><div>{r.owner.name || r.owner.email}</div><div className="text-xs text-muted"><a className="hover:underline" href={`mailto:${r.owner.email}`}>{r.owner.email}</a>{r.owner.phone && <> · <PhoneLink phone={r.owner.phone} /></>}</div></> : "—"}</td>
-                  <td className="px-4 py-3 text-xs text-muted"><div>{t("platformCompanies.lastActive")}: {fmt(r.last_active_at)}</div><div>{t("platformCompanies.invoices30d", { n: r.invoices_30d })}</div></td>
-                  <td className="px-2 text-muted">{open === r.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
-                </tr>
-                {open === r.id && (
-                  <tr key={`${r.id}-detail`} className="bg-paper/60">
-                    <td colSpan={5 + USAGE_KEYS.length} className="px-4 py-4">
-                      {(canSuspend || canDelete) && (
-                        <div className="mb-4 border-b border-line pb-4">
-                          <h3 className="mb-2 font-display text-sm font-semibold">{t("platformCompanies.ownerControls")}</h3>
-                          {r.suspension?.kind === "unpaid" && <p className="mb-2 text-sm text-danger">{t("platformCompanies.suspendedSince", { date: fmtDate(r.suspension.since), reason: r.suspension.reason })}</p>}
-                          {r.suspension?.kind === "manual" && <p className="mb-2 text-sm text-muted">{t("platformCompanies.manualSuspendHint", { reason: r.suspension.reason || "—" })}</p>}
-                          {r.deletion && <p className="mb-2 text-sm text-danger">{t("platformCompanies.deletionInfo", { date: fmtDate(r.deletion.purge_after), by: r.deletion.requested_by || "—", rows: r.deletion.backup_rows })}</p>}
-                          {r.pending_payments > 0 && <p className="mb-2 text-xs text-warn">{t("platformCompanies.pendingWarning", { n: r.pending_payments })}</p>}
-                          <div className="flex flex-wrap gap-2">
-                            {canSuspend && !r.deletion && !r.suspension && r.plan && (
-                              <Button variant="outline" disabled={busy === `suspend-${r.id}`} onClick={() => suspend(r)}><PauseCircle size={15} />{t("platformCompanies.suspend")}</Button>
-                            )}
-                            {canSuspend && r.suspension?.kind === "unpaid" && (
-                              <Button variant="outline" disabled={busy === `lift-${r.id}`} onClick={() => lift(r)}><PlayCircle size={15} />{t("platformCompanies.lift")}</Button>
-                            )}
-                            {canDelete && !r.deletion && (
-                              <Button variant="danger" disabled={busy === `delete-${r.id}`} onClick={() => remove(r)}><Trash2 size={15} />{t("platformCompanies.delete")}</Button>
-                            )}
-                            {canDelete && r.deletion && (
-                              <>
-                                <Button variant="outline" disabled={busy === `restore-${r.id}`} onClick={() => restore(r)}><RotateCcw size={15} />{t("platformCompanies.restore")}</Button>
-                                <a className="tap inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-surface px-4 py-2 text-sm font-semibold hover:bg-paper" href={api.backupUrl(r.id)}><Download size={15} />{t("platformCompanies.downloadBackup")}</a>
-                                <Button variant="danger" disabled={busy === `purge-${r.id}`} onClick={() => purge(r)}><Trash2 size={15} />{t("platformCompanies.purgeNow")}</Button>
-                              </>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      <label className={`mb-4 inline-flex items-center gap-2 text-sm ${canManage ? "cursor-pointer" : "opacity-70"}`}>
-                        <input
-                          type="checkbox" className="accent-accent" checked={!!r.is_demo}
-                          disabled={!canManage || busy === `demo-${r.id}`}
-                          onChange={(e) => setDemo(r.id, e.target.checked)}
-                        />
-                        {t("platformCompanies.demoToggle")}
-                      </label>
-                      <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
-                        <div><h3 className="mb-3 font-display font-semibold">{t("subscription.limits")}</h3><UsageMeter usage={r.usage} /></div>
-                        <div>
-                          <h3 className="mb-3 font-display font-semibold">{t("devices.title")}</h3>
-                          <DeviceList
-                            devices={devices[r.id]}
-                            busyId={busy}
-                            onRevoke={canManage ? async (d) => { if ((await confirm(t("devices.confirmRevoke", { name: d.label || d.device_id }), { tone: "danger" }))) deviceAction(r.id, () => api.revokeDevice(r.id, d.id), d.id); } : undefined}
-                            onReactivate={canManage ? (d) => deviceAction(r.id, () => api.reactivateDevice(r.id, d.id), d.id) : undefined}
-                          />
-                        </div>
+      {/* The scroller inside the card, as on the other lists: the card keeps its surface on phones. */}
+      <Card className="overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="stack-sm w-full sm:min-w-[880px] text-sm">
+            <thead className="bg-paper text-start text-xs uppercase tracking-wide text-muted">
+              <tr>
+                <th data-cell="primary" className="px-4 py-3 text-start">{t("platformCompanies.company")}</th>
+                {/* Phones: the plan opens line 2 (before the figures), its status as text. */}
+                <th data-cell="status" className="px-4 py-3 text-start">{t("platformCompanies.plan")}</th>
+                {USAGE_KEYS.map((key) => <th key={key} className="px-3 py-3 text-center">{t(`usage.${key}`)}</th>)}
+                <th className="px-4 py-3 text-start">{t("platformCompanies.owner")}</th>
+                <th className="px-4 py-3 text-start">{t("platformCompanies.activity")}</th>
+                <th data-cell="actions" className="w-10" />
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-line">
+              {rows.map((r) => (
+                <Fragment key={r.id}>
+                  <tr className={`cursor-pointer hover:bg-paper ${r.over_limit.length ? "bg-danger/5" : ""}`} onClick={() => toggle(r.id)}>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap items-center gap-2 font-medium"><Building2 size={15} className="text-muted max-sm:hidden" />{r.name}{r.is_demo && <Badge tone="warn">{t("platformCompanies.demoBadge")}</Badge>}
+                        {r.suspension && <Badge tone="danger">{t(r.suspension.kind === "unpaid" ? "platformCompanies.suspendedUnpaid" : "platformCompanies.suspendedManual")}</Badge>}
+                        {r.deletion && <Badge tone="danger">{t("platformCompanies.scheduledDeletion", { date: fmtDate(r.deletion.purge_after) })}</Badge>}
+                      </div>
+                      {/* Phones keep only the over-limit warning here; type and age are in the details. */}
+                      <div className={`mt-0.5 text-xs font-normal text-muted ${r.over_limit.length ? "" : "max-sm:hidden"}`}>
+                        <span className="max-sm:hidden">{t(`platformCompanies.type.${r.business_type}`)} · {t("platformCompanies.since")} {fmtDate(r.created_at)}{r.over_limit.length > 0 && " · "}</span>
+                        {r.over_limit.length > 0 && <span className="text-danger">{t("platformCompanies.overOn", { what: r.over_limit.map((k) => t(`usage.${k}`)).join("، ") })}</span>}
                       </div>
                     </td>
+                    <td className="px-4 py-3 max-sm:!order-5">{r.plan ? <><span className="sm:block">{r.plan.name || "—"}</span> <Badge tone={STATUS_TONE[r.plan.status] || "muted"}>{t(`platformCompanies.status.${r.plan.status}`)}</Badge></> : <Badge tone="muted">{t("platformCompanies.noPlan")}</Badge>}</td>
+                    {USAGE_KEYS.map((key) => (
+                      <td key={key} className={`px-3 py-3 text-center ${PHONE_FIGURES.includes(key) || r.over_limit.includes(key) ? "" : "max-sm:!hidden"}`}><Cell cell={r.usage[key]} t={t} /></td>
+                    ))}
+                    <td className="px-4 py-3 max-sm:!hidden" onClick={(e) => e.stopPropagation()}>{r.owner ? <><div>{r.owner.name || r.owner.email}</div><div className="text-xs text-muted"><a className="hover:underline" href={`mailto:${r.owner.email}`}>{r.owner.email}</a>{r.owner.phone && <> · <PhoneLink phone={r.owner.phone} /></>}</div></> : "—"}</td>
+                    <td className="px-4 py-3 text-xs text-muted max-sm:!hidden"><div>{t("platformCompanies.lastActive")}: {fmt(r.last_active_at)}</div><div>{t("platformCompanies.invoices30d", { n: r.invoices_30d })}</div></td>
+                    <td className="px-2 text-muted">{open === r.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
                   </tr>
-                )}
-              </>
-            ))}
-            {data && !rows.length && <tr><td colSpan={5 + USAGE_KEYS.length} className="px-4 py-10 text-center text-muted">{t("platformCompanies.empty")}</td></tr>}
-          </tbody>
-        </table>
+                  {open === r.id && (
+                    <tr className="bg-paper/60">
+                      <td colSpan={5 + USAGE_KEYS.length} className="px-4 py-4">
+                        {/* Phones: the list strips cell padding (table.stack-sm), so the details carry their own. */}
+                        <div className="max-sm:p-4">
+                          {/* Phones: what the compact row left out. */}
+                          <div className="mb-4 space-y-1 border-b border-line pb-4 text-sm sm:hidden">
+                            <p className="text-xs text-muted">{t(`platformCompanies.type.${r.business_type}`)} · {t("platformCompanies.since")} {fmtDate(r.created_at)}</p>
+                            <dl className="space-y-1">
+                              <div>
+                                <dt className="inline text-muted">{t("platformCompanies.owner")}: </dt>
+                                <dd className="inline">
+                                  {r.owner ? <>{r.owner.name || r.owner.email}<span className="block text-xs text-muted"><a className="hover:underline" href={`mailto:${r.owner.email}`}>{r.owner.email}</a>{r.owner.phone && <> · <PhoneLink phone={r.owner.phone} /></>}</span></> : "—"}
+                                </dd>
+                              </div>
+                              <div className="text-xs text-muted">
+                                <dt className="inline">{t("platformCompanies.lastActive")}: </dt>
+                                <dd className="inline">{fmt(r.last_active_at)} · {t("platformCompanies.invoices30d", { n: r.invoices_30d })}</dd>
+                              </div>
+                            </dl>
+                          </div>
+                          {(canSuspend || canDelete) && (
+                            <div className="mb-4 border-b border-line pb-4">
+                              <h3 className="mb-2 font-display text-sm font-semibold">{t("platformCompanies.ownerControls")}</h3>
+                              {r.suspension?.kind === "unpaid" && <p className="mb-2 text-sm text-danger">{t("platformCompanies.suspendedSince", { date: fmtDate(r.suspension.since), reason: r.suspension.reason })}</p>}
+                              {r.suspension?.kind === "manual" && <p className="mb-2 text-sm text-muted">{t("platformCompanies.manualSuspendHint", { reason: r.suspension.reason || "—" })}</p>}
+                              {r.deletion && <p className="mb-2 text-sm text-danger">{t("platformCompanies.deletionInfo", { date: fmtDate(r.deletion.purge_after), by: r.deletion.requested_by || "—", rows: r.deletion.backup_rows })}</p>}
+                              {r.pending_payments > 0 && <p className="mb-2 text-xs text-warn">{t("platformCompanies.pendingWarning", { n: r.pending_payments })}</p>}
+                              <div className="flex flex-wrap gap-2">
+                                {canSuspend && !r.deletion && !r.suspension && r.plan && (
+                                  <Button variant="outline" disabled={busy === `suspend-${r.id}`} onClick={() => suspend(r)}><PauseCircle size={15} />{t("platformCompanies.suspend")}</Button>
+                                )}
+                                {canSuspend && r.suspension?.kind === "unpaid" && (
+                                  <Button variant="outline" disabled={busy === `lift-${r.id}`} onClick={() => lift(r)}><PlayCircle size={15} />{t("platformCompanies.lift")}</Button>
+                                )}
+                                {canDelete && !r.deletion && (
+                                  <Button variant="danger" disabled={busy === `delete-${r.id}`} onClick={() => remove(r)}><Trash2 size={15} />{t("platformCompanies.delete")}</Button>
+                                )}
+                                {canDelete && r.deletion && (
+                                  <>
+                                    <Button variant="outline" disabled={busy === `restore-${r.id}`} onClick={() => restore(r)}><RotateCcw size={15} />{t("platformCompanies.restore")}</Button>
+                                    <a className="tap inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-surface px-4 py-2 text-sm font-semibold hover:bg-paper" href={api.backupUrl(r.id)}><Download size={15} />{t("platformCompanies.downloadBackup")}</a>
+                                    <Button variant="danger" disabled={busy === `purge-${r.id}`} onClick={() => purge(r)}><Trash2 size={15} />{t("platformCompanies.purgeNow")}</Button>
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                          <label className={`mb-4 inline-flex items-center gap-2 text-sm ${canManage ? "cursor-pointer" : "opacity-70"}`}>
+                            <input
+                              type="checkbox" className="accent-accent" checked={!!r.is_demo}
+                              disabled={!canManage || busy === `demo-${r.id}`}
+                              onChange={(e) => setDemo(r.id, e.target.checked)}
+                            />
+                            {t("platformCompanies.demoToggle")}
+                          </label>
+                          <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+                            <div><h3 className="mb-3 font-display font-semibold">{t("subscription.limits")}</h3><UsageMeter usage={r.usage} /></div>
+                            <div>
+                              <h3 className="mb-3 font-display font-semibold">{t("devices.title")}</h3>
+                              <DeviceList
+                                devices={devices[r.id]}
+                                busyId={busy}
+                                onRevoke={canManage ? async (d) => { if ((await confirm(t("devices.confirmRevoke", { name: d.label || d.device_id }), { tone: "danger" }))) deviceAction(r.id, () => api.revokeDevice(r.id, d.id), d.id); } : undefined}
+                                onReactivate={canManage ? (d) => deviceAction(r.id, () => api.reactivateDevice(r.id, d.id), d.id) : undefined}
+                              />
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              ))}
+              {data && !rows.length && <tr><td colSpan={5 + USAGE_KEYS.length} className="px-4 py-10 text-center text-muted">{t("platformCompanies.empty")}</td></tr>}
+            </tbody>
+          </table>
+        </div>
       </Card>
       {canDelete && data?.purged?.length > 0 && (
         <Card className="mt-6 p-4">

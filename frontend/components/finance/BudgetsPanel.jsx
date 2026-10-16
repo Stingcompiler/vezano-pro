@@ -15,6 +15,7 @@ import { expenseCategory } from "@/lib/expenseCategories";
 import { formatAmount } from "@/lib/money";
 import { budgetTotals } from "@/lib/progress";
 import ProgressRing from "@/components/ui/ProgressRing";
+import { formatDate } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -174,7 +175,7 @@ export default function BudgetsPanel({ writable, categories, onChanged }) {
     catch (err) { toast.error(errorText(err, t, "budgets.actionError")); }
     finally { setBusy(null); }
   };
-  const fmt = (d) => new Date(`${d}T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en");
+  const fmt = (d) => formatDate(`${d}T00:00:00`, language);
 
   return (
     <Card className="mt-5">

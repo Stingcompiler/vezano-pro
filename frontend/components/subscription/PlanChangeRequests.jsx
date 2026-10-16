@@ -8,6 +8,7 @@ import { platformPlanChanges as api } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { errorText } from "@/lib/errors";
 import { formatMoney } from "@/lib/money";
+import { formatDate } from "@/lib/dates";
 
 const KIND_TONE = { upgrade: "ok", downgrade: "warn", addon: "ok", addon_remove: "warn", switch: "accent" };
 
@@ -32,7 +33,7 @@ export default function PlanChangeRequests({ canManage, onChanged }) {
     catch (err) { setError(errorText(err, t, "planChange.decideError")); }
     finally { setBusy(null); }
   };
-  const fmt = (v) => v ? new Date(v).toLocaleDateString(language === "ar" ? "ar" : "en") : "—";
+  const fmt = (v) => v ? formatDate(v, language) : "—";
   const money = (v, c) => formatMoney(v, { currency: c, language });
 
   if (!rows.length) return null;

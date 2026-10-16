@@ -11,6 +11,7 @@ import { CalendarClock, Mail, MessageCircle, Phone, StickyNote } from "lucide-re
 import { useI18n } from "@/app/providers/I18nProvider";
 import { Badge, Button, Input } from "@/components/ui/kit";
 import PhoneLink from "@/components/ui/PhoneLink";
+import { formatDateTime } from "@/lib/dates";
 
 const CHANNEL_ICON = { whatsapp: MessageCircle, call: Phone, email: Mail };
 
@@ -57,7 +58,7 @@ export default function FollowUpPanel({ row, canEdit, onSave, saving }) {
     setNext(toLocalInput(row.next_follow_up_at));
   }, [row.internal_note, row.next_follow_up_at]);
 
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const dirty = note !== (row.internal_note || "") || next !== toLocalInput(row.next_follow_up_at);
   const Icon = CHANNEL_ICON[row.last_contact_channel] || Phone;
 

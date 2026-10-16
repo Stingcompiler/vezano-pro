@@ -11,6 +11,7 @@ import { Badge, Button, Card, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDateTime } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -48,7 +49,7 @@ export default function ShiftHistory({ refreshKey }) {
     } finally { setBusy(null); }
   }
 
-  const fmt = (v) => (v ? new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—");
+  const fmt = (v) => (v ? formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" }) : "—");
   const tone = (s) => (s.reviewed_at ? "ok" : s.status === "open" ? "accent" : Number(s.variance) === 0 ? "muted" : "warn");
   const label = (s) => (s.reviewed_at ? t("till.history.signedOff") : s.status === "open" ? t("till.history.open") : t("till.history.awaiting"));
 

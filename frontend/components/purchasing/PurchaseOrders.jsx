@@ -16,6 +16,7 @@ import {
   AmountWithBase, CurrencyFields, EMPTY_FX, fxCurrency, fxPayload, fxProblem, fxRate,
   toDocumentCost, usePurchaseCurrencies,
 } from "@/components/purchasing/PurchaseCurrency";
+import { formatDate } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -168,7 +169,7 @@ export default function PurchaseOrders({ suppliers, writable, onReceive, refresh
   }
 
   const shown = (rows || []).filter((o) => filter === "all" ? true : filter === "open" ? OPEN.has(o.status) || o.status === "draft" : o.status === filter);
-  const fmt = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "—");
+  const fmt = (d) => (d ? formatDate(d, language) : "—");
 
   return (
     <Card>

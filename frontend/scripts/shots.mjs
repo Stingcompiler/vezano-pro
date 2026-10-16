@@ -21,6 +21,8 @@
 //   SHOTS_CLOCK                            the page's fixed clock (ISO);
 //                                          default today 10:00, so the seeded
 //                                          "last 28 days" stay in range
+//   SHOTS_WIDTHS                           only these widths, e.g. "375,1280"
+//   SHOTS_SCHEMES / SHOTS_LANGS            likewise: "dark", "ar"
 //
 // One login per account writes a storageState (shots/.auth/<account>.json)
 // that every later context reuses. Each context: reduced motion, service
@@ -44,10 +46,11 @@ const OUT = join(ROOT, "shots", LABEL);
 const AUTH = join(ROOT, "shots", ".auth");
 
 // docs/ui-profile.md: supported widths, both schemes, both languages.
-const WIDTHS = [375, 768, 1280, 1920];
+const only = (name, all) => (process.env[name] ? process.env[name].split(",").map((v) => v.trim()) : all);
+const WIDTHS = only("SHOTS_WIDTHS", [375, 768, 1280, 1920]).map(Number);
 const HEIGHT = { 375: 812, 768: 1024, 1280: 800, 1920: 1080 };
-const SCHEMES = ["light", "dark"];
-const LANGS = ["ar", "en"];
+const SCHEMES = only("SHOTS_SCHEMES", ["light", "dark"]);
+const LANGS = only("SHOTS_LANGS", ["ar", "en"]);
 
 const ACCOUNTS = {
   owner: {
@@ -74,6 +77,9 @@ const SCREENS = [
   // A list table with no column roles: the phone layout's generic fallback.
   { name: "users", account: "owner", path: "/users/", ready: "main table tbody tr" },
   { name: "subscription", account: "owner", path: "/subscription/", ready: "main h1" },
+  // The till tab: an open drawer says who opened it and when (a date in
+  // Arabic text next to a name that may be Latin).
+  { name: "till", account: "owner", path: "/sales/?tab=till", ready: "main h1" },
   { name: "web-orders-empty", account: "owner", path: "/web-orders/", ready: "main table" },
   // One shot per report tab. The query differs per tab so each is a real
   // navigation (a hash change alone would not reload the page).

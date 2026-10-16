@@ -19,7 +19,7 @@ import { cacheProducts, searchProductsOffline } from "@/lib/productCache";
 import { nextLocalReference } from "@/lib/localReference";
 import { errorText } from "@/lib/errors";
 import { formatAmount, round2 } from "@/lib/money";
-import { localToday } from "@/lib/dates";
+import { formatTime, localToday } from "@/lib/dates";
 import { identityScope, storageKey } from "@/lib/localIdentity";
 import { draftStore, newTender, overDiscountLimit, paymentsFor, tenderPlan } from "@/lib/posCart";
 import { useMoney } from "@/lib/useMoney";
@@ -709,7 +709,7 @@ export default function PosTerminal({
       {held.length > 0 && <details className="mb-4 rounded-card border border-line bg-surface p-3">
         <summary className="cursor-pointer text-sm font-medium">{t("improvements.held")} ({held.length})</summary>
         <ul className="mt-3 space-y-2">{held.map((row) => <li key={row.id} className="flex items-center justify-between gap-3 text-sm">
-          <span>{row.cart[0]?.name} · {row.cart.length} · {new Date(row.saved_at).toLocaleTimeString(language === "ar" ? "ar" : "en")}</span>
+          <span>{row.cart[0]?.name} · {row.cart.length} · {formatTime(row.saved_at, language)}</span>
           <Button variant="outline" onClick={() => resumeCart(row)} disabled={submitting}>{t("improvements.resume")}</Button>
         </li>)}</ul>
       </details>}

@@ -13,6 +13,7 @@ import TabBar from "@/components/ui/TabBar";
 import { useHashTab } from "@/lib/useHashTab";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 import { translateRole } from "@/lib/i18n";
+import { formatDateTime } from "@/lib/dates";
 
 const bytes = (n) => (n > 1024 ? `${(n / 1024).toFixed(1)} KB` : `${n} B`);
 
@@ -461,12 +462,12 @@ export default function SettingsPage() {
                 {company.exchange_rate ? (
                   <>
                     <span className="tabular text-lg font-semibold text-ink">
-                      <NumText value={Number(company.exchange_rate).toLocaleString(undefined, { maximumFractionDigits: 4 })} />
+                      <NumText value={Number(company.exchange_rate).toLocaleString("en-US", { maximumFractionDigits: 4 })} />
                     </span>
                     <span className="ms-2 text-muted">
                       {company.currency} / 1 {company.reference_currency}
                       {company.exchange_rate_at && (
-                        <> · {t("settings.rateRecordedAt", { when: new Date(company.exchange_rate_at).toLocaleString(language === "ar" ? "ar" : "en") })}</>
+                        <> · {t("settings.rateRecordedAt", { when: formatDateTime(company.exchange_rate_at, language) })}</>
                       )}
                     </span>
                   </>
@@ -498,9 +499,9 @@ export default function SettingsPage() {
               <ul className="divide-y divide-line text-sm">
                 {rates.map((r) => (
                   <li key={r.id} className="flex items-center justify-between py-1.5">
-                    <span className="tabular text-ink">{Number(r.rate).toLocaleString(undefined, { maximumFractionDigits: 4 })} <span className="text-muted">{r.currency}</span></span>
+                    <span className="tabular text-ink">{Number(r.rate).toLocaleString("en-US", { maximumFractionDigits: 4 })} <span className="text-muted">{r.currency}</span></span>
                     <span className="text-muted">
-                      {new Date(r.recorded_at).toLocaleString(language === "ar" ? "ar" : "en")}
+                      {formatDateTime(r.recorded_at, language)}
                       {r.recorded_by_name ? ` · ${r.recorded_by_name}` : ""}
                     </span>
                   </li>
@@ -616,7 +617,7 @@ export default function SettingsPage() {
                   <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
                     <Badge tone={b.status === "success" ? "ok" : "danger"}>{kindLabel}</Badge>
                     <span className="tabular whitespace-nowrap text-ink">
-                      <NumText value={new Date(b.created_at).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" })} />
+                      <NumText value={formatDateTime(b.created_at, language, { dateStyle: "medium", timeStyle: "short" })} />
                     </span>
                     <span className="tabular whitespace-nowrap text-xs text-muted">
                       {b.record_count} {t("settings.records")} · {bytes(b.size_bytes)}

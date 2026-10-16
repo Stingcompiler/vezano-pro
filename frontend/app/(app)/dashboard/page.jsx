@@ -21,6 +21,7 @@ import { translateRole } from "@/lib/i18n";
 import BarList from "@/components/reports/BarList";
 import { SkeletonBar } from "@/components/ui/Skeleton";
 import { formatMoney } from "@/lib/money";
+import { formatDate } from "@/lib/dates";
 
 // The overview, in the chosen direction (docs/ui-profile.md): what matters
 // now first — today's block (the one raised surface) — then what needs
@@ -131,9 +132,9 @@ export default function DashboardPage() {
 
   const notShop = user?.business_type !== "shop";
   const { sales, debts, inventory, purchasing, returns, crm, hr, finance, website } = sections;
-  const today = new Date().toLocaleDateString(language === "ar" ? "ar-u-nu-latn" : "en-GB", {
+  const today = formatDate(new Date(), language, {
     weekday: "long", day: "numeric", month: "long",
-  });
+  }, "en-GB");
 
   // Today's actions: the two things people start here (the owner's team
   // link sits in the page header). Low stock, negative stock and returns are states, not

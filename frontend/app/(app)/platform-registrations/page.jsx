@@ -13,6 +13,7 @@ import { SkeletonCard } from "@/components/ui/Skeleton";
 import { enumLabel } from "@/lib/labels";
 import { offerRows } from "@/lib/planCatalog";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
+import { formatDate } from "@/lib/dates";
 
 const ACTIVE = ["submitted", "under_review", "needs_information", "approved"];
 const REVIEW = ["under_review", "needs_information", "rejected"];
@@ -198,7 +199,7 @@ export default function PlatformRegistrationsPage() {
                       <span>{t("platformRegistration.plan")}: {row.plan_name || "—"}</span>
                       <span>{t("platformRegistration.delivery")}: {enumLabel(t, "subscription", row.delivery_mode)}</span>
                       <span>{t("platformRegistration.country")}: {row.country}</span>
-                      <span>{t("platformRegistration.received")}: {new Date(row.created_at).toLocaleDateString(language === "ar" ? "ar" : "en")}</span>
+                      <span>{t("platformRegistration.received")}: {formatDate(row.created_at, language)}</span>
                     </div>
                     {open && !live && <p className="mt-2 text-sm font-medium text-danger">{t("platformRegistration.planUnavailable")}</p>}
                     {row.message && <p className="mt-3 whitespace-pre-wrap text-sm text-muted">{row.message}</p>}

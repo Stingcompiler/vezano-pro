@@ -13,6 +13,7 @@ import CustomerDrawer from "@/components/sales/CustomerDrawer";
 import ImportPartiesDrawer from "@/components/records/ImportPartiesDrawer";
 import { formatAmount } from "@/lib/money";
 import { useMoney } from "@/lib/useMoney";
+import { formatDate } from "@/lib/dates";
 
 const STATUS_TONE = { overdue: "danger", owing: "warn", credit: "accent", settled: "ok" };
 
@@ -22,7 +23,7 @@ function amount(value) {
 }
 
 function date(value, language) {
-  return value ? new Date(value).toLocaleDateString(language === "ar" ? "ar" : "en") : "—";
+  return value ? formatDate(value, language) : "—";
 }
 
 export default function DebtsPage() {

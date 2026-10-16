@@ -19,6 +19,7 @@ import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 import { EmptyTableRow } from "@/components/ui/EmptyState";
 import { formatMoney } from "@/lib/money";
+import { formatDateTime } from "@/lib/dates";
 
 const TABS = ["new", "active", "completed", "closed", "all"];
 // The stages each tab lists (the API takes a comma-separated list).
@@ -82,7 +83,7 @@ function WebOrders() {
     }).catch(() => {});
   }, [params]);
 
-  const fmt = (v) => v ? new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  const fmt = (v) => v ? formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" }) : "—";
   const decide = async (fn) => {
     setBusy(true); setError("");
     try { const res = await fn(open.id, note); setOpen(res.data); setNote(""); await load(); }

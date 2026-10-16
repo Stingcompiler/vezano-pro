@@ -13,6 +13,7 @@ import { errorText } from "@/lib/errors";
 import { formatAmount } from "@/lib/money";
 import { paymentMethodLabel } from "@/lib/labels";
 import { useMoney } from "@/lib/useMoney";
+import { formatDateTime } from "@/lib/dates";
 
 const money = (v) => formatAmount(v);
 
@@ -56,7 +57,7 @@ export default function PaymentVerificationPanel({ refreshKey }) {
     }
   }
 
-  const fmt = (v) => new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (v) => formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" });
 
   const waiting = Array.isArray(rows) ? rows : [];
   const waitingTotal = waiting.reduce((sum, p) => sum + Number(p.amount || 0), 0);

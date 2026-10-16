@@ -5,6 +5,7 @@ import { MonitorSmartphone, Pencil, Trash2 } from "lucide-react";
 
 import { Badge, Button, Input } from "@/components/ui/kit";
 import { useI18n } from "../../app/providers/I18nProvider";
+import { formatDateTime } from "@/lib/dates";
 
 function describeAgent(agent) {
   const ua = agent || "";
@@ -19,7 +20,7 @@ export default function DeviceList({ devices, onLabel, onRevoke, onReactivate, o
   const { t, language } = useI18n();
   const [editing, setEditing] = useState(null);
   const [draft, setDraft] = useState("");
-  const fmt = (value) => value ? new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—";
+  const fmt = (value) => value ? formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" }) : "—";
 
   if (!devices?.length) return <p className="text-sm text-muted">{t("devices.empty")}</p>;
   return (

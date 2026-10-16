@@ -11,6 +11,7 @@ import { usePlatformRoleLabel } from "@/components/PlatformShell";
 import { Badge, Card, DefinitionSection, FigureRow, PageHeader } from "@/components/ui/kit";
 import { subscriptionStateLabel } from "@/lib/labels";
 import PushPrompt from "@/components/orders/PushPrompt";
+import { formatDate, formatDateTime } from "@/lib/dates";
 
 // A count that is waiting on someone is in the warning colour; a zero is
 // quiet (FigureRow), and "…" holds the place while the overview loads.
@@ -20,9 +21,7 @@ export default function PlatformPage() {
   const { user } = useAuth();
   const { t, language } = useI18n();
   const roleLabel = usePlatformRoleLabel();
-  // Latin digits in Arabic too (docs/ui-profile.md).
-  const locale = language === "ar" ? "ar-u-nu-latn" : "en";
-  const fmt = (value) => new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   // Unknown role names (e.g. "Django superuser") fall back to the raw label.
   const memberRole = (name) => {
     if (!name) return "";
@@ -93,7 +92,7 @@ export default function PlatformPage() {
         {expiring.length ? <ul className="divide-y divide-line">{expiring.map((row) => (
           <li key={row.id} className="flex items-center justify-between gap-4 py-3">
             <div className="min-w-0"><div className="font-medium text-ink">{row.company_name}</div><div className="mt-0.5 text-sm text-muted">{subscriptionStateLabel(t, row.status)}</div></div>
-            <time className="shrink-0 text-sm text-muted tabular" dateTime={row.ends_at}>{new Date(row.ends_at).toLocaleDateString(locale)}</time>
+            <time className="shrink-0 text-sm text-muted tabular" dateTime={row.ends_at}>{formatDate(row.ends_at, language)}</time>
           </li>
         ))}</ul> : <p className="py-3 text-sm text-muted">{t("platform.noExpiringSubscriptions")}</p>}
       </DefinitionSection>

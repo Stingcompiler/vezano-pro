@@ -5,6 +5,7 @@ import { CloudOff, RefreshCw } from "lucide-react";
 import { useSync } from "@/components/sync/SyncProvider";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
+import { formatDateTime } from "@/lib/dates";
 
 // Full-width, unmissable state for a market where the connection drops
 // daily: the cashier must know they are working locally, how much is
@@ -17,7 +18,7 @@ export default function OfflineBanner() {
   const { t, language } = useI18n();
   if (online && !offlineSession && !pending) return null;
   const when = (value) =>
-    value ? new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "short", timeStyle: "short" }) : "—";
+    value ? formatDateTime(value, language, { dateStyle: "short", timeStyle: "short" }) : "—";
   const offline = !online || offlineSession;
   return (
     <div

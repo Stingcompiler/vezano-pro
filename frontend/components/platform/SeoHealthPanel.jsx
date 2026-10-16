@@ -16,6 +16,7 @@ import {
 import { Badge, Button, Card, Input, Select } from "@/components/ui/kit";
 import { EmptyState, EmptyTableRow } from "@/components/ui/EmptyState";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const NO_FILTERS = { severity: "all", language: "all", code: "all", query: "" };
 const CHIP = "tap inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm font-medium transition-colors";
@@ -91,7 +92,7 @@ export default function SeoHealthPanel({ canManage, onOverride, onRedirects }) {
   );
   const flaggedRedirects = useMemo(() => (report?.redirects || []).filter((row) => row.issues.length > 0), [report]);
   const setFilter = (key) => (event) => setFilters({ ...filters, [key]: event.target.value });
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
 
   if (loading) return <SkeletonCard rows={6} />;
   if (!report) {

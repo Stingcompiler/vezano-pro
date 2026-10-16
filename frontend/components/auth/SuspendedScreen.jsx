@@ -8,6 +8,7 @@ import Wordmark from "@/components/brand/Wordmark";
 import { useOptionalSync } from "@/components/sync/SyncProvider";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
+import { formatDate } from "@/lib/dates";
 
 // Shown in place of the workspace while the platform has suspended the
 // company until it pays (core.company_access). The owner gets the notice and
@@ -27,7 +28,7 @@ export default function SuspendedScreen({ access, children }) {
   const sync = useOptionalSync();
   const pending = sync?.pending || 0;
   const since = access?.since
-    ? new Date(access.since).toLocaleDateString(language === "ar" ? "ar" : "en", { dateStyle: "medium" })
+    ? formatDate(access.since, language, { dateStyle: "medium" })
     : null;
   const owner = Boolean(access?.is_owner);
 

@@ -13,6 +13,7 @@ import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDate } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -161,7 +162,7 @@ export default function QuotesOrders({ customers, writable, onInvoice, refreshKe
     catch (err) { toast.error(errorText(err, t, "quotes.actionError")); }
     finally { setBusy(null); }
   };
-  const fmt = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "—");
+  const fmt = (d) => (d ? formatDate(d, language) : "—");
 
   const Row = ({ id, name, ref, status, tone, sub, total, actions }) => (
     <div className="flex flex-wrap items-center gap-3 px-4 py-3 text-sm">

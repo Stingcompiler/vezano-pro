@@ -10,6 +10,7 @@ import { guide } from "@/lib/content/guides";
 import { solution } from "@/lib/content/solutions";
 
 import { Breadcrumbs, CtaBand, Eyebrow, MoreGuides, useContentLanguage } from "./shared";
+import { formatDate } from "@/lib/dates";
 
 export default function GuidePage({ slug }) {
   const { t, href, dir } = useI18n();
@@ -19,7 +20,7 @@ export default function GuidePage({ slug }) {
   const copy = item[language];
   const related = item.related ? solution(item.related) : null;
   const Arrow = dir === "rtl" ? ArrowLeft : ArrowRight;
-  const date = new Date(item.published).toLocaleDateString(language === "ar" ? "ar" : "en", { dateStyle: "long" });
+  const date = formatDate(item.published, language, { dateStyle: "long" });
 
   return (
     <MarketingPage>

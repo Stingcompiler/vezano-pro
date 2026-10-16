@@ -12,6 +12,7 @@ import { platformTeam } from "@/lib/api";
 import { activityKind, describeActivity } from "@/lib/platformActivity";
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/kit";
 import { SkeletonRows } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const EMPTY = { user: "", entity_type: "", action: "", start: "", end: "", search: "" };
 
@@ -35,7 +36,7 @@ export default function PlatformActivityPage() {
     return label.startsWith("platformTeam.") ? name : label;
   };
   const fmt = (value) =>
-    new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+    formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
 
   const load = useCallback(async (params, append = false, url = null) => {
     setLoading(true);

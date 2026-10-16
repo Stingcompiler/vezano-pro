@@ -8,6 +8,7 @@ import { useI18n } from "../../providers/I18nProvider";
 import { platformFinance as api } from "@/lib/api";
 import { Badge, Button, Card, Figure, NumText, PageHeader } from "@/components/ui/kit";
 import { formatMoney } from "@/lib/money";
+import { formatDate } from "@/lib/dates";
 
 const STATUS_TONE = { active: "ok", trialing: "accent", grace: "warn", read_only: "warn", suspended: "danger", cancelled: "muted", legacy: "muted" };
 
@@ -18,7 +19,7 @@ function fmtMoney(value, currency, language = "en") {
 
 function fmtMonth(key, language) {
   const [y, m] = key.split("-").map(Number);
-  return new Date(y, m - 1, 1).toLocaleDateString(language === "ar" ? "ar" : "en", { month: "short", year: "2-digit" });
+  return formatDate(new Date(y, m - 1, 1), language, { month: "short", year: "2-digit" });
 }
 
 /** Invoiced vs collected per month. Two bars per month, hand-drawn SVG —
@@ -94,7 +95,7 @@ export default function PlatformFinancePage() {
     return list.find((c) => c.currency === currency) || list[0] || null;
   }, [data, currency]);
 
-  const fmt = (v) => v ? new Date(v).toLocaleDateString(language === "ar" ? "ar" : "en") : "—";
+  const fmt = (v) => v ? formatDate(v, language) : "—";
   const companies = useMemo(() => (data?.companies || []).filter((c) => !block || c.currency === block.currency), [data, block]);
 
   if (!canView) return <Card className="mx-auto mt-16 max-w-md p-8 text-center"><Lock className="mx-auto text-muted" /><p className="mt-3 text-muted">{t("platformFinance.noAccess")}</p></Card>;

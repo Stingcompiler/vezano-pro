@@ -10,6 +10,7 @@ import { translateRole } from "@/lib/i18n";
 import { activityActionLabel, entityTypeLabel, metaKeyLabel, metaValueLabel } from "@/lib/labels";
 import { Badge, Button, Card, Field, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import { SkeletonRows } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const ACTION_TONE = {
   login: "accent",
@@ -199,7 +200,7 @@ export default function LogsPage() {
 
   const set = (k, v) => setFilters((f) => ({ ...f, [k]: v }));
   const dt = (d) =>
-    d ? new Date(d).toLocaleString(language === "ar" ? "ar" : "en") : "—";
+    d ? formatDateTime(d, language) : "—";
 
   if (!allowed || denied) {
     return (

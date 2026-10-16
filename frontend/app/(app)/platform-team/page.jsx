@@ -10,6 +10,7 @@ import { platformTeam } from "@/lib/api";
 import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const DEFAULT_ROLE = "Support Agent";
 
@@ -99,7 +100,7 @@ export default function PlatformTeamPage() {
     const label = t(`platformTeam.roles.${name}`);
     return label.startsWith("platformTeam.") ? name : label;
   };
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const statusOf = (row) => {
     if (!row.is_active) return { tone: "danger", label: t("platformTeam.inactive") };
     if (!row.activated) return { tone: "warn", label: t("platformTeam.pendingActivation") };

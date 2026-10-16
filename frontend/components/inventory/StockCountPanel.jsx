@@ -10,6 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
 import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
+import { formatDateTime } from "@/lib/dates";
 
 const TONES = { draft: "muted", submitted: "warn", approved: "ok", cancelled: "danger" };
 
@@ -108,7 +109,7 @@ export default function StockCountPanel({ warehouses, canWrite }) {
     } catch (err) { fail(err); } finally { setBusy(null); }
   };
 
-  const fmt = (v) => (v ? new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—");
+  const fmt = (v) => (v ? formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" }) : "—");
 
   return (
     <Card className="mb-4 p-4">
