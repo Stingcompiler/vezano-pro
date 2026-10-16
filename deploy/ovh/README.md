@@ -12,8 +12,12 @@ so their runtime versions match the packaged release and the VPS installation.
 
 This job still deploys the systemd packaged release. A separate `prod-image`
 job (phase 1 of the container plan, `docs/docker.md`) builds and pushes a
-production image to `ghcr.io/stingcompiler/vezano-pro` in parallel; nothing
-deploys that image yet, and neither job waits for the other.
+production image to `ghcr.io/stingcompiler/vezano-pro` in parallel. Since
+phase 3, an optional `deploy-docker-parallel` job (repository variable
+`OVH_DOCKER_DEPLOY_ENABLED=true`) sends `deploy-image <commit> sha256:<digest>`
+through the same gateway to start that image in a blue/green container slot
+on loopback, without switching Caddy; see `deploy/docker/README.md`.
+`deploy-ovh` never waits for it.
 
 The deployment uses the frontend export produced by the successful frontend
 job in the same workflow run. It checks out the exact tested commit, installs
@@ -31,7 +35,9 @@ the VPS for the separate `vezano-deploy` account. This account:
 - Has a root-owned home and authorized_keys file, so it cannot edit key policy.
 - Uses an SSH forced command with `restrict`, disabling interactive shell,
   forwarding, PTY and user startup scripts for this key.
-- Can only send `ready`, `upload <commit> <sha256>`, or `deploy <commit> <sha256>`.
+- Can only send `ready`, `upload <commit> <sha256>`, `deploy <commit> <sha256>`,
+  or `deploy-image <commit> sha256:<digest>` (full hex only; the image
+  repository is fixed by `image_repository` in `/etc/vezano-deploy.json`).
 - Can write incoming archives, but cannot read `/etc/vezano/vezano.env` or
   protected deployment logs.
 - Has passwordless sudo only for the fixed, root-owned controller. The

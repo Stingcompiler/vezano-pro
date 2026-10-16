@@ -1,4 +1,4 @@
-"""Static checks for the parallel production container (deploy/docker, phase 2).
+"""Static checks for the production container slots (deploy/docker, phases 2-3).
 
 No Docker needed: the compose file is parsed (PyYAML when present, else a
 small parser for the subset the file uses), the scripts pass `bash -n`, and
@@ -6,6 +6,7 @@ the wrapper's guards are exercised by sourcing it.
 """
 
 from pathlib import Path
+import json
 import os
 import re
 import runpy
@@ -90,58 +91,93 @@ def load_compose():
     return yaml.safe_load(text)
 
 
+SLOTS = {"blue": "8001", "green": "8002"}
+
+
 class ComposeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.compose = load_compose()
-        cls.web = cls.compose["services"]["web"]
+        cls.services = cls.compose["services"]
 
-    def test_single_web_service(self):
-        self.assertEqual(list(self.compose["services"]), ["web"])
+    def test_two_slots_blue_green(self):
+        self.assertEqual(self.compose["name"], "vezano-docker")
+        self.assertEqual(sorted(self.services), ["blue", "green"])
+        for slot in SLOTS:
+            self.assertEqual(self.services[slot]["container_name"], f"vezano-docker-{slot}")
 
     def test_host_network_and_no_published_ports(self):
-        self.assertEqual(self.web["network_mode"], "host")
-        self.assertNotIn("ports", self.web)
-        self.assertNotIn("expose", self.web)
+        for slot, service in self.services.items():
+            with self.subTest(slot=slot):
+                self.assertEqual(service["network_mode"], "host")
+                self.assertNotIn("ports", service)
+                self.assertNotIn("expose", service)
 
-    def test_binds_loopback_8001_never_8000(self):
-        env = self.web["environment"]
-        self.assertEqual(env["GUNICORN_BIND"], "127.0.0.1:8001")
-        self.assertEqual(str(env["PORT"]), "8001")
-        self.assertFalse(env["GUNICORN_BIND"].endswith(":8000"))
+    def test_slots_bind_loopback_8001_and_8002_never_8000(self):
+        for slot, port in SLOTS.items():
+            env = self.services[slot]["environment"]
+            with self.subTest(slot=slot):
+                self.assertEqual(env["GUNICORN_BIND"], f"127.0.0.1:{port}")
+                self.assertEqual(str(env["PORT"]), port)
+                self.assertEqual(self.services[slot]["logging"]["options"]["tag"], f"vezano-docker-{slot}")
         code = "\n".join(_strip_comment(line) for line in COMPOSE.read_text().splitlines())
         self.assertNotIn("8000", code)
         self.assertNotIn("0.0.0.0", code)
 
-    def test_env_file_media_and_user(self):
-        self.assertEqual(self.web["env_file"], ["/etc/vezano/vezano.env"])
-        self.assertEqual(self.web["environment"]["MEDIA_ROOT"], "/var/lib/vezano/media")
-        self.assertEqual(self.web["user"], "${VEZANO_UID:?VEZANO_UID is required}:${VEZANO_GID:?VEZANO_GID is required}")
-        [volume] = self.web["volumes"]
-        self.assertEqual(volume["type"], "bind")
-        self.assertEqual(volume["source"], "/var/lib/vezano/media")
-        self.assertEqual(volume["target"], "/var/lib/vezano/media")
-        self.assertFalse(volume["read_only"])
+    def test_slots_are_identical_except_slot_fields(self):
+        def normalised(slot):
+            service = json.loads(json.dumps(self.services[slot]))
+            service.pop("image")
+            service.pop("container_name")
+            service["logging"]["options"].pop("tag")
+            service["environment"].pop("GUNICORN_BIND")
+            service["environment"].pop("PORT")
+            return service
+        self.assertEqual(normalised("blue"), normalised("green"))
 
-    def test_image_is_required_variable(self):
-        self.assertTrue(self.web["image"].startswith("${VEZANO_IMAGE:?"))
+    def test_env_file_media_and_user(self):
+        for slot, service in self.services.items():
+            with self.subTest(slot=slot):
+                self.assertEqual(service["env_file"], ["/etc/vezano/vezano.env"])
+                self.assertEqual(service["environment"]["MEDIA_ROOT"], "/var/lib/vezano/media")
+                self.assertEqual(service["user"], "${VEZANO_UID:?VEZANO_UID is required}:${VEZANO_GID:?VEZANO_GID is required}")
+                [volume] = service["volumes"]
+                self.assertEqual(volume["type"], "bind")
+                self.assertEqual(volume["source"], "/var/lib/vezano/media")
+                self.assertEqual(volume["target"], "/var/lib/vezano/media")
+                self.assertFalse(volume["read_only"])
+
+    def test_image_is_required_variable_per_slot(self):
+        self.assertTrue(self.services["blue"]["image"].startswith("${VEZANO_IMAGE_BLUE:?"))
+        self.assertTrue(self.services["green"]["image"].startswith("${VEZANO_IMAGE_GREEN:?"))
 
     def test_hardening_restart_and_limits(self):
-        self.assertIs(self.web["read_only"], True)
-        self.assertTrue(any(entry.startswith("/tmp:") for entry in self.web["tmpfs"]))
-        self.assertEqual(self.web["restart"], "unless-stopped")
-        self.assertEqual(self.web["stop_grace_period"], "30s")
-        self.assertEqual(self.web["cap_drop"], ["ALL"])
-        self.assertIn("vezano-healthcheck", self.web["healthcheck"]["test"])
-        self.assertEqual(self.web["mem_limit"], "1g")
-        self.assertEqual(self.web["logging"]["driver"], "journald")
+        for slot, service in self.services.items():
+            with self.subTest(slot=slot):
+                self.assertIs(service["read_only"], True)
+                self.assertTrue(any(entry.startswith("/tmp:") for entry in service["tmpfs"]))
+                self.assertEqual(service["restart"], "unless-stopped")
+                self.assertEqual(service["stop_grace_period"], "30s")
+                self.assertEqual(service["cap_drop"], ["ALL"])
+                self.assertIn("vezano-healthcheck", service["healthcheck"]["test"])
+                self.assertEqual(service["mem_limit"], "1g")
+                self.assertEqual(service["logging"]["driver"], "journald")
 
-    def test_runs_gunicorn_only_never_migrates(self):
-        self.assertEqual(self.web["command"][0], "gunicorn")
-        self.assertNotIn("entrypoint", self.web)
-        for path in (COMPOSE, DOCKER_DIR / "vezano-docker.sh"):
-            code = "\n".join(l for l in path.read_text().splitlines() if not l.lstrip().startswith("#"))
-            self.assertNotRegex(code, r"\bmigrate\b|createcachetable|manage\.py")
+    def test_runs_gunicorn_only_never_applies_migrations(self):
+        for slot, service in self.services.items():
+            self.assertEqual(service["command"][0], "gunicorn")
+            self.assertNotIn("entrypoint", service)
+        compose_code = "\n".join(l for l in COMPOSE.read_text().splitlines() if not l.lstrip().startswith("#"))
+        self.assertNotRegex(compose_code, r"\bmigrate\b|createcachetable|manage\.py")
+        # The script only reads the migration state (migrate --check,
+        # showmigrations); it never applies or creates migrations.
+        script = "\n".join(l for l in (DOCKER_DIR / "vezano-docker.sh").read_text().splitlines()
+                           if not l.lstrip().startswith("#"))
+        for match in re.finditer(r"manage\.py ([a-z]+)([^\n]*)", script):
+            self.assertIn(match.group(1), ("migrate", "showmigrations"))
+            if match.group(1) == "migrate":
+                self.assertIn("--check", match.group(2))
+        self.assertNotRegex(script, r"createcachetable|makemigrations|--noinput")
 
 
 class ScriptTests(unittest.TestCase):
@@ -159,15 +195,15 @@ class ScriptTests(unittest.TestCase):
                 self.assertIn("set -euo pipefail", text)
                 self.assertNotRegex(text, r"set -[a-z]*x|set -o xtrace")
 
-    def test_wrapper_never_touches_systemd_caddy_or_8000(self):
+    def test_wrapper_never_calls_systemctl_and_8000_is_caddy_only(self):
         code = "\n".join(
             l for l in (DOCKER_DIR / "vezano-docker.sh").read_text().splitlines()
             if not l.lstrip().startswith("#")
         )
         self.assertNotIn("systemctl", code)
-        self.assertNotRegex(code.lower(), r"\bcaddy\b")
-        self.assertNotIn(":8000", code)
-        self.assertIn("BIND=127.0.0.1:8001", code)
+        # 8000 appears once: the systemd upstream for `caddy-mode systemd`.
+        self.assertEqual(code.count(":8000"), 1)
+        self.assertIn("SYSTEMD_UPSTREAM=127.0.0.1:8000", code)
 
     def _check_env(self, content):
         with tempfile.NamedTemporaryFile("w", suffix=".env", delete=False) as handle:
@@ -195,7 +231,8 @@ class ScriptTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which("docker"), "docker is not installed")
     def test_compose_config_validates(self):
-        env = dict(os.environ, VEZANO_IMAGE="ghcr.io/stingcompiler/vezano-pro@sha256:" + "0" * 64,
+        image = "ghcr.io/stingcompiler/vezano-pro@sha256:" + "0" * 64
+        env = dict(os.environ, VEZANO_IMAGE_BLUE=image, VEZANO_IMAGE_GREEN=image,
                    VEZANO_UID="1000", VEZANO_GID="1000")
         with tempfile.TemporaryDirectory() as tmp:
             # The real env file lives on the VPS; point the check at an empty one.

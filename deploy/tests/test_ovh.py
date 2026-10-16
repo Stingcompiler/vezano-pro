@@ -246,5 +246,130 @@ class ControllerTests(unittest.TestCase):
         self.assertEqual(self.current.resolve(), self.old)
 
 
+class ImageDeployTests(unittest.TestCase):
+    IMAGE_DIGEST = "sha256:" + DIGEST
+    CONFIG = {"repository": "Stingcompiler/vezano-pro", "image_repository": "ghcr.io/stingcompiler/vezano-pro"}
+
+    def test_gateway_accepts_deploy_image_with_full_identifiers(self):
+        self.assertEqual(
+            gateway.parse_command(f"deploy-image {SHA} {self.IMAGE_DIGEST}"),
+            ("deploy-image", SHA, self.IMAGE_DIGEST),
+        )
+
+    def test_gateway_rejects_bad_deploy_image_requests(self):
+        for command in (
+            f"deploy-image {SHA} {DIGEST}",                       # no sha256: prefix
+            f"deploy-image {SHA[:39]} {self.IMAGE_DIGEST}",       # short commit
+            f"deploy-image {SHA}a {self.IMAGE_DIGEST}",           # long commit
+            f"deploy-image {SHA} sha256:{DIGEST[:63]}",           # short digest
+            f"deploy-image {SHA} sha256:{DIGEST}0",               # long digest
+            f"deploy-image {SHA.upper()} {self.IMAGE_DIGEST}",    # uppercase
+            f"deploy-image {SHA} sha256:{DIGEST.upper()}",
+            f"deploy-image {SHA} ghcr.io/stingcompiler/vezano-pro@{self.IMAGE_DIGEST}",
+            f"deploy-image {SHA} docker.io/evil/x@{self.IMAGE_DIGEST}",
+            f"deploy-image {SHA} main",
+            f"deploy-image {SHA} {self.IMAGE_DIGEST} --skip-backup",
+            f"deploy-image {SHA} {self.IMAGE_DIGEST}\n",
+            f"deploy-image {SHA} {self.IMAGE_DIGEST};id",
+            f"deploy-image  {SHA} {self.IMAGE_DIGEST}",
+            f"deploy-image {SHA}",
+            f"deploy {SHA} {self.IMAGE_DIGEST}",
+            f"upload {SHA} {self.IMAGE_DIGEST}",
+        ):
+            with self.subTest(command=command), self.assertRaises(ValueError):
+                gateway.parse_command(command)
+
+    def test_gateway_invokes_the_fixed_controller_only(self):
+        command = f"deploy-image {SHA} {self.IMAGE_DIGEST}"
+        with patch.dict(os.environ, {"SSH_ORIGINAL_COMMAND": command}), \
+                patch.object(gateway.subprocess, "call", return_value=10) as call:
+            self.assertEqual(gateway.main(), 10)
+        call.assert_called_once_with(
+            ["sudo", "-n", gateway.CONTROLLER, "deploy-image", SHA, self.IMAGE_DIGEST],
+            env={"PATH": "/usr/local/bin:/usr/bin:/bin"},
+        )
+
+    def test_gateway_rejects_without_calling_anything(self):
+        with patch.dict(os.environ, {"SSH_ORIGINAL_COMMAND": f"deploy-image {SHA} main"}), \
+                patch.object(gateway.subprocess, "call") as call, \
+                patch("sys.stderr", new_callable=io.StringIO):
+            self.assertEqual(gateway.main(), 1)
+        call.assert_not_called()
+
+    def test_controller_validates_image_identifiers(self):
+        controller.validate_image_arguments(SHA, self.IMAGE_DIGEST)
+        for sha, digest in ((SHA, DIGEST), ("short", self.IMAGE_DIGEST), (SHA, "sha256:short"),
+                            (SHA, self.IMAGE_DIGEST + "\n"), (SHA, "sha512:" + DIGEST)):
+            with self.subTest(sha=sha, digest=digest), self.assertRaises(ValueError):
+                controller.validate_image_arguments(sha, digest)
+
+    def test_image_reference_uses_the_configured_ghcr_repository(self):
+        self.assertEqual(controller.image_reference(self.CONFIG, self.IMAGE_DIGEST),
+                         f"ghcr.io/stingcompiler/vezano-pro@{self.IMAGE_DIGEST}")
+        for repository in ("docker.io/stingcompiler/vezano-pro", "ghcr.io/stingcompiler/vezano-pro:main",
+                           "ghcr.io/stingcompiler/vezano-pro@sha256:" + DIGEST, "ghcr.io/../x",
+                           "ghcr.io/Stingcompiler/vezano-pro", "ghcr.io/a/b/c", "", None):
+            with self.subTest(repository=repository), self.assertRaises((ValueError, TypeError)):
+                controller.image_reference({"image_repository": repository}, self.IMAGE_DIGEST)
+        with self.assertRaises(KeyError):
+            controller.image_reference({}, self.IMAGE_DIGEST)
+
+    def _deploy(self, returncode):
+        with tempfile.TemporaryDirectory() as name:
+            root = Path(name)
+            (root / "logs").mkdir()
+            (root / "state").mkdir()
+            config = dict(self.CONFIG, logs=str(root / "logs"), state=str(root / "state"),
+                          docker_lock=str(root / "docker.lock"))
+            (root / "config.json").write_text(json.dumps(config))
+            with patch.object(controller, "CONFIG", root / "config.json"), \
+                    patch.object(controller.os, "geteuid", return_value=0), \
+                    patch.object(controller, "require_latest_main") as latest, \
+                    patch.object(controller.subprocess, "run", return_value=SimpleNamespace(returncode=returncode)) as run, \
+                    patch("sys.stdout", new_callable=io.StringIO) as out, \
+                    patch("sys.stderr", new_callable=io.StringIO) as err:
+                code = controller.deploy_image(SHA, self.IMAGE_DIGEST)
+            success = root / "state" / "last-image-success.json"
+            return code, latest, run, out.getvalue() + err.getvalue(), success.exists() and json.loads(success.read_text())
+
+    def test_controller_runs_the_fixed_docker_script(self):
+        code, latest, run, output, success = self._deploy(0)
+        self.assertEqual(code, 0)
+        latest.assert_called_once()
+        args, kwargs = run.call_args
+        self.assertEqual(args[0], ["bash", controller.DOCKER_SCRIPT, "deploy",
+                                   f"ghcr.io/stingcompiler/vezano-pro@{self.IMAGE_DIGEST}", SHA])
+        self.assertEqual(controller.DOCKER_SCRIPT, "/usr/local/libexec/vezano/vezano-docker.sh")
+        self.assertEqual(kwargs["env"], {"PATH": controller.UPGRADE_PATH, "HOME": "/root"})
+        self.assertIn("Caddy mode unchanged", output)
+        self.assertEqual(success["commit"], SHA)
+
+    def test_controller_reports_pending_migrations_with_distinct_code(self):
+        code, _, _, output, success = self._deploy(10)
+        self.assertEqual(code, 10)
+        self.assertIn("pending migrations — apply via the manual upgrade path", output)
+        self.assertFalse(success)
+
+    def test_controller_failure_is_quiet(self):
+        code, _, _, output, success = self._deploy(1)
+        self.assertEqual(code, 1)
+        self.assertIn("protected server log", output)
+        self.assertFalse(success)
+
+    def test_controller_main_dispatches_deploy_image(self):
+        with patch.object(controller.sys, "argv", ["deploy_release.py", "deploy-image", SHA, self.IMAGE_DIGEST]), \
+                patch.object(controller, "deploy_image", return_value=0) as deploy:
+            self.assertEqual(controller.main(), 0)
+        deploy.assert_called_once_with(SHA, self.IMAGE_DIGEST)
+
+    def test_install_ships_docker_script_and_fixed_repository(self):
+        text = (Path(__file__).resolve().parents[1] / "ovh" / "install.sh").read_text()
+        self.assertIn('"image_repository": "ghcr.io/stingcompiler/vezano-pro"', text)
+        self.assertIn("/usr/local/libexec/vezano/vezano-docker.sh", text)
+        self.assertIn("/usr/local/libexec/vezano/docker-compose.prod.yml", text)
+        self.assertNotIn("caddy-mode", text)
+        self.assertNotRegex(text, r"\bcaddy (reload|validate)")
+
+
 if __name__ == "__main__":
     unittest.main()

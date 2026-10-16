@@ -1,104 +1,190 @@
-# Production container on the VPS — phase 2 (parallel run)
+# Production containers on the VPS — phase 3 (blue/green, parallel run)
 
-Phase 2 of the approved container plan: Docker Engine on the OVH VPS and the
-production image (`ghcr.io/stingcompiler/vezano-pro`, phase 1, #244) running
-**next to** the systemd release, on `127.0.0.1:8001`. Production traffic does
-not change: Caddy still proxies to the systemd gunicorn on `127.0.0.1:8000`,
-and the `vezano-web` service and the `vezano-backup`, `vezano-daily-scans`
-and `vezano-healthcheck` timers are not touched.
+Phase 3 of the approved container plan (`docs/docker.md`). Every push to
+`main` can now start the new production image
+(`ghcr.io/stingcompiler/vezano-pro`, pinned by digest) in one of two
+container slots on the OVH VPS, **next to** the systemd release:
+
+| Slot | Bind | Container |
+|---|---|---|
+| `blue` | `127.0.0.1:8001` | `vezano-docker-blue` |
+| `green` | `127.0.0.1:8002` | `vezano-docker-green` |
+
+**Production traffic does not change in this phase.** Caddy still proxies to
+the systemd gunicorn on `127.0.0.1:8000`; `deploy-ovh`, `upgrade.sh`, the
+`vezano-web` service and the timers work exactly as before. The mechanism to
+switch Caddy exists and is tested, but nothing runs it automatically: the
+switch is phase 4 and needs the owner's approval.
 
 | File | Purpose |
 |---|---|
-| `install-docker.sh` | installs Docker Engine + compose plugin (Docker's apt repo when it publishes the host codename, else Ubuntu's `docker.io` + `docker-compose-v2`), writes `/etc/docker/daemon.json` (journald logs, `live-restore`), enables Docker. Idempotent. |
-| `docker-compose.prod.yml` | service `web`: image by digest (`VEZANO_IMAGE`), host network, gunicorn on `127.0.0.1:8001`, `/etc/vezano/vezano.env`, media bind mount, read-only rootfs, healthcheck, 1 GiB / 1.5 CPU limits. |
-| `vezano-docker.sh` | operator wrapper: `pull`, `up`, `status`, `logs`, `smoke`, `down`, `prune`. |
+| `install-docker.sh` | Docker Engine + compose plugin, journald logs, `live-restore` (phase 2). Idempotent. |
+| `docker-compose.prod.yml` | services `blue` and `green`: identical except for the port and image variable; host network, gunicorn on loopback, `/etc/vezano/vezano.env`, media bind mount, read-only rootfs, healthcheck, 1 GiB / 1.5 CPU each. No published ports. |
+| `vezano-docker.sh` | `deploy`, `rollback`, `caddy-mode`, `status`, `logs`, `smoke`, `pull`, `prune`. |
 
-## Run phase 2 on the VPS
+## The deploy flow
 
-As root, from a checkout or copy of this directory:
+`vezano-docker.sh deploy <ghcr.io/stingcompiler/vezano-pro@sha256:…> <commit40>`
+(as root; CI calls it through the restricted gateway, see below):
+
+1. **Refuse** anything not pinned by digest in that one repository, or a
+   commit that is not 40 hex characters (exit 3).
+2. **Pull** the digest; check that the image carries that digest, has no
+   `ENTRYPOINT`, and that its `org.opencontainers.image.revision` label
+   equals the commit (exit 4 otherwise).
+3. **Migration gate:** `python manage.py migrate --check` in a one-off
+   container of the **new** image against the shared database (read-only).
+   If migrations are pending it stops with exit **10** and
+   `pending migrations — apply via the manual upgrade path`; nothing is
+   started or changed. Schema changes keep going through `upgrade.sh` while
+   systemd is primary.
+4. **Backup:** `/usr/local/libexec/vezano/backup.sh --env-file
+   /etc/vezano/vezano.env --label pre-docker-<commit12>` (the same reviewed
+   script the systemd deploy uses), into `/var/backups/vezano`.
+5. **Start** the image in the **inactive** slot (the first deploy uses
+   `green`, so the phase-2 container on 8001 keeps running until then) and
+   wait for the healthcheck.
+6. **Smoke** that slot's port: `/api/health/` (`status`, `database` ok,
+   `commit` = the commit), `/` and `/en/`.
+7. **Mark it active** in `/var/lib/vezano-docker/state.json`.
+8. **Caddy:** only when `caddy_mode` is `docker` (phase 4): point
+   `/etc/caddy/vezano-upstream.caddy` at the new slot, `caddy validate`, then
+   `caddy reload`. In this phase the mode is `systemd`, so Caddy is not touched.
+9. **Stop the old slot** (after a 20 s grace period in docker mode). It is
+   kept stopped, not removed, for instant rollback. After the first deploy
+   the phase-2 `vezano-docker-web` container is stopped too.
+10. **Prune** images, keeping the 3 newest and the two slot images.
+
+Any failure before step 8 removes the new slot and leaves the active slot,
+`state.json` and Caddy untouched. A failed Caddy switch restores the previous
+snippet and `state.json` as well.
+
+## How the owner enables it (one time)
+
+On the VPS, from a checkout of the merged commit:
 
 ```bash
-install -d -m 0755 /opt/vezano-docker
-install -m 0755 deploy/docker/install-docker.sh deploy/docker/vezano-docker.sh /opt/vezano-docker/
-install -m 0644 deploy/docker/docker-compose.prod.yml /opt/vezano-docker/
-/opt/vezano-docker/install-docker.sh
-/opt/vezano-docker/vezano-docker.sh pull main
-/opt/vezano-docker/vezano-docker.sh up
-/opt/vezano-docker/vezano-docker.sh smoke
+sed 's/^[^ ]* //' /var/lib/vezano-deploy/.ssh/authorized_keys > /tmp/vezano-deploy.pub
+sudo bash deploy/ovh/install.sh /tmp/vezano-deploy.pub /usr/bin/python3.12
+sudo /usr/local/libexec/vezano/vezano-docker.sh status
 ```
 
-- `pull <ref>` accepts `main`, `sha-<short|full>` or `sha256:<digest>`,
-  resolves the digest and records it in `/var/lib/vezano-docker/current.env`
-  (the previous record is kept as `previous.env`). `up` always runs that
-  digest, never a moving tag. It refuses an image that has an `ENTRYPOINT`.
-- `up` runs as the host `vezano` user's uid/gid (`id vezano`), so uploads in
-  `/var/lib/vezano/media` keep their owner, and waits for the healthcheck.
-- `smoke` sends `GET /api/health/` to `127.0.0.1:8001` with
-  `Host: vezano.app` (override with `SMOKE_HOST=...`) and checks `status`,
-  `database` and that `commit` equals the image's commit, then `/` and `/en/`.
-- `status`, `logs [N]` (also `journalctl CONTAINER_TAG=vezano-docker-web`),
-  `prune` (keeps the 3 newest images and the recorded one).
+The first line reuses the deploy key that is already installed. `install.sh`
+is idempotent: it installs the updated `gateway.py`, `deploy_release.py`,
+`vezano-docker.sh` and `docker-compose.prod.yml` into
+`/usr/local/libexec/vezano` (and refreshes `/opt/vezano-docker` when it
+exists), and adds `image_repository` and `docker_lock` to
+`/etc/vezano-deploy.json`. It does not restart anything or touch Caddy.
 
-`up` stops with a clear message, naming only the key, if
-`/etc/vezano/vezano.env` has a value with `$` outside single quotes: compose
-expands `$` there and systemd does not. Single-quote that value (systemd reads
-`KEY='va$lue'` the same way) and run `up` again. Any setting in the env file
-that points at a host path other than the media directory is not visible in
-the container; the smoke test shows whether that matters.
-
-## Stop it
+Then, from your machine, enable the CI job:
 
 ```bash
-/opt/vezano-docker/vezano-docker.sh down
+gh variable set OVH_DOCKER_DEPLOY_ENABLED --body true
 ```
 
-That removes the container only. To remove Docker entirely as well:
-`apt-get purge docker-ce docker-ce-cli containerd.io docker-compose-plugin`
-(or `docker.io docker-compose-v2`); the systemd release never depended on it.
+The job `deploy-docker-parallel` runs after `prod-image` on `main`, in the
+`ovh-production` environment with the same secrets and stale-`main` check as
+`deploy-ovh`. It waits for `deploy-ovh` to finish (so the two backups never
+overlap) but runs whatever its result, and `deploy-ovh` never waits for it. It
+sends `deploy-image <commit> sha256:<digest>`; the gateway accepts only that
+exact shape, and the controller builds the image name from the repository
+fixed in `/etc/vezano-deploy.json`. To turn it off: delete the variable.
+
+## Watching it
+
+```bash
+sudo /usr/local/libexec/vezano/vezano-docker.sh status       # state.json, Caddy mode, both slots
+sudo /usr/local/libexec/vezano/vezano-docker.sh logs          # active slot (or: logs green 500)
+sudo /usr/local/libexec/vezano/vezano-docker.sh smoke         # active slot (or: smoke blue)
+sudo cat /var/lib/vezano-docker/state.json
+sudo ls -t /var/log/vezano-deploy/ | head                    # *-image.log per CI deploy
+journalctl CONTAINER_TAG=vezano-docker-green -n 100
+```
+
+To deploy by hand: `vezano-docker.sh pull main` prints the digest and commit
+and the exact `deploy` command to run.
+
+## Rollback
+
+```bash
+sudo /usr/local/libexec/vezano/vezano-docker.sh rollback          # start the previous slot again
+sudo /usr/local/libexec/vezano/vezano-docker.sh rollback systemd  # Caddy back to systemd :8000
+```
+
+`rollback` starts the stopped previous slot, smokes it, (in docker mode)
+switches Caddy to it, marks it active and stops the current one. With no
+previous slot in docker mode it puts Caddy back on systemd.
+
+## Why Caddy is untouched until phase 4
+
+In this phase the containers prove themselves on real data while the systemd
+release serves every request. Switching traffic is a production change that
+needs the owner's approval, so `deploy` only moves Caddy when `caddy_mode` is
+`docker`, and only the explicit `caddy-mode docker` command sets that.
+
+The phase 4 step (owner-approved, not done here). The repository has no copy
+of the VPS Caddyfile, so this is the minimal edit:
+
+```bash
+sudo /usr/local/libexec/vezano/vezano-docker.sh caddy-mode systemd   # writes the snippet (127.0.0.1:8000); no reload yet
+# in /etc/caddy/Caddyfile, inside the site block, replace the line
+#     reverse_proxy 127.0.0.1:8000
+# with
+#     import /etc/caddy/vezano-upstream.caddy
+sudo caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+sudo systemctl reload caddy                                          # still :8000, no behaviour change
+sudo /usr/local/libexec/vezano/vezano-docker.sh caddy-mode docker    # the switch
+```
+
+The snippet holds a single `reverse_proxy <upstream>` line. If the site's
+`reverse_proxy` has an options block, review that before the edit.
+`caddy-mode docker` refuses to run unless the Caddyfile imports the snippet.
 
 ## Why it is safe
 
-- **Not reachable from outside.** Gunicorn binds `127.0.0.1:8001`
-  (`GUNICORN_BIND`); no ports are published, and Caddy has no route to 8001.
-  The wrapper refuses any other bind and never calls `systemctl` or edits Caddy.
-- **No migrations, no start-up writes.** The production image has no
-  entrypoint; the compose command is gunicorn only. Migrations, backups and
-  the deploy gate stay with the systemd release and its deploy controller.
-- **Same database, used only when asked.** The container uses the production
-  PostgreSQL through `DATABASE_URL` from the env file, like the systemd
-  release. It reads or writes only when a request reaches it, and nothing
-  reaches 8001 except `smoke` (and the container's own healthcheck, which only opens a
-  database connection and checks that media is writable). Neither creates business data.
-- **Bounded.** 1 GiB memory, 1.5 CPUs, 256 processes, 2 workers; logs go to
-  journald; read-only root filesystem, all capabilities dropped,
-  `no-new-privileges`.
-- Installing Docker adds its iptables chains; with host networking and no
-  published ports no container port is opened.
-
-## Phases 3–4 (later, not in this change)
-
-- **Phase 3:** the deploy controller (`vezano-deploy` gateway kept) pulls the
-  new image by digest, runs the migration check inside it, takes the backup,
-  then switches Caddy blue/green between two loopback ports, with instant
-  rollback. The timers run their commands inside the image.
-- **Phase 4:** after parallel runs and smoke tests, Caddy is switched to the
-  container. The systemd release stays installed for 2 weeks as the rollback.
+- **Loopback only.** The slots bind `127.0.0.1:8001`/`8002`; no ports are
+  published, and the script refuses a rendered config with any other bind.
+- **No migrations.** The image has no entrypoint, the slots run gunicorn only,
+  and the gate only reads (`migrate --check`, `showmigrations`).
+- **Restricted access.** CI still only reaches the `vezano-deploy` forced
+  command; the controller and script are root-owned in `/usr/local/libexec/vezano`.
+  Their output goes to the protected log, not to public Actions logs.
+- **Bounded.** 1 GiB memory, 1.5 CPUs, 256 processes and 2 workers per slot;
+  journald logs; read-only root filesystem, all capabilities dropped.
 
 ---
 
 ## بالعربية (مختصر)
 
-المرحلة 2: تشغيل حاوية الإنتاج **بالتوازي** مع إصدار systemd على
-`127.0.0.1:8001` فقط. لا تغيير على حركة الإنتاج: Caddy يبقى على المنفذ 8000،
-وخدمة `vezano-web` والمؤقتات كما هي.
+**المرحلة 3:** نشر أزرق/أخضر للحاوية **بالتوازي** مع إصدار systemd. الخانة
+`blue` على `127.0.0.1:8001` و`green` على `127.0.0.1:8002`. لا تغيير على حركة
+الإنتاج: Caddy يبقى على المنفذ 8000 حتى المرحلة 4 بموافقة المالك.
 
-التشغيل (بصلاحية root): انسخ الملفات إلى `/opt/vezano-docker` ثم
-`install-docker.sh` ← `vezano-docker.sh pull main` ← `up` ← `smoke`.
-الإيقاف: `vezano-docker.sh down`.
+**تسلسل `deploy`:** رفض أي صورة غير مثبّتة بالـ digest ← سحب الصورة والتحقق من
+أن وسم الـ revision يساوي الـ commit ← فحص الترحيلات للقراءة فقط داخل الصورة
+الجديدة (إن وُجدت ترحيلات معلّقة: يتوقف برمز 10 ورسالة «طبّقها عبر مسار
+الترقية اليدوي») ← نسخة احتياطية بـ `backup.sh` ← تشغيل الخانة غير النشطة ←
+فحص الصحة والصفحات ← تسجيلها نشطة في `state.json` ← (فقط في وضع docker)
+تبديل Caddy بعد `caddy validate` ← إيقاف الخانة القديمة مع إبقائها للرجوع ←
+تنظيف الصور مع إبقاء آخر 3. أي فشل قبل تبديل Caddy يحذف الخانة الجديدة ويترك
+الخانة النشطة كما هي.
 
-لماذا هو آمن: المنفذ محلي فقط ولا يصل إليه أحد غير اختبار `smoke`، والحاوية لا
-تشغّل الترحيلات (migrations) ولا تكتب شيئًا عند الإقلاع، وتستخدم قاعدة البيانات
-نفسها فقط عند وصول طلب إليها.
+**التفعيل (مرة واحدة على الخادم):**
 
-المرحلتان 3–4 لاحقًا: نشر بالـ digest مع فحص الترحيلات والنسخ الاحتياطي ثم تبديل
-Caddy (أزرق/أخضر) مع رجوع فوري، وإبقاء إصدار systemd أسبوعين للرجوع.
+```bash
+sed 's/^[^ ]* //' /var/lib/vezano-deploy/.ssh/authorized_keys > /tmp/vezano-deploy.pub
+sudo bash deploy/ovh/install.sh /tmp/vezano-deploy.pub /usr/bin/python3.12
+sudo /usr/local/libexec/vezano/vezano-docker.sh status
+```
+
+ثم من جهازك: `gh variable set OVH_DOCKER_DEPLOY_ENABLED --body true`.
+
+**المتابعة:** `vezano-docker.sh status` و`logs` و`smoke` والملف
+`/var/lib/vezano-docker/state.json` وسجلات `/var/log/vezano-deploy/*-image.log`.
+
+**الرجوع:** `vezano-docker.sh rollback` (الخانة السابقة) أو
+`vezano-docker.sh rollback systemd` (إعادة Caddy إلى systemd).
+
+**لماذا لا يُلمس Caddy الآن:** تحويل الحركة تغيير إنتاجي يحتاج موافقة المالك؛
+لذلك لا يغيّر `deploy` إعداد Caddy إلا في وضع `docker`، ولا يضبط هذا الوضع إلا
+الأمر الصريح `caddy-mode docker` في المرحلة 4.

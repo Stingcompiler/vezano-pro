@@ -483,3 +483,72 @@ jobs:
             --output /dev/null https://pro.vezano.app/api/health/
           printf 'Promoted commit `%s` to [Vezano Pro](https://pro.vezano.app).\n' \
             "$GITHUB_SHA" >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-docker-parallel:
+    # Phase 3 of the container plan: start the pushed image in the inactive
+    # blue/green slot on the VPS (127.0.0.1:8001/8002), in parallel with the
+    # systemd release. Caddy is NOT switched here (that is the owner-approved
+    # phase 4); production traffic stays on systemd :8000. Skipped until the
+    # owner sets OVH_DOCKER_DEPLOY_ENABLED=true after re-running install.sh.
+    # It waits for deploy-ovh (so the two backups never overlap) but runs
+    # whatever deploy-ovh's result; deploy-ovh never waits for it.
+    name: Deploy the container slot to OVH (parallel, no Caddy switch)
+    needs: [prod-image, deploy-ovh, deployment-checks]
+    if: ${{ !cancelled() && github.event_name == 'push' && github.ref == 'refs/heads/main' && vars.OVH_DOCKER_DEPLOY_ENABLED == 'true' && needs.prod-image.result == 'success' && needs.deployment-checks.result == 'success' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    environment:
+      name: ovh-production
+      url: https://pro.vezano.app
+    concurrency:
+      group: ovh-docker-parallel
+      cancel-in-progress: false
+    env:
+      GH_TOKEN: ${{ github.token }}
+      OVH_DEPLOY_HOST: ${{ vars.OVH_DEPLOY_HOST }}
+      OVH_DEPLOY_USER: ${{ vars.OVH_DEPLOY_USER }}
+      OVH_DEPLOY_PORT: ${{ vars.OVH_DEPLOY_PORT }}
+      IMAGE_DIGEST: ${{ needs.prod-image.outputs.digest }}
+    steps:
+      - name: Check this commit is still main HEAD
+        id: latest
+        shell: bash
+        run: |
+          set -euo pipefail
+          head="$(gh api "repos/$GITHUB_REPOSITORY/commits/main" --jq .sha)"
+          if [ "$head" = "$GITHUB_SHA" ]; then
+            echo 'deploy=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'deploy=false' >> "$GITHUB_OUTPUT"
+            echo 'A newer main commit exists; skipping this deployment.'
+          fi
+      - name: Deploy the image digest through the restricted SSH gateway
+        if: steps.latest.outputs.deploy == 'true'
+        env:
+          OVH_DEPLOY_SSH_KEY: ${{ secrets.OVH_DEPLOY_SSH_KEY }}
+          OVH_KNOWN_HOSTS: ${{ secrets.OVH_KNOWN_HOSTS }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          [[ "$IMAGE_DIGEST" =~ ^sha256:[0-9a-f]{64}$ ]] || { echo "prod-image gave no digest"; exit 1; }
+          key="$RUNNER_TEMP/ovh-deploy-key"
+          hosts="$RUNNER_TEMP/ovh-known-hosts"
+          trap 'rm -f "$key" "$hosts"' EXIT
+          test -n "$OVH_DEPLOY_SSH_KEY"
+          test -n "$OVH_KNOWN_HOSTS"
+          printf '%s\n' "$OVH_DEPLOY_SSH_KEY" > "$key"
+          printf '%s\n' "$OVH_KNOWN_HOSTS" > "$hosts"
+          ssh_options=(-T -i "$key" -p "$OVH_DEPLOY_PORT" -o BatchMode=yes \
+            -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes -o ConnectTimeout=15 \
+            -o ServerAliveInterval=30 -o "UserKnownHostsFile=$hosts")
+          target="$OVH_DEPLOY_USER@$OVH_DEPLOY_HOST"
+          status=0
+          ssh "${ssh_options[@]}" "$target" "deploy-image $GITHUB_SHA $IMAGE_DIGEST" || status=$?
+          if [ "$status" -eq 10 ]; then
+            echo "::warning::Pending migrations: the container slot was not changed. Apply them via the manual upgrade path."
+          elif [ "$status" -eq 0 ]; then
+            printf 'Container slot running commit `%s` (`%s`); Caddy unchanged.\n' \
+              "$GITHUB_SHA" "$IMAGE_DIGEST" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          exit "$status"

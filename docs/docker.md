@@ -108,9 +108,12 @@ your host checkout out of the containers. Never put production secrets in
 ## Production image
 
 `backend/Dockerfile --target production` is the image production will run once
-the container plan is complete. **Until phases 2–4 land, production is still
-the systemd packaged release deployed by CI's `deploy-ovh` job**; nothing pulls
-this image yet.
+the container plan is complete. **Until phase 4 lands, production traffic is
+still the systemd packaged release deployed by CI's `deploy-ovh` job.** Since
+phase 3, CI's `deploy-docker-parallel` job (off until the owner sets
+`OVH_DOCKER_DEPLOY_ENABLED=true`) also starts each `main` image in a
+blue/green container slot on the VPS (`127.0.0.1:8001`/`8002`), without
+switching Caddy. The runbook is `deploy/docker/README.md`.
 
 The container plan (owner approved 2026-10-15). PostgreSQL stays native on the
 VPS with its backups and R2; Caddy, `/etc/vezano/vezano.env`, the media
@@ -120,9 +123,9 @@ through Caddy.
 | Phase | What | Status |
 |---|---|---|
 | 1 | production image + GHCR push in CI | **done** (this section) |
-| 2 | Docker Engine on the VPS, `docker-compose.prod.yml` (ports on 127.0.0.1, journald logs, image prune) | planned |
-| 3 | deploy controller: pull by digest, migration check in the new image, backup, blue/green Caddy switch, instant rollback (the `vezano-deploy` gateway stays) | planned |
-| 4 | parallel run on a second port + smoke tests, then the Caddy switch; the systemd release kept 2 weeks for rollback | planned |
+| 2 | Docker Engine on the VPS, `docker-compose.prod.yml` (ports on 127.0.0.1, journald logs, image prune) | **done** (#245) |
+| 3 | deploy controller: pull by digest, migration check in the new image, backup, blue/green slots (8001/8002), rollback; `deploy-image` through the `vezano-deploy` gateway; CI job `deploy-docker-parallel` gated by `OVH_DOCKER_DEPLOY_ENABLED`; the Caddy switch exists but is off | **done** (`deploy/docker/README.md`) |
+| 4 | parallel run on a second port + smoke tests, then the Caddy switch (`vezano-docker.sh caddy-mode docker`, owner-approved); the systemd release kept 2 weeks for rollback | planned |
 | 5 | cleanup | planned |
 
 ### Registry, tags and digest
@@ -174,8 +177,8 @@ and the `docker-dev` job's "Image sizes" step print the size (297 MB uncompresse
 ### User, UID and filesystem
 
 - Runs as **UID/GID 10001** (`vezano`), never root. Build args
-  `APP_UID`/`APP_GID` change it; phase 2 will set them to the VPS `vezano`
-  user's ids so the bind-mounted media keeps its owner.
+  `APP_UID`/`APP_GID` change it; on the VPS the slots run as the host `vezano`
+  user's ids (compose `user:`) so the bind-mounted media keeps its owner.
 - The code under `/srv/vezano` is owned by root and not writable by the app.
 - **Read-only root filesystem:** run with `--read-only`. The only writable
   paths are a tmpfs `/tmp` (gunicorn's worker heartbeat files, upload temp
