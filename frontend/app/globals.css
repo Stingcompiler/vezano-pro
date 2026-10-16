@@ -30,6 +30,14 @@
      text on warn/10, which measured 4.39:1 — under AA's 4.5. */
   --warn: 164 72 8;
   --danger: 185 28 28;
+  /* Text on a solid accent / danger fill (primary and danger buttons).
+     White on the light theme's deep teal and red (4.95:1, 6.47:1); the
+     dark theme's lighter teal and red need dark text (see .dark). */
+  --on-accent: 255 255 255;
+  --on-danger: 255 255 255;
+  /* The one raised surface (<PrimaryBlock>): soft depth for the screen's
+     primary block only; every other card is flat or hairline. */
+  --raise: 0 1px 2px rgb(18 37 59 / 0.04), 0 12px 32px -18px rgb(18 37 59 / 0.22);
 
   /* Script-specific font pairing. LTR (English) uses Inter/Sora; the RTL
      override below swaps to Tajawal (body and display) for Arabic. */
@@ -58,6 +66,11 @@
   /* On the dark theme the bg-ink panels (the footer) are light: the brand
      teal measured 4.2:1 on them, so «برو»/"Pro" takes the strong teal. */
   --pro-inverse: 11 90 97;
+  /* White on the dark accent measured 2.6:1 and on the dark danger 2.8:1
+     (review 2026-10-15); this near-black ink gives 7.0:1 and 6.6:1. */
+  --on-accent: 8 22 30;
+  --on-danger: 8 22 30;
+  --raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 16px 36px -18px rgb(0 0 0 / 0.6);
 }
 
 html,
@@ -318,12 +331,11 @@ body {
 }
 @media print { .enter-rise, .change-flash { animation: none !important; } }
 
-/* Cards that are links (or marked interactive) lift a hair under a mouse.
+/* Cards that are links lift a hair under a mouse.
    Phones have no hover, and reduced motion keeps them still. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
   a:hover > .workspace-card,
-  a:hover .dashboard-stat,
-  .workspace-card--interactive:hover {
+  a:hover .dashboard-stat {
     transform: translateY(-2px);
     box-shadow: 0 2px 3px rgba(18,37,59,0.03), 0 14px 28px -16px rgba(18,37,59,0.22);
   }
@@ -606,7 +618,13 @@ body { line-height: 1.6; }
 .workspace-main .tabular { letter-spacing: -.035em; }
 .dashboard-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
 .dashboard-overview > * { min-width: 0; margin-top: 0; margin-bottom: 0; }
-.dashboard-stat { height: 100%; position: relative; overflow: hidden; }
+/* A stat fills its grid cell (and the link around it) so a row lines up.
+   Only there: `height: 100%` on the top-products chart box resolved against
+   the whole section (heading included), so the chart ran past its section
+   and covered the next heading (review 2026-10-15). */
+.dashboard-stat { position: relative; overflow: hidden; }
+.grid > .dashboard-stat,
+.grid > a > .dashboard-stat { height: 100%; }
 a:hover .dashboard-stat { border-color: rgb(var(--accent) / .5); }
 .dashboard-section { padding: 20px; border: 1px solid rgb(var(--line)); border-radius: 20px; background: rgb(var(--surface)); }
 .dashboard-section .dashboard-stat { background: rgb(var(--paper) / .65); box-shadow: none; border-color: transparent; }

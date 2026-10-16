@@ -143,7 +143,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={submitting}
-            className="mt-6 w-full rounded-control bg-accent py-3 font-medium text-white transition-colors hover:bg-accent-strong disabled:opacity-60"
+            className="mt-6 w-full rounded-control bg-accent py-3 font-medium text-on-accent transition-colors hover:bg-accent-strong disabled:opacity-60"
           >
             {submitting ? t("auth.signingIn") : t("auth.signInHeading")}
           </button>

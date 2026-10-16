@@ -28,6 +28,9 @@ module.exports = {
         ok: withAlpha("--ok"),
         warn: withAlpha("--warn"),
         danger: withAlpha("--danger"),
+        // Text on a solid accent / danger fill (globals.css --on-accent).
+        "on-accent": withAlpha("--on-accent"),
+        "on-danger": withAlpha("--on-danger"),
       },
       fontFamily: {
         // These resolve to Inter/Sora in LTR and Tajawal in RTL — the
@@ -44,6 +47,8 @@ module.exports = {
       transitionTimingFunction: { motion: "var(--motion-ease)" },
       boxShadow: {
         card: "0 2px 3px rgba(18,37,59,0.025), 0 8px 24px -16px rgba(18,37,59,0.14)",
+        // The primary block's soft depth (globals.css --raise), one per screen.
+        raise: "var(--raise)",
       },
     },
   },

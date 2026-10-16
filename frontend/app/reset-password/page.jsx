@@ -47,7 +47,7 @@ export default function ResetPasswordPage() {
           <p className="mt-2 text-sm text-muted">{t("passwordReset.retiredBody")}</p>
           <Link
             href="/forgot-password/"
-            className="tap mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-white hover:bg-accent-strong"
+            className="tap mt-6 inline-flex min-h-11 w-full items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-on-accent hover:bg-accent-strong"
           >
             {t("passwordReset.requestCode")}
           </Link>

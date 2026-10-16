@@ -121,7 +121,7 @@ export function ConfirmProvider({ children }) {
                 type="button"
                 onClick={accept}
                 disabled={missing}
-                className={`min-h-11 rounded-control px-4 text-sm font-semibold text-white disabled:opacity-50 ${danger ? "bg-danger hover:opacity-90" : "bg-accent hover:bg-accent-strong"}`}
+                className={`min-h-11 rounded-control px-4 text-sm font-semibold disabled:opacity-50 ${danger ? "bg-danger text-on-danger hover:opacity-90" : "bg-accent text-on-accent hover:bg-accent-strong"}`}
               >
                 {request.confirmLabel || t(danger ? "confirm.proceedDanger" : "confirm.proceed")}
               </button>

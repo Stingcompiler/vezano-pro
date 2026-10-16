@@ -4,6 +4,12 @@
 //   npm run lint:ui            prints file:line  [pattern]  snippet, exits 1
 //                              on any hit; silent with exit 0 when clean
 //   npm run lint:ui -- --summary   also prints counts per pattern and file
+//   npm run lint:ui -- --migrated  only the files already moved to the chosen
+//                              direction (scripts/lint-ui-migrated.json).
+//                              `npm test` runs this (tests/lintUi.test.mjs),
+//                              so a migrated screen cannot regress while the
+//                              rest of the app is still being migrated. Add a
+//                              file to the list when its screen is migrated.
 //
 // Patterns:
 //   stripe        a coloured top/side stripe: border-s-4/border-t-2… with an
@@ -33,6 +39,9 @@ const FRONTEND = join(dirname(fileURLToPath(import.meta.url)), "..");
 const SCAN = ["app", "components"];
 const EXT = /\.(jsx?|tsx?|css)$/;
 const SUMMARY = process.argv.includes("--summary");
+const MIGRATED = process.argv.includes("--migrated")
+  ? new Set(JSON.parse(readFileSync(join(FRONTEND, "scripts", "lint-ui-migrated.json"), "utf8")).files)
+  : null;
 
 const COLOR = "(?:accent|ok|warn|danger|pro|brand|(?:red|green|emerald|amber|yellow|orange|sky|blue|indigo|violet|purple|rose|pink|teal|cyan|lime)-\\d{2,3})";
 // A light wash, not a solid fill and not a hover-only state: bg-accent/10,
@@ -204,6 +213,7 @@ for (const dir of SCAN) {
     const text = readFileSync(path, "utf8");
     const lines = text.split("\n");
     const file = relative(FRONTEND, path);
+    if (MIGRATED && !MIGRATED.has(file)) continue;
     currentFile = file;
     const hit = (pattern, index, snippet) => {
       const line = lineOf(text, index);

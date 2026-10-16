@@ -100,7 +100,7 @@ function TrialBand({ text }) {
       <div className="flex flex-col items-center gap-4 rounded-card border border-accent/30 bg-accent/5 px-5 py-6 text-center sm:flex-row sm:justify-between sm:px-8 sm:text-start">
         <p className="font-display text-lg font-semibold text-ink">{text}</p>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:gap-3">
-          <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-accent px-5 py-2.5 font-medium text-white shadow-card hover:bg-accent-strong">
+          <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control bg-accent px-5 py-2.5 font-medium text-on-accent shadow-card hover:bg-accent-strong">
             {t("home.heroPrimary")}
           </Link>
           <a href="#walkthrough" className="inline-flex min-h-11 items-center justify-center whitespace-nowrap rounded-control border border-line bg-surface px-5 py-2.5 font-medium text-ink hover:border-accent">
@@ -146,7 +146,7 @@ function Hero() {
           </p>
           <div className="hero-fade" style={heroTiming("actions")}>
             <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-              <Link href={href("/register")} className="w-full rounded-control bg-accent px-6 py-3 text-center font-medium text-white shadow-card hover:bg-accent-strong sm:w-auto">
+              <Link href={href("/register")} className="w-full rounded-control bg-accent px-6 py-3 text-center font-medium text-on-accent shadow-card hover:bg-accent-strong sm:w-auto">
                 {t("home.heroPrimary")}
               </Link>
               <Link href={href("/pricing")} className="w-full rounded-control border border-line bg-surface px-6 py-3 text-center font-medium text-ink hover:border-accent sm:w-auto">
@@ -219,7 +219,7 @@ function Stories() {
         })}
       </div>
       <div className="mt-12 text-center">
-        <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3 font-medium text-white shadow-card hover:bg-accent-strong">
+        <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3 font-medium text-on-accent shadow-card hover:bg-accent-strong">
           {t("home.heroPrimary")}
         </Link>
       </div>
@@ -364,7 +364,7 @@ function HowItWorks() {
         {steps.map(([title, body], index) => (
           <Reveal key={title} index={index}>
             <div className="h-full rounded-card border border-line bg-paper p-6 shadow-card">
-              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent font-display text-sm font-bold text-white">{index + 1}</span>
+              <span className="grid h-9 w-9 place-items-center rounded-full bg-accent font-display text-sm font-bold text-on-accent">{index + 1}</span>
               <h3 className="mt-4 font-display text-lg font-semibold">{title}</h3>
               <p className="mt-2 text-sm text-muted">{body}</p>
             </div>
@@ -372,7 +372,7 @@ function HowItWorks() {
         ))}
       </div>
       <div className="mt-8 text-center">
-        <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3 font-medium text-white shadow-card hover:bg-accent-strong">
+        <Link href={href("/register")} className="inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-6 py-3 font-medium text-on-accent shadow-card hover:bg-accent-strong">
           {t("home.heroPrimary")}
         </Link>
       </div>
@@ -421,7 +421,7 @@ function TrustSupport() {
             <LifeBuoy size={20} aria-hidden="true" className="text-accent" />{t("home.supportTitle")}
           </h2>
           <p className="mt-4 text-sm">{t("home.supportBody")}</p>
-          <a href="#walkthrough" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-control bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong">
+          <a href="#walkthrough" className="mt-5 inline-flex min-h-11 items-center gap-2 rounded-control bg-accent px-4 py-2 text-sm font-medium text-on-accent hover:bg-accent-strong">
             {t("home.supportForm")}
           </a>
           <ContactChannels lead={t("home.supportDirect")} className="mt-5" />
@@ -489,7 +489,7 @@ function GetStarted() {
         <div className="relative mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
           <div className="flex flex-col rounded-card border border-paper/15 bg-paper/5 p-5">
             <p className="flex-1 text-sm text-paper/80">{t("home.startTrialBody")}</p>
-            <Link href={href("/register")} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 font-medium text-white hover:bg-accent-strong">
+            <Link href={href("/register")} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 font-medium text-on-accent hover:bg-accent-strong">
               {t("home.finalPrimary")}
             </Link>
           </div>

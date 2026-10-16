@@ -30,7 +30,7 @@ export default function SolutionPage({ slug }) {
             <h1 className="mt-4 font-display text-3xl font-bold tracking-tight sm:text-5xl">{copy.title}</h1>
             <p className="mt-5 text-lg text-muted">{copy.lead}</p>
             <div className="mt-7 flex flex-col gap-3 sm:flex-row">
-              <Link href={href("/register")} className="rounded-control bg-accent px-6 py-3 text-center font-medium text-white shadow-card hover:bg-accent-strong">{t("content.startTrial")}</Link>
+              <Link href={href("/register")} className="rounded-control bg-accent px-6 py-3 text-center font-medium text-on-accent shadow-card hover:bg-accent-strong">{t("content.startTrial")}</Link>
               <Link href={href("/product")} className="rounded-control border border-line bg-surface px-6 py-3 text-center font-medium text-ink hover:border-accent">{t("landing.navFeatures")}</Link>
             </div>
           </div>
@@ -61,7 +61,7 @@ export default function SolutionPage({ slug }) {
             <div className="rounded-card border border-line bg-surface p-5 shadow-card">
               <h2 className="font-display font-semibold">{copy.cta}</h2>
               <p className="mt-2 text-sm text-muted">{t("home.heroNote")}</p>
-              <Link href={href("/register")} className="mt-4 block rounded-control bg-accent px-4 py-3 text-center font-medium text-white hover:bg-accent-strong">{t("content.startTrial")}</Link>
+              <Link href={href("/register")} className="mt-4 block rounded-control bg-accent px-4 py-3 text-center font-medium text-on-accent hover:bg-accent-strong">{t("content.startTrial")}</Link>
               <Link href={href("/pricing")} className="mt-2 block rounded-control border border-line px-4 py-3 text-center font-medium hover:border-accent">{t("content.seePricing")}</Link>
             </div>
           </aside>

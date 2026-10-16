@@ -40,7 +40,7 @@ export default function AppLayoutClient({ children }) {
   if (loading || !user) {
     return (
       <div className="grid min-h-screen place-items-center text-muted">
-        <div className="animate-pulse font-display">{t("common.loading")}</div>
+        <div role="status" className="font-display">{t("common.loading")}</div>
       </div>
     );
   }
@@ -73,7 +73,7 @@ export default function AppLayoutClient({ children }) {
     if (!isPlatformPath(pathname)) {
       return (
         <div className="grid min-h-screen place-items-center text-muted">
-          <div className="animate-pulse font-display">{t("common.loading")}</div>
+          <div role="status" className="font-display">{t("common.loading")}</div>
         </div>
       );
     }

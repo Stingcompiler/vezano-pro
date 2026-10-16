@@ -137,7 +137,7 @@ export default function CodeStep({
           <button
             type="submit"
             disabled={busy || dead}
-            className="rounded-control bg-accent px-6 py-3 font-medium text-white hover:bg-accent-strong disabled:opacity-50"
+            className="rounded-control bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-strong disabled:opacity-50"
           >
             {busy ? t("otp.verifying") : t("otp.verify")}
           </button>

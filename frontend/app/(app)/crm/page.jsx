@@ -159,7 +159,7 @@ export default function CrmPage() {
             onClick={() => setFilter(f)}
             className={`tap rounded-full border px-3 py-1.5 text-sm transition-colors ${
               filter === f
-                ? "border-accent bg-accent text-white"
+                ? "border-accent bg-accent text-on-accent"
                 : "border-line bg-surface text-muted hover:text-ink"
             }`}
           >

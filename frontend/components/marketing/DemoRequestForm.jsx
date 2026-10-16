@@ -168,7 +168,7 @@ export default function DemoRequestForm() {
         </div>
         <button
           type="submit" disabled={busy}
-          className="w-full rounded-control bg-accent py-3 font-medium text-white hover:bg-accent-strong disabled:opacity-70"
+          className="w-full rounded-control bg-accent py-3 font-medium text-on-accent hover:bg-accent-strong disabled:opacity-70"
         >
           {busy ? t("improvements.contactSending") : t("landing.contactSend")}
         </button>

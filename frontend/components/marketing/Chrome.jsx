@@ -148,7 +148,7 @@ export function MarketingHeader() {
     <Link
       href={user ? "/dashboard" : "/login"}
       prefetch={false}
-      className="tap inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-control bg-accent px-3.5 text-sm font-medium text-white hover:bg-accent-strong"
+      className="tap inline-flex h-10 shrink-0 items-center whitespace-nowrap rounded-control bg-accent px-3.5 text-sm font-medium text-on-accent hover:bg-accent-strong"
     >
       {user ? t("nav.dashboard") : t("common.signIn")}
     </Link>
@@ -174,7 +174,7 @@ export function MarketingHeader() {
       {/* First stop for the keyboard: straight past the header to the page. */}
       <a
         href="#content"
-        className="sr-only rounded-control bg-accent px-4 py-3 text-sm font-medium text-white shadow-card focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-2"
+        className="sr-only rounded-control bg-accent px-4 py-3 text-sm font-medium text-on-accent shadow-card focus:not-sr-only focus:fixed focus:start-3 focus:top-3 focus:z-50 focus:outline-none focus:ring-2 focus:ring-accent/40 focus:ring-offset-2"
       >
         {t("landing.skipToContent")}
       </a>

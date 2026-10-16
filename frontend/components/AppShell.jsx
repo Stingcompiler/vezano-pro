@@ -47,7 +47,7 @@ function WorkspaceBadge({ user }) {
   const initial = name.trim().charAt(0).toUpperCase() || "•";
   return (
     <div className="mx-3 mb-5 mt-4 flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-3 py-3">
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-accent font-display text-sm font-semibold text-white">
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-accent font-display text-sm font-semibold text-on-accent">
         {initial}
       </div>
       <div className="min-w-0">

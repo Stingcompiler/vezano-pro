@@ -201,7 +201,7 @@ function OrderTracker({ onRequest }) {
           <button
             type="submit"
             disabled={busy}
-            className="inline-flex items-center justify-center gap-2 rounded-control bg-accent px-6 py-3 font-medium text-white hover:bg-accent-strong disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-2 rounded-control bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-strong disabled:opacity-60"
           >
             <Search size={17} aria-hidden="true" />
             {busy ? t("track.searching") : t("track.search")}
@@ -220,7 +220,7 @@ function OrderTracker({ onRequest }) {
         {answer?.asRequest && (
           <div role="status" className="flex flex-wrap items-center justify-between gap-3 rounded-control border border-accent/30 bg-accent/5 p-4 text-sm">
             <span>{t("track.looksLikeRequest")}</span>
-            <button type="button" onClick={() => onRequest(answer.query)} className="inline-flex min-h-11 items-center gap-2 rounded-control bg-accent px-4 py-2 font-medium text-white hover:bg-accent-strong">
+            <button type="button" onClick={() => onRequest(answer.query)} className="inline-flex min-h-11 items-center gap-2 rounded-control bg-accent px-4 py-2 font-medium text-on-accent hover:bg-accent-strong">
               <MailCheck size={15} aria-hidden="true" />{t("track.trackAsRequest")}
             </button>
           </div>
@@ -448,7 +448,7 @@ function RequestTracker({ initialQuery }) {
         <button
           type="submit"
           disabled={busy || !query.trim()}
-          className="inline-flex items-center justify-center gap-2 rounded-control bg-accent px-6 py-3 font-medium text-white hover:bg-accent-strong disabled:opacity-60"
+          className="inline-flex items-center justify-center gap-2 rounded-control bg-accent px-6 py-3 font-medium text-on-accent hover:bg-accent-strong disabled:opacity-60"
         >
           <MailCheck size={17} aria-hidden="true" />
           {busy ? t("track.sendingCode") : t("track.sendCode")}

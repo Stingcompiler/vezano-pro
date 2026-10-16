@@ -72,7 +72,7 @@ export default function ActivateOwnerPage() {
             </h1>
             <Link
               href="/login"
-              className="tap mt-6 inline-flex min-h-10 items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-white"
+              className="tap mt-6 inline-flex min-h-10 items-center justify-center rounded-control bg-accent px-5 py-2 text-sm font-semibold text-on-accent"
             >
               {t("ownerActivation.signIn")}
             </Link>

@@ -24,9 +24,9 @@ export function EmptyState({ icon: Icon, title, body, action, filtered = false, 
   return (
     <div className={`mx-auto flex max-w-md flex-col items-center px-4 py-10 text-center ${className}`}>
       {Shown && (
-        <span className="grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-accent" aria-hidden="true">
-          <Shown size={22} />
-        </span>
+        // A plain line icon, no tinted disc (docs/ui-profile.md): the title
+        // and the action carry the message.
+        <Shown size={28} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
       )}
       <h3 className="mt-3 font-display text-base font-semibold text-ink">
         {filtered ? t("empty.noResultsTitle") : title}

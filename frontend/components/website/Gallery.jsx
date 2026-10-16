@@ -57,7 +57,7 @@ export default function Gallery({ writable, onChanged }) {
       <div className="mb-1 flex items-center justify-between gap-3">
         <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">{t("website.gallery")}</h2>
         {writable && (
-          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-control bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent-strong">
+          <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-control bg-accent px-3 py-1.5 text-sm font-medium text-on-accent hover:bg-accent-strong">
             <ImagePlus size={15} />{busy ? t("website.uploading") : t("website.addPhotos")}
             <input ref={input} type="file" multiple accept="image/jpeg,image/png,image/webp" className="hidden" disabled={busy} onChange={(event) => add(event.target.files)} />
           </label>
