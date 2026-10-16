@@ -12,6 +12,7 @@ import { errorText } from "@/lib/errors";
 import { useSync } from "@/components/sync/SyncProvider";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDateTime } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -360,7 +361,7 @@ export default function CashDrawer({ currency = "", onShiftChange }) {
           <Badge tone="ok">{t("till.open")}</Badge>
           <span className="text-sm text-muted">
             {t("till.openedBy", { name: shift.opened_by_name })} ·{" "}
-            {new Date(shift.opened_at).toLocaleString(language === "ar" ? "ar" : "en")}
+            {formatDateTime(shift.opened_at, language)}
           </span>
         </div>
         <div className="flex gap-2">

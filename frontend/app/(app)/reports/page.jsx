@@ -18,7 +18,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { useHashTab } from "@/lib/useHashTab";
 import { useTabFade } from "@/lib/useTabFade";
 import { expenseCategory } from "@/lib/expenseCategories";
-import { localToday } from "@/lib/dates";
+import { formatDate, localToday } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 import { useMoney } from "@/lib/useMoney";
 import { LOADING, planIncludes, slotFromError } from "@/lib/reportSlots";
@@ -631,7 +631,7 @@ export default function ReportsPage() {
                       <tbody>
                         {forecast.rows.map((r) => (
                           <tr key={r.bucket} className="border-b border-line last:border-0">
-                            <td className="px-3 py-2">{r.bucket === "overdue" ? t("reports.forecastOverdue") : t("reports.forecastWeekFrom", { date: new Date(`${r.starts_on}T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en", { day: "numeric", month: "short" }) })}</td>
+                            <td className="px-3 py-2">{r.bucket === "overdue" ? t("reports.forecastOverdue") : t("reports.forecastWeekFrom", { date: formatDate(`${r.starts_on}T00:00:00`, language, { day: "numeric", month: "short" }) })}</td>
                             <td className="tabular px-3 py-2 text-end text-ok"><NumText value={cell(r.inflow)} /></td>
                             <td className="tabular px-3 py-2 text-end text-danger"><NumText value={cell(r.outflow)} /></td>
                             <td className={`tabular px-3 py-2 text-end ${Number(r.net) < 0 ? "text-danger" : ""}`}><NumText value={cell(r.net)} /></td>

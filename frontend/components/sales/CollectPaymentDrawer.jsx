@@ -14,6 +14,7 @@ import { errorText } from "@/lib/errors";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 import { formatAmount, round2 } from "@/lib/money";
 import { useStableIds } from "@/lib/useStableIds";
+import { formatDate } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -309,7 +310,7 @@ export default function CollectPaymentDrawer({ open, onClose, customer, invoice,
                         {inv.is_overdue && <Badge tone="danger">{t("debts.overdue")}</Badge>}
                       </div>
                       <div className="text-xs text-muted">
-                        {new Date(inv.issued_at).toLocaleDateString(language === "ar" ? "ar" : "en")}
+                        {formatDate(inv.issued_at, language)}
                         {" · "}{t("debts.dueOf", { due: money(inv.amount_due), total: money(inv.total) })}
                       </div>
                     </div>

@@ -3,6 +3,7 @@
 import { useI18n } from "../../app/providers/I18nProvider";
 import { currencyLabel, formatAmount } from "@/lib/money";
 import { paymentMethodLabel } from "@/lib/labels";
+import { formatDateTime } from "@/lib/dates";
 
 /**
  * Renders a document payload from the API into a printable page.
@@ -80,7 +81,7 @@ function fmtDate(value, language) {
   const opts = /T\d/.test(String(value))
     ? { dateStyle: "medium", timeStyle: "short" }
     : { dateStyle: "medium" };
-  return d.toLocaleString(language === "ar" ? "ar" : "en", opts);
+  return formatDateTime(d, language, opts);
 }
 
 export default function DocumentView({ doc, paper = "a4" }) {

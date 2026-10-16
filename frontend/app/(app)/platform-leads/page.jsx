@@ -9,6 +9,7 @@ import { platformLeads as platformLeadsApi } from "@/lib/api";
 import { Badge, Card, Input, PageHeader, Select } from "@/components/ui/kit";
 import FollowUpPanel, { ContactLinks, FollowUpBadge } from "@/components/platform/FollowUpPanel";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const STATUSES = ["new", "contacted", "qualified", "closed"];
 const TONES = { new: "accent", contacted: "warn", qualified: "ok", closed: "muted" };
@@ -83,7 +84,7 @@ export default function PlatformLeadsPage() {
   };
 
   const statusLabel = (value) => t(`platformLeads.status${value.charAt(0).toUpperCase()}${value.slice(1)}`);
-  const dateLabel = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en");
+  const dateLabel = (value) => formatDateTime(value, language);
 
   if (!canView) {
     return (

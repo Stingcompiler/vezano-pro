@@ -283,7 +283,7 @@ export default function ProductForm({ open, onClose, onSaved, product, exchangeR
             form.reference_price !== "" && Number(exchangeRate) > 0
               ? t("inventory.referencePriceHint", {
                   price: (Number(form.reference_price) * Number(exchangeRate)).toLocaleString(
-                    undefined, { maximumFractionDigits: 2 },
+                    "en-US", { maximumFractionDigits: 2 },
                   ),
                 })
               : t("inventory.referencePriceEmptyHint")
@@ -315,7 +315,7 @@ export default function ProductForm({ open, onClose, onSaved, product, exchangeR
             form.reference_cost !== "" && Number(exchangeRate) > 0
               ? t("inventory.referenceCostHint", {
                   price: (Number(form.reference_cost) * Number(exchangeRate)).toLocaleString(
-                    undefined, { maximumFractionDigits: 2 },
+                    "en-US", { maximumFractionDigits: 2 },
                   ),
                 })
               : t("inventory.referenceCostEmptyHint")

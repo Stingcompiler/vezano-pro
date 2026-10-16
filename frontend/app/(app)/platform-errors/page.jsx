@@ -7,11 +7,12 @@ import { platformErrors } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { Badge, Button, Card, PageHeader } from "@/components/ui/kit";
+import { formatDateTime } from "@/lib/dates";
 
 function ErrorRow({ event, onResolve }) {
   const { t, language } = useI18n();
   const [open, setOpen] = useState(false);
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   return (
     <Card className="p-4">
       <div className="flex flex-wrap items-start justify-between gap-3">

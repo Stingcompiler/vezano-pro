@@ -8,6 +8,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
 import { Badge, Button, Field, Input, Select } from "@/components/ui/kit";
+import { formatDate } from "@/lib/dates";
 
 const STAGES = [
   ["new", "crm.stageNew"],
@@ -147,7 +148,7 @@ export default function LeadDrawer({ open, lead, groups, writable, onClose, onSa
   }
 
   const dateFmt = (d) =>
-    d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "";
+    d ? formatDate(d, language) : "";
   const isOverdue = (fu) => !fu.done && fu.due_date && new Date(fu.due_date) < new Date();
 
   return (

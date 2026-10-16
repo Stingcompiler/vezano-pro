@@ -11,6 +11,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDateTime } from "@/lib/dates";
 
 const money = (v) =>
   v == null || v === "" ? "—"
@@ -52,7 +53,7 @@ export default function PriceFlagReview() {
     } finally { setBusy(null); }
   }
 
-  const fmt = (v) => (v ? new Date(v).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" }) : "—");
+  const fmt = (v) => (v ? formatDateTime(v, language, { dateStyle: "medium", timeStyle: "short" }) : "—");
 
   return (
     <Card>

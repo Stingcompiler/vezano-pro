@@ -22,6 +22,7 @@ import SeoHealthPanel from "@/components/platform/SeoHealthPanel";
 import SeoRedirectsPanel from "@/components/platform/SeoRedirectsPanel";
 import { useHashTab } from "@/lib/useHashTab";
 import { overrideDraftFor } from "@/lib/seoHealth";
+import { formatDateTime } from "@/lib/dates";
 
 const SETTINGS_FIELDS = ["google_site_verification", "bing_site_verification", "analytics_id", "robots_extra", "support_whatsapp", "support_phone", "support_email"];
 const EMPTY_OVERRIDE = { path: "/", language: "both", title: "", description: "", noindex: false, canonical: "" };
@@ -190,7 +191,7 @@ export default function PlatformSeoPage() {
     }
   };
 
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const set = (key) => (event) => setForm({ ...form, [key]: event.target.value });
   const setDraftField = (key) => (event) => setDraft({ ...draft, [key]: event.target.type === "checkbox" ? event.target.checked : event.target.value });
 

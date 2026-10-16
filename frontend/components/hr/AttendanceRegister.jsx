@@ -12,7 +12,7 @@ import TabBar from "@/components/ui/TabBar";
 import { Badge, Card, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
-import { localToday } from "@/lib/dates";
+import { formatDate, localToday } from "@/lib/dates";
 
 const STATUSES = ["present", "absent", "half_day", "leave"];
 const TONE = { present: "ok", absent: "danger", half_day: "warn", leave: "accent" };
@@ -102,7 +102,7 @@ export default function AttendanceRegister({ writable }) {
     } finally { setBusy(null); }
   }
 
-  const fmtMonth = (m) => new Date(`${m}-01T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en", { month: "long", year: "numeric" });
+  const fmtMonth = (m) => formatDate(`${m}-01T00:00:00`, language, { month: "long", year: "numeric" });
   const marked = Object.keys(records).length;
 
   return (

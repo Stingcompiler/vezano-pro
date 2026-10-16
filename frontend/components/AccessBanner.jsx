@@ -5,6 +5,7 @@ import Link from "next/link";
 
 import { useAuth } from "../app/providers/AuthProvider";
 import { useI18n } from "../app/providers/I18nProvider";
+import { formatDate } from "@/lib/dates";
 
 const SOON_DAYS = 30;
 
@@ -22,7 +23,7 @@ export default function AccessBanner() {
 
   const locked = !ent.allow_writes;
   const until = ent.valid_until
-    ? new Date(ent.valid_until).toLocaleDateString(language === "ar" ? "ar" : "en", { dateStyle: "medium" })
+    ? formatDate(ent.valid_until, language, { dateStyle: "medium" })
     : null;
   const key = locked ? `access.locked.${ent.state}` : `access.warn.${ent.state}`;
   const fallback = locked ? "access.locked.generic" : "access.warn.generic";

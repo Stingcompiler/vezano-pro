@@ -5,7 +5,7 @@ import { Check, FileText, Lock, Plus, RefreshCw, Stethoscope, Users, X } from "l
 
 import { hr, org } from "@/lib/api";
 import { errorText } from "@/lib/errors";
-import { localToday } from "@/lib/dates";
+import { formatDate, localToday } from "@/lib/dates";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
@@ -531,7 +531,7 @@ export default function HrPage() {
     return { headcount: employees.length, active, onLeave, pending };
   }, [employees, leave]);
 
-  const dateFmt = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "—");
+  const dateFmt = (d) => (d ? formatDate(d, language) : "—");
   const money = (v) => formatAmount(v);
 
   async function decide(kind, id, approveFn, rejectFn) {

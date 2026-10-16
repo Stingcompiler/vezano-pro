@@ -14,6 +14,7 @@ import { errorText } from "@/lib/errors";
 import { formatAmount } from "@/lib/money";
 import { uploadProgress } from "@/lib/progress";
 import ProgressRing from "@/components/ui/ProgressRing";
+import { formatDate, formatDateTime } from "@/lib/dates";
 
 const money = (v) => formatAmount(v);
 
@@ -28,7 +29,7 @@ function summarise(op, t, language) {
   const day = p.date || p.occurred_at || p.recorded_at;
   if (day) {
     const d = new Date(day);
-    if (!Number.isNaN(d.getTime())) parts.push(d.toLocaleDateString(language === "ar" ? "ar" : "en", { dateStyle: "medium" }));
+    if (!Number.isNaN(d.getTime())) parts.push(formatDate(d, language, { dateStyle: "medium" }));
   }
   if (p.status && op.op_type === "attendance") parts.push(t(`hr.attendance.status.${p.status}`));
   return parts.join(" · ");
@@ -192,7 +193,7 @@ export default function SyncStatus() {
         <details className="mt-2 text-xs text-muted">
           <summary className="cursor-pointer select-none">{t("improvements.technicalDetails")}</summary>
           <div className="mt-1 break-all font-mono">{op.client_uuid}</div>
-          {op.queued_at && <div className="mt-0.5">{new Date(op.queued_at).toLocaleString(language === "ar" ? "ar" : "en")}</div>}
+          {op.queued_at && <div className="mt-0.5">{formatDateTime(op.queued_at, language)}</div>}
         </details>
         {op.error && online && op.op_type === "pos_checkout" && op.error_field === "customer" && (
           <AttachCustomer op={op} onAttach={amend} />

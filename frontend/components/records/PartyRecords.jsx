@@ -12,6 +12,7 @@ import { Badge, Button, Card, Field, Input, NumText, PageHeader, Select } from "
 import PhoneLink from "@/components/ui/PhoneLink";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
+import { formatDate, formatDateTime } from "@/lib/dates";
 
 const STATUS_TONE = {
   active: "ok",
@@ -132,8 +133,8 @@ export default function PartyRecords({
     v == null
       ? "—"
       : formatAmount(v);
-  const dt = (d) => (d ? new Date(d).toLocaleString(language === "ar" ? "ar" : "en") : "—");
-  const day = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "—");
+  const dt = (d) => (d ? formatDateTime(d, language) : "—");
+  const day = (d) => (d ? formatDate(d, language) : "—");
 
   if (!allowed) {
     return (

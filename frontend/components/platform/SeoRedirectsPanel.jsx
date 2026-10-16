@@ -19,6 +19,7 @@ import { EmptyTableRow } from "@/components/ui/EmptyState";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import Drawer from "@/components/ui/Drawer";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 const NO_FILTERS = { query: "", state: "all" };
 const TEXTAREA = "w-full rounded-control border border-line bg-surface px-3 py-2 font-mono text-xs text-ink outline-none focus:border-accent";
@@ -85,7 +86,7 @@ export default function SeoRedirectsPanel({ canManage }) {
     setNotice(message);
     setTimeout(() => setNotice(""), 2500);
   };
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const shown = useMemo(() => filterRedirects(rows, filters), [rows, filters]);
   const activeCount = rows.filter((row) => row.is_active).length;
 
@@ -358,7 +359,7 @@ export default function SeoRedirectsPanel({ canManage }) {
                     )}
                   </td>
                   <td className="px-2 py-2">
-                    <div className="tabular-nums">{row.hits.toLocaleString(language === "ar" ? "ar" : "en")}</div>
+                    <div className="tabular-nums">{row.hits.toLocaleString("en-US")}</div>
                     <div className="text-xs text-muted">{row.last_hit_at ? t("platformSeo.redirects.lastHit", { date: fmt(row.last_hit_at) }) : t("platformSeo.redirects.neverHit")}</div>
                   </td>
                   <td className="px-2 py-2">

@@ -13,6 +13,7 @@ import {
   AmountWithBase, CurrencyFields, EMPTY_FX, fxCurrency, fxPayload, fxProblem, fxRate,
   usePurchaseCurrencies,
 } from "@/components/purchasing/PurchaseCurrency";
+import { formatDate } from "@/lib/dates";
 
 const money = (v) =>
   formatAmount(v);
@@ -93,7 +94,7 @@ export default function NewBillDrawer({ open, onClose, onSaved, suppliers }) {
   const total = round2(subtotal + tax);
   const currency = receipt ? receipt.currency || fxInfo.currency : fxCurrency(fx, fxInfo);
   const rate = receipt ? Number(receipt.exchange_rate) || 1 : fxRate(fx, fxInfo);
-  const fmtDate = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "");
+  const fmtDate = (d) => (d ? formatDate(d, language) : "");
 
   async function save() {
     setError("");

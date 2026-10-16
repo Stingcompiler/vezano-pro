@@ -16,6 +16,7 @@ import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/compone
 import { errorText } from "@/lib/errors";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonCard } from "@/components/ui/Skeleton";
+import { formatDateTime } from "@/lib/dates";
 
 function Row({ label, children }) {
   return (
@@ -139,7 +140,7 @@ function MemberDetail() {
   const capabilityNames = t("platformTeam.capabilityNames");
   const capabilityLabel = (code) =>
     (capabilityNames && typeof capabilityNames === "object" && capabilityNames[code]) || code;
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const back = (
     <Link href="/platform-team" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">

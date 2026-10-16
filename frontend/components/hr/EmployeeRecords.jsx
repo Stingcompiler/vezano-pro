@@ -11,7 +11,7 @@ import { Button, Field, Input, Select, controlClass } from "@/components/ui/kit"
 import { errorText } from "@/lib/errors";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonLines } from "@/components/ui/Skeleton";
-import { localToday } from "@/lib/dates";
+import { formatDate, localToday } from "@/lib/dates";
 
 const today = () => localToday();
 const DOC_TYPES = ["contract", "id", "certificate", "warning", "other"];
@@ -72,7 +72,7 @@ export default function EmployeeRecords({ employee, writable }) {
     try { await hr.deleteEmployeeDocument(d.id); load(); } catch (err) { fail(err, t("hr.records.saveError")); }
   }
 
-  const fmt = (v) => new Date(`${v}`.length === 10 ? `${v}T00:00:00` : v).toLocaleDateString(language === "ar" ? "ar" : "en", { dateStyle: "medium" });
+  const fmt = (v) => formatDate(`${v}`.length === 10 ? `${v}T00:00:00` : v, language, { dateStyle: "medium" });
 
   return (
     <div className="mt-6 border-t border-line pt-4">

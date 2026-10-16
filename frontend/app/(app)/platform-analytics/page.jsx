@@ -7,6 +7,7 @@ import { platformAnalytics } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { Badge, Card, Figure, FigureRow, PageHeader } from "@/components/ui/kit";
+import { formatDate } from "@/lib/dates";
 
 const WINDOWS = [7, 30, 90];
 
@@ -71,7 +72,7 @@ function TrendChart({ series }) {
   const y = (v) => H - 24 - (v / max) * (H - 48);
   const line = (field) => series.map((p, i) => `${i ? "L" : "M"}${x(i).toFixed(1)},${y(p[field]).toFixed(1)}`).join(" ");
   const area = `${line("visits")} L${x(series.length - 1).toFixed(1)},${H - 24} L${x(0).toFixed(1)},${H - 24} Z`;
-  const fmtDay = (iso) => new Date(`${iso}T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en", { day: "numeric", month: "short" });
+  const fmtDay = (iso) => formatDate(`${iso}T00:00:00`, language, { day: "numeric", month: "short" });
   const point = hover === null ? null : series[hover];
   return (
     <div dir="ltr">

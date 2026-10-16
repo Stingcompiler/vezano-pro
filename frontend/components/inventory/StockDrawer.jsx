@@ -10,6 +10,7 @@ import Drawer from "@/components/ui/Drawer";
 import { Badge, Button, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useStableIds } from "@/lib/useStableIds";
+import { formatDate } from "@/lib/dates";
 
 // Mirrors StockAdjustment.REASON_CHOICES on the server: a coded reason is
 // what lets shrinkage be reported by cause rather than as free text.
@@ -158,7 +159,7 @@ export default function StockDrawer({ open, onClose, product, warehouses, canWri
     }
   }
 
-  const dateFmt = (d) => (d ? new Date(d).toLocaleDateString(language === "ar" ? "ar" : "en") : "");
+  const dateFmt = (d) => (d ? formatDate(d, language) : "");
 
   // What a lot holds in one warehouse (from the stock endpoint), shown in the
   // lot picker so a write-off is not aimed at an empty lot unseen.

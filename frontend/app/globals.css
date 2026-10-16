@@ -717,6 +717,14 @@ body { line-height: 1.6; }
   table.stack-sm td { display: block; padding: 0 !important; border: 0; text-align: start; min-width: 0; }
   table.stack-sm td[colspan] { width: 100%; }
   table.stack-sm td:not([colspan]):empty { display: none; }
+  /* The pinned first column (above) is for tables that scroll sideways. A
+     phone row does not scroll, so its first cell shows the row's own
+     background (hover, an over-limit tint) instead of a surface strip. */
+  .workspace-main .overflow-x-auto > table.stack-sm tbody tr td:first-child {
+    position: static;
+    background: transparent;
+    box-shadow: none;
+  }
 
   /* Line 2 by default: the cell's heading, then its value, small. */
   table.stack-sm td:not([colspan]) { order: 5; font-size: 0.8125rem; }

@@ -12,7 +12,7 @@ import { errorText } from "@/lib/errors";
 // Mirrors inventory.pricing.STEPS on the server.
 const STEPS = ["0.01", "1", "5", "10", "50", "100", "500", "1000"];
 
-const fmt = (v) => (v == null ? "—" : Number(v).toLocaleString(undefined, { maximumFractionDigits: 2 }));
+const fmt = (v) => (v == null ? "—" : Number(v).toLocaleString("en-US", { maximumFractionDigits: 2 }));
 
 /**
  * Bulk repricing under inflation: preview first (dry run), then apply. Rate

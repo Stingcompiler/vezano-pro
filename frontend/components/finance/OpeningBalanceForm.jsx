@@ -9,7 +9,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import { Badge, Button, Field, Input, NumText } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
-import { localToday } from "@/lib/dates";
+import { formatDate, localToday } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
 
 const money = (v) =>
@@ -51,7 +51,7 @@ export default function OpeningBalanceForm({ kind, account, onSaved }) {
     }
   }
 
-  const fmt = (d) => new Date(`${d}T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en");
+  const fmt = (d) => formatDate(`${d}T00:00:00`, language);
 
   return (
     <div className="rounded-control border border-line bg-paper p-3">

@@ -21,6 +21,7 @@ import { errorText } from "@/lib/errors";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonCard } from "@/components/ui/Skeleton";
 import { activityActionLabel } from "@/lib/labels";
+import { formatDateTime } from "@/lib/dates";
 
 function Row({ label, children }) {
   return (
@@ -113,7 +114,7 @@ function UserDetail() {
     usersApi.branches().then((r) => setBranches(r.data.results || r.data)).catch(() => {});
   }, [writable]);
 
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  const fmt = (value) => formatDateTime(value, language, { dateStyle: "medium", timeStyle: "short" });
   const BackIcon = dir === "rtl" ? ArrowRight : ArrowLeft;
   const back = (
     <Link href="/users" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">
