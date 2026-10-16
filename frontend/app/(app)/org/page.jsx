@@ -6,7 +6,7 @@ import { Lock, Plus } from "lucide-react";
 import { inventory, org } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Button, Card, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, NumText, PageHeader } from "@/components/ui/kit";
 import PhoneLink from "@/components/ui/PhoneLink";
 import BranchForm from "@/components/org/BranchForm";
 import WarehouseForm from "@/components/org/WarehouseForm";
@@ -112,7 +112,7 @@ export default function OrgPage() {
                 branches.map((b) => (
                   <tr key={b.id} className="border-b border-line last:border-0">
                     <td className="px-4 py-3 text-ink">{b.name}</td>
-                    <td className="tabular px-4 py-3 text-muted">{b.code || "—"}</td>
+                    <td className="tabular px-4 py-3 text-muted"><NumText value={b.code || "—"} /></td>
                     <td className="px-4 py-3 text-muted"><PhoneLink phone={b.phone} /></td>
                     <td className="px-4 py-3 text-end">
                       {b.is_active ? (
@@ -180,7 +180,7 @@ export default function OrgPage() {
               {warehouses.map((w) => (
                 <tr key={w.id} className="border-b border-line last:border-0">
                   <td className="px-4 py-3 text-ink">{w.name}</td>
-                  <td className="tabular px-4 py-3 text-muted">{w.code || "—"}</td>
+                  <td className="tabular px-4 py-3 text-muted"><NumText value={w.code || "—"} /></td>
                   <td className="px-4 py-3 text-end">
                     {w.is_active ? (
                       <Badge tone="ok">{t("common.active")}</Badge>

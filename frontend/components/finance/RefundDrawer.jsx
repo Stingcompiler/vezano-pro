@@ -7,7 +7,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import { useOfflineMutation } from "@/components/sync/useOfflineMutation";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Button, Field, Input, Select } from "@/components/ui/kit";
+import { Button, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useStableIds } from "@/lib/useStableIds";
 import { formatAmount } from "@/lib/money";
@@ -96,11 +96,11 @@ export default function RefundDrawer({ note, open, onClose, onDone }) {
         <div className="rounded-card border border-line p-3 text-sm">
           <div className="flex justify-between">
             <span className="text-muted">{t("doc.number")}</span>
-            <span className="tabular text-ink">{note.number_display}</span>
+            <span className="tabular text-ink"><NumText value={note.number_display} /></span>
           </div>
           <div className="mt-1 flex justify-between">
             <span className="text-muted">{t("corrections.remainingRefundable")}</span>
-            <span className="tabular text-ink">{money(note.remaining_refundable)}</span>
+            <span className="tabular text-ink"><NumText value={money(note.remaining_refundable)} /></span>
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">

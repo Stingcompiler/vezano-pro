@@ -18,6 +18,9 @@
     "app/(app)/users/detail/page.jsx",
     "app/(app)/users/page.jsx",
     "app/(app)/web-orders/page.jsx",
+    "app/(marketing)/product/page.js",
+    "app/(marketing)/register/hosting/page.js",
+    "app/(marketing)/track/page.js",
     "app/globals.css",
     "app/reset-password/page.jsx",
     "components/SetupPrompt.jsx",
@@ -25,6 +28,11 @@
     "components/finance/MoneyLedger.jsx",
     "components/finance/StatementReconcilePanel.jsx",
     "components/inventory/StockCountPanel.jsx",
+    "components/landing/LandingPage.jsx",
+    "components/marketing/CodeStep.jsx",
+    "components/marketing/RegisterForm.jsx",
+    "components/marketing/content/GuidePage.jsx",
+    "components/marketing/pricing/parts.jsx",
     "components/platform/PricingLayoutEditor.jsx",
     "components/platform/SeoHealthPanel.jsx",
     "components/purchasing/BillList.jsx",
@@ -50,6 +58,7 @@
     "components/ui/EmptyState.jsx",
     "components/ui/Skeleton.jsx",
     "components/ui/TableCardLabels.jsx",
-    "components/ui/kit.jsx"
+    "components/ui/kit.jsx",
+    "components/website/Gallery.jsx"
   ]
 }

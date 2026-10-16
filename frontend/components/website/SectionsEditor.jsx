@@ -6,7 +6,7 @@ import { Eye, EyeOff, Pencil, Plus, Trash2 } from "lucide-react";
 import { website } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonLines } from "@/components/ui/Skeleton";
@@ -194,7 +194,7 @@ export default function SectionsEditor({ websiteId, writable, onChanged }) {
         <div className="divide-y divide-line">
           {sections.map((s) => (
             <div key={s.id} className="flex items-center gap-3 py-3">
-              <span className="tabular w-8 text-center text-xs text-muted">{s.order}</span>
+              <span className="tabular w-8 text-center text-xs text-muted"><NumText value={s.order} /></span>
               <Badge tone="muted">{typeLabel(t, s.type)}</Badge>
               <div className="min-w-0 flex-1">
                 <div className="truncate text-sm text-ink">{s.title || t("website.untitled")}</div>

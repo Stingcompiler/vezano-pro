@@ -7,7 +7,7 @@ import { bankAccounts as bankAccountsApi, sales } from "@/lib/api";
 import { accountLabel } from "@/lib/bankChannels";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Field, FileInput, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, FileInput, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { formatAmount } from "@/lib/money";
 
@@ -111,7 +111,7 @@ export default function StatementReconcilePanel({ onApplied }) {
                     {m.how === "last4_amount" && <span className="text-muted"> · {t("finance.reconcileByLast4")}</span>}
                     {m.payments?.length > 1 && <span className="text-muted"> · {t("finance.reconcileGroup", { count: m.payments.length })}</span>}
                   </span>
-                  <span className="tabular font-semibold">{money(m.amount)}</span>
+                  <span className="tabular font-semibold"><NumText value={money(m.amount)} /></span>
                   {m.amount_differs && <Badge tone="danger">{t("finance.reconcileRecorded", { amount: money(m.group_total ?? m.payment.amount) })}</Badge>}
                   {m.outcome && <Badge tone={outcomeTone[m.outcome] || "muted"}>{t(`finance.reconcileOutcome.${m.outcome}`)}</Badge>}
                 </Row>
@@ -124,7 +124,7 @@ export default function StatementReconcilePanel({ onApplied }) {
                 <Row key={`u${u.row}`}>
                   <span dir="ltr" className="tabular text-muted">{u.reference || "—"}</span>
                   <span className="min-w-0 flex-1 truncate text-muted">{u.sender || ""} {u.date ? `· ${u.date}` : ""}</span>
-                  <span className="tabular font-semibold">{u.amount != null ? money(u.amount) : "—"}</span>
+                  <span className="tabular font-semibold"><NumText value={u.amount != null ? money(u.amount) : "—"} /></span>
                   <Badge tone="muted">{t(`finance.reconcileReason.${u.reason}`)}</Badge>
                 </Row>
               ))}
@@ -139,7 +139,7 @@ export default function StatementReconcilePanel({ onApplied }) {
                     {p.customer || t("sales.walkIn")} · <span dir="ltr">INV-{String(p.invoice_number).padStart(6, "0")}</span>
                     <span className="text-muted"> · {p.sender_bank_name}</span>
                   </span>
-                  <span className="tabular font-semibold">{money(p.amount)}</span>
+                  <span className="tabular font-semibold"><NumText value={money(p.amount)} /></span>
                 </Row>
               ))}
             </Section>

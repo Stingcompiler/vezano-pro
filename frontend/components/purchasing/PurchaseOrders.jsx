@@ -8,7 +8,7 @@ import { offlineStore } from "@/lib/offlineStore";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount, round2 } from "@/lib/money";
@@ -108,8 +108,8 @@ function NewOrderDrawer({ open, onClose, suppliers, onSaved, fxInfo }) {
             <Card className="absolute z-10 mt-1 w-full overflow-hidden">
               {results.map((p) => (
                 <button key={p.id} onClick={() => add(p)} className="tap flex w-full items-center justify-between px-4 py-2 text-start text-sm hover:bg-paper">
-                  <span><span className="tabular text-muted">{p.sku}</span> {p.name}</span>
-                  <span className="tabular text-muted">{money(p.cost_price)}</span>
+                  <span><span className="tabular text-muted"><NumText value={p.sku} /></span> {p.name}</span>
+                  <span className="tabular text-muted"><NumText value={money(p.cost_price)} /></span>
                 </button>
               ))}
             </Card>
@@ -119,10 +119,10 @@ function NewOrderDrawer({ open, onClose, suppliers, onSaved, fxInfo }) {
           <div className="divide-y divide-line rounded-card border border-line">
             {lines.map((l) => (
               <div key={l.product} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
-                <div className="min-w-0 flex-1"><div className="truncate">{l.name}</div><div className="tabular text-xs text-muted">{l.sku}</div></div>
+                <div className="min-w-0 flex-1"><div className="truncate">{l.name}</div><div className="tabular text-xs text-muted"><NumText value={l.sku} /></div></div>
                 <div className="w-20"><Input type="number" inputMode="decimal" min="0" value={l.qty} onChange={(e) => patch(l.product, { qty: e.target.value })} aria-label={t("purchasing.qty")} /></div>
                 <div className="w-24"><Input type="number" inputMode="decimal" min="0" step="0.01" value={l.cost} onChange={(e) => patch(l.product, { cost: e.target.value })} aria-label={t("purchasing.unitCost")} /></div>
-                <div className="tabular w-24 text-end">{money(Number(l.qty || 0) * Number(l.cost || 0))}</div>
+                <div className="tabular w-24 text-end"><NumText value={money(Number(l.qty || 0) * Number(l.cost || 0))} /></div>
                 <button onClick={() => setLines((ls) => ls.filter((x) => x.product !== l.product))} className="text-muted hover:text-danger" aria-label={t("common.remove")}><Trash2 size={15} /></button>
               </div>
             ))}

@@ -5,7 +5,7 @@ import { ChartColumn } from "lucide-react";
 
 import { website } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Card } from "@/components/ui/kit";
+import { Card, NumText } from "@/components/ui/kit";
 
 /**
  * The shop owner's own traffic: 30 days of visits to their published
@@ -38,7 +38,7 @@ export default function VisitsCard() {
           <p className="mt-1 text-sm text-muted">{t("website.visitsHint")}</p>
         </div>
         <div className="text-end">
-          <div className="text-2xl font-bold tabular-nums">{data.visits}</div>
+          <div className="text-2xl font-bold tabular-nums"><NumText value={data.visits} /></div>
           <div className="text-xs text-muted">
             {t("website.visitsVisitors", { count: data.visitors })}
           </div>

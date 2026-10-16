@@ -9,7 +9,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import DocumentDrawer from "@/components/print/DocumentDrawer";
 import RefundDrawer from "@/components/finance/RefundDrawer";
 import VoidDrawer from "@/components/finance/VoidDrawer";
-import { Badge, Card } from "@/components/ui/kit";
+import { Badge, Card, NumText } from "@/components/ui/kit";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
 
@@ -85,7 +85,7 @@ export default function NotesList({ kind }) {
               rows.map((n) => (
                 <tr key={n.id} className="border-b border-line last:border-0">
                   <td className="tabular px-4 py-3 text-ink">
-                    {n.number_display || `${prefix}-${String(n.id).padStart(6, "0")}`}
+                    <NumText value={n.number_display || `${prefix}-${String(n.id).padStart(6, "0")}`} />
                   </td>
                   <td className="px-4 py-3 text-ink">
                     {n.customer_name || n.supplier_name || "—"}
