@@ -1,5 +1,9 @@
 #!/usr/bin/python3
-"""Forced SSH command: accept an archive or invoke the fixed deploy controller."""
+"""Forced SSH command: accept an archive or invoke the fixed deploy controller.
+
+Commands: ready | upload <commit> <sha256> | deploy <commit> <sha256> |
+deploy-image <commit> sha256:<digest> (container slot, phase 3).
+"""
 
 import hashlib
 import json
@@ -20,6 +24,11 @@ DIGEST = r"[0-9a-f]{64}"
 def parse_command(command):
     if command == "ready":
         return ("ready",)
+    # Container deploy (phase 3): a full commit and a full image digest only.
+    # The registry and repository are fixed on the server, never sent here.
+    match = re.fullmatch(rf"deploy-image ({SHA}) (sha256:{DIGEST})", command)
+    if match:
+        return ("deploy-image", *match.groups())
     match = re.fullmatch(rf"(upload|deploy) ({SHA}) ({DIGEST})", command)
     if not match:
         raise ValueError("command is not permitted")
@@ -60,6 +69,11 @@ def main():
             print("[deploy] SSH gateway ready")
             return 0
         _, sha, digest = command
+        if command[0] == "deploy-image":
+            return subprocess.call(
+                ["sudo", "-n", CONTROLLER, "deploy-image", sha, digest],
+                env={"PATH": "/usr/local/bin:/usr/bin:/bin"},
+            )
         config = json.loads(CONFIG.read_text())
         if command[0] == "upload":
             size = receive_archive(sys.stdin.buffer, Path(config["incoming"]), sha, digest)

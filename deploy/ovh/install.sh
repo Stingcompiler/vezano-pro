@@ -30,6 +30,15 @@ install -m 0755 "$SOURCE/gateway.py" /usr/local/libexec/vezano/gateway.py
 install -m 0755 "$SOURCE/deploy_release.py" /usr/local/libexec/vezano/deploy_release.py
 install -m 0755 "$SOURCE/../standalone/upgrade.sh" /usr/local/libexec/vezano/upgrade.sh
 install -m 0755 "$SOURCE/../standalone/backup.sh" /usr/local/libexec/vezano/backup.sh
+# Container slots (phase 3): the controller runs this reviewed copy only.
+install -m 0755 "$SOURCE/../docker/vezano-docker.sh" /usr/local/libexec/vezano/vezano-docker.sh
+install -m 0644 "$SOURCE/../docker/docker-compose.prod.yml" /usr/local/libexec/vezano/docker-compose.prod.yml
+install -d -o root -g root -m 0755 /var/lib/vezano-docker
+# Keep the operator copy from phase 2 identical, when it exists.
+if [ -d /opt/vezano-docker ]; then
+    install -m 0755 "$SOURCE/../docker/vezano-docker.sh" "$SOURCE/../docker/install-docker.sh" /opt/vezano-docker/
+    install -m 0644 "$SOURCE/../docker/docker-compose.prod.yml" /opt/vezano-docker/
+fi
 
 printf 'command="/usr/local/libexec/vezano/gateway.py",restrict %s\n' "$PUBLIC_KEY" \
     > /var/lib/vezano-deploy/.ssh/authorized_keys
@@ -48,7 +57,9 @@ cat > /etc/vezano-deploy.json <<JSON
   "python": "$PYTHON",
   "logs": "/var/log/vezano-deploy",
   "state": "/var/lib/vezano-deploy-state",
-  "lock": "/run/lock/vezano-autodeploy.lock"
+  "lock": "/run/lock/vezano-autodeploy.lock",
+  "image_repository": "ghcr.io/stingcompiler/vezano-pro",
+  "docker_lock": "/run/lock/vezano-docker-deploy.lock"
 }
 JSON
 chmod 0644 /etc/vezano-deploy.json
@@ -57,4 +68,4 @@ trap 'rm -f "$SUDOERS"' EXIT
 printf 'Defaults:vezano-deploy env_reset\nvezano-deploy ALL=(root) NOPASSWD:NOSETENV: /usr/local/libexec/vezano/deploy_release.py *\n' > "$SUDOERS"
 visudo -cf "$SUDOERS" >/dev/null
 install -o root -g root -m 0440 "$SUDOERS" /etc/sudoers.d/vezano-deploy
-printf '[deploy] gateway installed; production service and current link retained\n'
+printf '[deploy] gateway installed; production service, current link and Caddy retained\n'

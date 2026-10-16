@@ -1,5 +1,6 @@
 #!/usr/bin/python3
-"""Root-owned controller, callable only with a commit and archive checksum.
+"""Root-owned controller, callable only with a commit and archive checksum,
+or with `deploy-image <commit> sha256:<digest>` for the container slots.
 
 Never execute uploaded deployment scripts as root. Install reviewed controller
 updates separately; the release itself runs as the application service user.
@@ -27,11 +28,69 @@ MAX_EXPANDED_BYTES = 2 * 1024 * 1024 * 1024
 MAX_MEMBERS = 100000
 # Root upgrade orchestration needs administrator commands such as runuser.
 UPGRADE_PATH = "/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
+# Container deploys (phase 3): the reviewed root-owned blue/green script.
+DOCKER_SCRIPT = "/usr/local/libexec/vezano/vezano-docker.sh"
+DOCKER_TIMEOUT_SECONDS = 3600
+EXIT_PENDING_MIGRATIONS = 10
+IMAGE_REPOSITORY = re.compile(r"ghcr\.io/[a-z0-9][a-z0-9-]*/[a-z0-9][a-z0-9._-]*")
 
 
 def validate_arguments(sha, digest):
     if not re.fullmatch(r"[0-9a-f]{40}", sha) or not re.fullmatch(r"[0-9a-f]{64}", digest):
         raise ValueError("invalid deployment identifier")
+
+
+def validate_image_arguments(sha, digest):
+    if not re.fullmatch(r"[0-9a-f]{40}", sha) or not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
+        raise ValueError("invalid image deployment identifier")
+
+
+def image_reference(config, digest):
+    """The only image this host deploys: the configured GHCR repository, by digest."""
+    repository = config["image_repository"]
+    if not isinstance(repository, str) or not IMAGE_REPOSITORY.fullmatch(repository):
+        raise ValueError("image_repository must be a ghcr.io repository")
+    return f"{repository}@{digest}"
+
+
+def deploy_image(sha, digest):
+    """Start the image in the inactive container slot; Caddy is not changed here."""
+    log_path = None
+    try:
+        if os.geteuid() != 0:
+            raise ValueError("controller requires root")
+        validate_image_arguments(sha, digest)
+        config = json.loads(CONFIG.read_text())
+        image = image_reference(config, digest)
+        with open(config["docker_lock"], "a") as lock:
+            fcntl.flock(lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            require_latest_main(config, sha)
+            stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+            log_path = Path(config["logs"]) / f"{stamp}-{sha[:12]}-image.log"
+            with log_path.open("x") as log:
+                result = subprocess.run(
+                    ["bash", DOCKER_SCRIPT, "deploy", image, sha],
+                    env={"PATH": UPGRADE_PATH, "HOME": "/root"},
+                    stdout=log, stderr=log, timeout=DOCKER_TIMEOUT_SECONDS,
+                )
+            if result.returncode == EXIT_PENDING_MIGRATIONS:
+                print("[deploy] pending migrations — apply via the manual upgrade path", file=sys.stderr)
+                print(f"[deploy] protected server log: {log_path}", file=sys.stderr)
+                return EXIT_PENDING_MIGRATIONS
+            if result.returncode:
+                print(f"[deploy] container deploy stopped; protected server log: {log_path}", file=sys.stderr)
+                return result.returncode
+            (Path(config["state"]) / "last-image-success.json").write_text(
+                json.dumps({"commit": sha, "image": image, "completed_at": stamp}) + "\n"
+            )
+            print(f"[deploy] container slot healthy for commit {sha[:12]}; Caddy mode unchanged")
+            print(f"[deploy] protected server log: {log_path}")
+            return 0
+    except Exception:
+        print("[deploy] request stopped before completion", file=sys.stderr)
+        if log_path:
+            print(f"[deploy] protected server log: {log_path}", file=sys.stderr)
+        return 1
 
 
 def safe_extract(archive_path, destination):
@@ -145,6 +204,8 @@ def install_release(config, sha, digest, archive):
 
 def main():
     os.umask(0o077)
+    if len(sys.argv) == 4 and sys.argv[1] == "deploy-image":
+        return deploy_image(sys.argv[2], sys.argv[3])
     log_path = None
     try:
         if os.geteuid() != 0 or len(sys.argv) != 3:
