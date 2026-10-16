@@ -70,6 +70,8 @@ const SCREENS = [
   { name: "pos", account: "owner", path: "/sales/", ready: "main input[placeholder]" },
   { name: "invoices", account: "owner", path: "/sales/?tab=invoices", ready: "main table tbody tr" },
   { name: "inventory", account: "owner", path: "/inventory/", ready: "main table tbody tr" },
+  // A list table with no column roles: the phone layout's generic fallback.
+  { name: "users", account: "owner", path: "/users/", ready: "main table tbody tr" },
   { name: "subscription", account: "owner", path: "/subscription/", ready: "main h1" },
   { name: "web-orders-empty", account: "owner", path: "/web-orders/", ready: "main table" },
   // One shot per report tab. The query differs per tab so each is a real

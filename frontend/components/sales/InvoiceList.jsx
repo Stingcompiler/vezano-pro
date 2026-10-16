@@ -10,7 +10,7 @@ import { useI18n } from "../../app/providers/I18nProvider";
 import DocumentDrawer from "@/components/print/DocumentDrawer";
 import CollectPaymentDrawer from "@/components/sales/CollectPaymentDrawer";
 import VoidDrawer from "@/components/finance/VoidDrawer";
-import { Badge, Button, Card, Input } from "@/components/ui/kit";
+import { Badge, Button, Card, Input, NumText } from "@/components/ui/kit";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 import { EmptyTableRow } from "@/components/ui/EmptyState";
 import { formatAmount } from "@/lib/money";
@@ -82,11 +82,11 @@ export default function InvoiceList({ refreshKey }) {
         <table className="stack-sm w-full text-sm">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-              <th className="px-4 py-3 text-start font-medium">{t("sales.invoice")}</th>
-              <th className="px-4 py-3 text-start font-medium">{t("sales.customer")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("common.total")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("common.actions")}</th>
+              <th data-cell="lead" className="px-4 py-3 text-start font-medium">{t("sales.invoice")}</th>
+              <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("sales.customer")}</th>
+              <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("common.total")}</th>
+              <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+              <th data-cell="actions" className="px-4 py-3 text-end font-medium">{t("common.actions")}</th>
             </tr>
           </thead>
           <tbody>
@@ -122,7 +122,7 @@ export default function InvoiceList({ refreshKey }) {
                     </button>
                   </td>
                   <td className="px-4 py-3 text-ink">{inv.customer_name || t("sales.walkIn")}</td>
-                  <td className="tabular px-4 py-3 text-end text-ink">{money(inv.total)}</td>
+                  <td className="tabular px-4 py-3 text-end text-ink"><NumText value={money(inv.total)} /></td>
                   <td className="px-4 py-3 text-end">
                     <Badge tone={statusTone[inv.status] || "muted"}>{invoiceStatusLabel(t, inv.status)}</Badge>
                   </td>

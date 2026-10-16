@@ -61,12 +61,12 @@ export default function NotesList({ kind }) {
         <table className="stack-sm w-full text-sm">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-              <th className="px-4 py-3 text-start font-medium">{t("doc.number")}</th>
+              <th data-cell="lead" className="px-4 py-3 text-start font-medium">{t("doc.number")}</th>
               <th className="px-4 py-3 text-start font-medium">
                 {isCredit ? t("doc.billTo") : t("doc.supplier")}
               </th>
-              <th className="px-4 py-3 text-start font-medium">{t("doc.reason")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("doc.amount")}</th>
+              <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("doc.reason")}</th>
+              <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("doc.amount")}</th>
               <th className="px-4 py-3" />
             </tr>
           </thead>

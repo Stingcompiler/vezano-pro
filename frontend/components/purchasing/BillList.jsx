@@ -201,11 +201,11 @@ export default function BillList({ suppliersById, bankAccounts, writable, refres
         <table className="stack-sm w-full sm:min-w-[640px] text-sm">
           <thead>
             <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-              <th className="px-4 py-3 text-start font-medium">{t("purchasing.supplier")}</th>
-              <th className="px-4 py-3 text-start font-medium">{t("sales.invoice")}</th>
+              <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("purchasing.supplier")}</th>
+              <th data-cell="lead" className="px-4 py-3 text-start font-medium">{t("sales.invoice")}</th>
               <th className="px-4 py-3 text-end font-medium">{t("common.total")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("purchasing.amountDue")}</th>
-              <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+              <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("purchasing.amountDue")}</th>
+              <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
               {writable && <th className="px-4 py-3" />}
             </tr>
           </thead>

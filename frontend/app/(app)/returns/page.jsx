@@ -108,11 +108,11 @@ export default function ReturnsPage() {
           <table className="stack-sm w-full text-sm">
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 text-start font-medium">{t("returns.return")}</th>
+                <th data-cell="lead" className="px-4 py-3 text-start font-medium">{t("returns.return")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("returns.invoice")}</th>
-                <th className="px-4 py-3 text-start font-medium">{t("returns.reason")}</th>
+                <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("returns.reason")}</th>
                 <th className="px-4 py-3 text-end font-medium">{t("returns.lines")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+                <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
                 {writable && <th className="px-4 py-3" />}
               </tr>
             </thead>

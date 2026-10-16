@@ -106,10 +106,10 @@ export default function BankAccounts({ writable, onChanged }) {
           <table className="stack-sm w-full text-sm">
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 text-start font-medium">{t("sales.bankName")}</th>
+                <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("sales.bankName")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("sales.accountName")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("sales.accountNumber")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+                <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
               </tr>
             </thead>
             <tbody>

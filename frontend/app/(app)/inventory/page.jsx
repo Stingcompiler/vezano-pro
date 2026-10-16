@@ -270,14 +270,14 @@ export default function InventoryPage() {
           <table className="stack-sm w-full text-sm">
             <thead>
               <tr className="border-b border-line text-start text-xs uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 text-start font-medium">{t("inventory.sku")}</th>
-                <th className="px-4 py-3 text-start font-medium">{t("common.name")}</th>
+                <th data-cell="meta" className="px-4 py-3 text-start font-medium">{t("inventory.sku")}</th>
+                <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("common.name")}</th>
                 <th className="px-4 py-3 text-end font-medium">{t("inventory.onHand")}</th>
                 <th className="px-4 py-3 text-end font-medium">{t("inventory.reorder")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("common.price")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+                <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("common.price")}</th>
+                <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
                 {writable && (
-                  <th className="px-4 py-3 text-end font-medium">
+                  <th data-cell="actions" className="px-4 py-3 text-end font-medium">
                     {t("common.actions")}
                   </th>
                 )}
@@ -327,9 +327,9 @@ export default function InventoryPage() {
                       )}
                     </td>
                     <td className="tabular px-4 py-3 text-end text-ink"><NumText value={p.on_hand} /></td>
-                    <td className="tabular px-4 py-3 text-end text-muted">{p.reorder_level}</td>
+                    <td className="tabular px-4 py-3 text-end text-muted"><NumText value={p.reorder_level} /></td>
                     <td className="tabular px-4 py-3 text-end text-ink">
-                      {formatAmount(p.sale_price)}
+                      <NumText value={formatAmount(p.sale_price)} />
                       {p.suggested_price != null && Number(p.suggested_price) !== Number(p.sale_price) && (
                         <div className="text-xs text-warn">{t("inventory.suggested", { price: p.suggested_price })}</div>
                       )}
