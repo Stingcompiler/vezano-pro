@@ -8,7 +8,7 @@ import { errorText } from "@/lib/errors";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Field, Figure, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Figure, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import Drawer from "@/components/ui/Drawer";
 import PaymentVerificationPanel from "@/components/finance/PaymentVerificationPanel";
 import StatementReconcilePanel from "@/components/finance/StatementReconcilePanel";
@@ -235,7 +235,7 @@ export default function FinancePage() {
           {(e.payroll_run || e.salary_advance) && <Badge tone="accent">{t("finance.fromHr")}</Badge>}
         </span></td><td className="px-4 py-3">{e.description || "—"}</td>
         <td className="px-4 py-3"><Badge>{paymentMethodLabel(t, e.method)}</Badge></td>
-        <td className="tabular whitespace-nowrap px-4 py-3">{e.date}</td><td className="tabular px-4 py-3">{formatAmount(e.amount)}</td>
+        <td className="tabular whitespace-nowrap px-4 py-3">{e.date}</td><td className="tabular px-4 py-3"><NumText value={formatAmount(e.amount)} /></td>
       </tr>)}</tbody></table></div>}
       <div className="flex items-center justify-between gap-3 border-t border-line p-3">
         <Button variant="outline" disabled={page <= 1} onClick={() => setPage((p) => p-1)}>{t("improvements.previous")}</Button>

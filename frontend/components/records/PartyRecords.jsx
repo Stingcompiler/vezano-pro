@@ -8,7 +8,7 @@ import DocumentDrawer from "@/components/print/DocumentDrawer";
 
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Badge, Button, Card, Field, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import PhoneLink from "@/components/ui/PhoneLink";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
@@ -294,8 +294,8 @@ export default function PartyRecords({
                         <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
                           <th className="px-4 py-3 text-start font-medium">{t("common.date")}</th>
                           <th className="px-4 py-3 text-start font-medium">{t("records.filterType")}</th>
-                          <th className="px-4 py-3 text-start font-medium">{t("common.reference")}</th>
-                          <th className="px-4 py-3 text-end font-medium">{t("common.amount")}</th>
+                          <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("common.reference")}</th>
+                          <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("common.amount")}</th>
                           <th className="px-4 py-3 text-start font-medium">{t("logs.changes")}</th>
                           <th className="px-4 py-3" />
                         </tr>
@@ -310,7 +310,7 @@ export default function PartyRecords({
                               </Badge>
                             </td>
                             <td className="tabular px-4 py-3 text-ink">{e.reference || "—"}</td>
-                            <td className="tabular px-4 py-3 text-end text-ink">{money(e.amount)}</td>
+                            <td className="tabular px-4 py-3 text-end text-ink"><NumText value={money(e.amount)} /></td>
                             <td className="px-4 py-3 text-xs text-muted">{e.meta || "—"}</td>
                             <td className="px-4 py-3 text-end">
                               {fetchers[e.type] && e.entity_id && (

@@ -6,7 +6,7 @@ import { FileSpreadsheet, Lock, Plus, Truck } from "lucide-react";
 import { inventory, purchasing, bankAccounts as bankApi } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Button, Card, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, NumText, PageHeader } from "@/components/ui/kit";
 import PhoneLink from "@/components/ui/PhoneLink";
 import SupplierForm from "@/components/purchasing/SupplierForm";
 import OpeningBalanceForm from "@/components/finance/OpeningBalanceForm";
@@ -44,10 +44,10 @@ function SupplierList({ suppliers, loading, writable, onNew, onOpen, onImport })
           <table className="stack-sm w-full text-sm">
             <thead>
               <tr className="border-b border-line text-xs uppercase tracking-wide text-muted">
-                <th className="px-4 py-3 text-start font-medium">{t("common.name")}</th>
+                <th data-cell="primary" className="px-4 py-3 text-start font-medium">{t("common.name")}</th>
                 <th className="px-4 py-3 text-start font-medium">{t("common.phone")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("purchasing.apBalance")}</th>
-                <th className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
+                <th data-cell="amount" className="px-4 py-3 text-end font-medium">{t("purchasing.apBalance")}</th>
+                <th data-cell="status" className="px-4 py-3 text-end font-medium">{t("common.status")}</th>
                 {writable && <th className="px-4 py-3" />}
               </tr>
             </thead>
@@ -74,7 +74,7 @@ function SupplierList({ suppliers, loading, writable, onNew, onOpen, onImport })
                   <tr key={s.id} className="border-b border-line last:border-0">
                     <td className="px-4 py-3 text-ink">{s.name}</td>
                     <td className="px-4 py-3 text-muted"><PhoneLink phone={s.phone} /></td>
-                    <td className="tabular px-4 py-3 text-end text-ink">{money(s.ap_balance)}</td>
+                    <td className="tabular px-4 py-3 text-end text-ink"><NumText value={money(s.ap_balance)} /></td>
                     <td className="px-4 py-3 text-end">
                       {s.is_active ? (
                         <Badge tone="ok">{t("common.active")}</Badge>
