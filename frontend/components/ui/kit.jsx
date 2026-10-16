@@ -211,6 +211,7 @@ const ROW_COLS = {
   2: "grid-cols-2",
   3: "grid-cols-2 sm:grid-cols-3",
   4: "grid-cols-2 lg:grid-cols-4",
+  5: "grid-cols-2 sm:grid-cols-3 xl:grid-cols-5",
 };
 
 // Several figures of equal weight side by side, divided by hairlines: no
@@ -218,8 +219,10 @@ const ROW_COLS = {
 // hint? }]. A zero is quiet (muted, regular weight) and never takes its
 // tone; a non-zero `tone` (warn/danger/ok/accent) colours the figure, and
 // `hint` says in words what the colour means. An item with `href` is one
-// link, the whole cell (its only action). `cols`: 2, 3 or 4 on wide
-// screens (2 on a phone). Figures do not count up here.
+// link, the whole cell (its only action). `cols`: 2, 3, 4 or 5 on wide
+// screens (2 on a phone). Figures do not count up here. `content` (a node)
+// stands in for the figure while it has none to show: a loading line, or a
+// failure with its own retry.
 export function FigureRow({ items, cols = 4, size = "md", className = "" }) {
   const shown = (items || []).filter(Boolean);
   if (!shown.length) return null;
@@ -232,7 +235,7 @@ export function FigureRow({ items, cols = 4, size = "md", className = "" }) {
           const body = (
             <>
               <div className="text-sm text-muted">{item.label}</div>
-              <Figure value={item.value} size={size} animate={false} className="mt-1" valueClassName={tone} />
+              {item.content ?? <Figure value={item.value} size={size} animate={false} className="mt-1" valueClassName={tone} />}
               {item.hint && <div className="mt-0.5 text-xs text-muted">{item.hint}</div>}
             </>
           );

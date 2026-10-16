@@ -8,6 +8,11 @@
     "components/ui/Skeleton.jsx",
     "components/ui/ConfirmDialog.jsx",
     "app/(app)/dashboard/page.jsx",
-    "components/reports/BarList.jsx"
+    "components/reports/BarList.jsx",
+    "app/(app)/reports/page.jsx",
+    "components/reports/ReportSection.jsx",
+    "components/reports/ReportState.jsx",
+    "components/reports/OperationalReports.jsx",
+    "components/reports/ZakatCard.jsx"
   ]
 }
