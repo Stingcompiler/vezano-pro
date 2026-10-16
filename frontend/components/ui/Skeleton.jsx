@@ -15,9 +15,12 @@ import { Card } from "@/components/ui/kit";
 // Varied widths so the placeholder looks like text, not a barcode.
 const WIDTHS = ["w-11/12", "w-4/5", "w-2/3", "w-3/4", "w-1/2", "w-5/6"];
 
-function Bar({ className = "" }) {
-  return <span aria-hidden="true" className={`block h-3 rounded bg-line motion-safe:animate-pulse ${className}`} />;
+// One grey bar; 12px tall unless the caller gives its own height.
+export function SkeletonBar({ className = "" }) {
+  const height = /(?:^|\s)h-/.test(className) ? "" : "h-3";
+  return <span aria-hidden="true" className={`block ${height} rounded bg-line motion-safe:animate-pulse ${className}`} />;
 }
+const Bar = SkeletonBar;
 
 function Status({ className = "", children }) {
   const { t } = useI18n();

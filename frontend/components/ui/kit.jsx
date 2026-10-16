@@ -127,9 +127,10 @@ export function NumText({ value }) {
 // instead of in the same voice as the day's takings.
 export function isZeroFigure(value) {
   if (value === null || value === undefined || value === "") return false;
-  const text = String(value);
-  if (!/\d/.test(text)) return false;
-  const n = Number(text.replace(/−/g, "-").replace(/[^\d.-]/g, ""));
+  // The first number in the text: "0.00 ج.س" has a second "." in its label.
+  const match = String(value).replace(/−/g, "-").match(/-?[\d,]*\.?\d+/);
+  if (!match) return false;
+  const n = Number(match[0].replace(/,/g, ""));
   return Number.isFinite(n) && n === 0;
 }
 
@@ -197,7 +198,7 @@ export function PrimaryBlock({ title, meta, actions, className = "", children, .
             {title && <h2 className="font-display text-lg font-bold text-ink">{title}</h2>}
             {meta && <p className="mt-0.5 text-sm text-muted">{meta}</p>}
           </div>
-          {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
+          {actions && <div className="flex w-full flex-wrap items-center gap-2 sm:w-auto">{actions}</div>}
         </div>
       )}
       {children}
@@ -277,7 +278,7 @@ export function AttentionItem({ count, title, detail, tone = "warn", href, actio
       {count !== undefined && count !== null && (
         <span className={`tabular min-w-8 shrink-0 text-lg font-semibold ${toneClass}`}><NumText value={count} /></span>
       )}
-      <span className="min-w-0 flex-1">
+      <span className="min-w-[11rem] flex-1">
         <span className="block text-sm font-medium text-ink">{title}</span>
         {detail && <span className="mt-0.5 block text-xs text-muted">{detail}</span>}
       </span>
