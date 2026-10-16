@@ -74,6 +74,13 @@ const SCREENS = [
   { name: "users", account: "owner", path: "/users/", ready: "main table tbody tr" },
   { name: "subscription", account: "owner", path: "/subscription/", ready: "main h1" },
   { name: "web-orders-empty", account: "owner", path: "/web-orders/", ready: "main table" },
+  // One shot per report tab. The query differs per tab so each is a real
+  // navigation (a hash change alone would not reload the page).
+  { name: "reports-overview", account: "owner", path: "/reports/?t=overview#overview", ready: "main h1" },
+  { name: "reports-sales", account: "owner", path: "/reports/?t=sales#sales", ready: "main h1" },
+  { name: "reports-purchasing", account: "owner", path: "/reports/?t=purchasing#purchasing", ready: "main h1" },
+  { name: "reports-finance", account: "owner", path: "/reports/?t=finance#finance", ready: "main h1" },
+  { name: "reports-hr", account: "owner", path: "/reports/?t=hr#hr", ready: "main h1" },
   { name: "platform", account: "platform", path: "/platform/", ready: "main h1" },
   { name: "platform-companies", account: "platform", path: "/platform-companies/", ready: "main h1" },
 ].filter((s) => !ONLY.length || ONLY.includes(s.name));

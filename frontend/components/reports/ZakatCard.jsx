@@ -1,13 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Download, Moon } from "lucide-react";
+import { Download } from "lucide-react";
 
 import { API_BASE, reports } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Button, Field, Input, Select } from "@/components/ui/kit";
 import { formatAmount } from "@/lib/money";
 import { ReportFailed } from "@/components/reports/ReportState";
+import ReportSection from "@/components/reports/ReportSection";
 import { slotFromError } from "@/lib/reportSlots";
 
 const HIJRI_MONTHS_AR = ["محرم", "صفر", "ربيع الأول", "ربيع الآخر", "جمادى الأولى", "جمادى الآخرة", "رجب", "شعبان", "رمضان", "شوال", "ذو القعدة", "ذو الحجة"];
@@ -70,22 +71,16 @@ export default function ZakatCard() {
   ] : [];
 
   return (
-    <Card className="p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 className="flex items-center gap-2 font-display text-sm font-semibold uppercase tracking-wide text-muted">
-            <Moon size={15} /> {t("reports.zakatTitle")}
-          </h2>
-          {data && (
-            <p className="mt-1 text-sm text-ink">
-              {t("reports.zakatToday")} <span className="font-semibold">{language === "ar" ? data.hijri_ar : data.hijri_en}</span>
-              <span className="text-muted"> · {data.as_of}</span>
-            </p>
-          )}
-        </div>
-        <a href={csvUrl}><Button variant="ghost"><Download size={15} /> CSV</Button></a>
-      </div>
-
+    <ReportSection
+      title={t("reports.zakatTitle")}
+      hint={data && (
+        <span className="text-sm text-ink">
+          {t("reports.zakatToday")} <span className="font-semibold">{language === "ar" ? data.hijri_ar : data.hijri_en}</span>
+          <span className="text-muted"> · {data.as_of}</span>
+        </span>
+      )}
+      action={<a href={csvUrl}><Button variant="ghost"><Download size={15} /> CSV</Button></a>}
+    >
       <div className="mb-4 grid gap-3 sm:grid-cols-4">
         <Field label={t("reports.zakatValuation")}>
           <Select value={valuation} onChange={(e) => setValuation(e.target.value)}>
@@ -133,9 +128,9 @@ export default function ZakatCard() {
           {data.next_hawl && (
             <p className="mb-3 text-sm text-muted">{t("reports.zakatNextHawl", { date: data.next_hawl })}</p>
           )}
-          <div className="divide-y divide-line rounded-card border border-line text-sm">
+          <div className="divide-y divide-line border-y border-line text-sm">
             {lines.map(([label, value, sign, hint]) => (
-              <div key={label} className="flex items-center justify-between gap-3 px-3 py-2">
+              <div key={label} className="flex items-center justify-between gap-3 px-1 py-2 sm:px-3">
                 <span>
                   {label}
                   {hint && <span className="mt-0.5 block text-xs text-muted">{hint}</span>}
@@ -143,11 +138,11 @@ export default function ZakatCard() {
                 <span className="tabular shrink-0" dir="ltr">{sign} {money(value)}</span>
               </div>
             ))}
-            <div className="flex items-center justify-between bg-paper px-3 py-2 font-semibold">
+            <div className="flex items-center justify-between px-1 py-2 font-semibold sm:px-3">
               <span>{t("reports.zakatBase")}</span>
               <span className="tabular" dir="ltr">{money(data.base)}</span>
             </div>
-            <div className="flex items-center justify-between px-3 py-3 text-base font-semibold text-accent">
+            <div className="flex items-center justify-between px-1 py-3 text-base font-semibold text-accent sm:px-3">
               <span>{t("reports.zakatDue")}</span>
               <span className="tabular" dir="ltr">{money(data.zakat)}</span>
             </div>
@@ -161,6 +156,6 @@ export default function ZakatCard() {
           </p>
         </>
       )}
-    </Card>
+    </ReportSection>
   );
 }

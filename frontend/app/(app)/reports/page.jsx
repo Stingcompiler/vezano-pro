@@ -7,11 +7,12 @@ import { BarChart3, Download, Lock } from "lucide-react";
 import { API_BASE, reports } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Button, Card, Field, Figure, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, DefinitionSection, Field, FigureRow, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import BarList from "@/components/reports/BarList";
 import ZakatCard from "@/components/reports/ZakatCard";
 import OperationalReports from "@/components/reports/OperationalReports";
 import ReportState, { ReportFailed } from "@/components/reports/ReportState";
+import ReportSection from "@/components/reports/ReportSection";
 import TabBar from "@/components/ui/TabBar";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { useHashTab } from "@/lib/useHashTab";
@@ -29,40 +30,6 @@ import { SkeletonLines } from "@/components/ui/Skeleton";
 function thisMonth() {
   const today = localToday();
   return { start: `${today.slice(0, 8)}01`, end: today };
-}
-
-// A headline figure. `slot` is the request it comes from: while it loads
-// the tile keeps its shape, and a failed request says so on the tile itself
-// (with its own retry) instead of showing a dash that reads like "nothing".
-function Kpi({ label, value, tone = "ink", slot, onRetry }) {
-  const toneClass = tone === "accent" ? "text-accent" : tone === "ok" ? "text-ok" : "text-ink";
-  const status = slot?.status || "ok";
-  return (
-    <Card className="p-5">
-      <div className="text-sm text-muted">{label}</div>
-      {status === "loading" ? (
-        <SkeletonLines lines={1} className="mt-2" />
-      ) : status !== "ok" ? (
-        <div className="mt-2"><ReportFailed status={status} onRetry={onRetry} compact /></div>
-      ) : (
-        <Figure value={value} className="mt-2" valueClassName={`font-medium ${toneClass}`} />
-      )}
-    </Card>
-  );
-}
-
-function SectionCard({ title, action, children }) {
-  return (
-    <Card className="p-5">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-        <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">
-          {title}
-        </h2>
-        {action}
-      </div>
-      {children}
-    </Card>
-  );
 }
 
 function CsvLink({ href }) {
@@ -250,6 +217,22 @@ export default function ReportsPage() {
     fifo: t("reports.fifo"),
   }[method] || method);
 
+  // A figure from one report request. While the request runs the cell keeps
+  // its shape, and a failed request says so in the cell itself (with its own
+  // retry) instead of showing a dash that reads like "nothing".
+  const fromSlot = (key, item) => {
+    const status = slot(key).status;
+    if (status === "loading") return { ...item, content: <SkeletonLines lines={1} className="mt-2" /> };
+    if (status !== "ok") {
+      return { ...item, content: <div className="mt-2"><ReportFailed status={status} onRetry={() => retry(key)} compact /></div> };
+    }
+    return item;
+  };
+  // Profit-like figures: green when they are not negative (as before).
+  const gainTone = (v) => (Number(v) < 0 ? undefined : "ok");
+
+  // Amounts in plain cells are isolated (NumText): "-1,250.00" read
+  // "1,250.00-" in an Arabic table.
   const agingTable = (rows, partyKey, partyLabel) => (
     <div className="overflow-x-auto">
       <table className="w-full text-sm">
@@ -268,12 +251,12 @@ export default function ReportsPage() {
           {rows.map((row) => (
             <tr key={row[partyKey]} className="border-b border-line last:border-0">
               <td className="px-3 py-2 text-ink">{row.name}</td>
-              <td className="tabular px-3 py-2 text-end text-muted">{cell(row.current)}</td>
-              <td className="tabular px-3 py-2 text-end text-muted">{cell(row["1_30"])}</td>
-              <td className="tabular px-3 py-2 text-end text-muted">{cell(row["31_60"])}</td>
-              <td className="tabular px-3 py-2 text-end text-muted">{cell(row["61_90"])}</td>
-              <td className="tabular px-3 py-2 text-end text-warn">{cell(row.over_90)}</td>
-              <td className="tabular px-3 py-2 text-end font-medium text-ink">{cell(row.total)}</td>
+              <td className="tabular px-3 py-2 text-end text-muted"><NumText value={cell(row.current)} /></td>
+              <td className="tabular px-3 py-2 text-end text-muted"><NumText value={cell(row["1_30"])} /></td>
+              <td className="tabular px-3 py-2 text-end text-muted"><NumText value={cell(row["31_60"])} /></td>
+              <td className="tabular px-3 py-2 text-end text-muted"><NumText value={cell(row["61_90"])} /></td>
+              <td className="tabular px-3 py-2 text-end text-warn"><NumText value={cell(row.over_90)} /></td>
+              <td className="tabular px-3 py-2 text-end font-medium text-ink"><NumText value={cell(row.total)} /></td>
             </tr>
           ))}
         </tbody>
@@ -306,7 +289,7 @@ export default function ReportsPage() {
                   <Badge tone="muted">{t("reports.dueSoon")}</Badge>
                 )}
               </td>
-              <td className="tabular px-3 py-2 text-end font-medium text-ink">{cell(r.amount_due)}</td>
+              <td className="tabular px-3 py-2 text-end font-medium text-ink"><NumText value={cell(r.amount_due)} /></td>
             </tr>
           ))}
         </tbody>
@@ -365,69 +348,65 @@ export default function ReportsPage() {
       <div
         ref={tabFade}
         aria-busy={refreshing || undefined}
-        className={`space-y-6 transition-opacity duration-200 ${refreshing ? "opacity-60" : ""}`}
+        className={`space-y-10 transition-opacity duration-200 ${refreshing ? "opacity-60" : ""}`}
       >
         {tab === "hr" && hrReports && (
           <ReportState slot={slot("hrSummary")} onRetry={() => retry("hrSummary")} isEmpty={() => false} lines={4}>
             {(hrSummary) => (
               <>
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                  <Kpi label={t("reports.hrEmployees")} value={hrSummary.employee_total} />
-                  <Kpi label={t("reports.hrActive")} tone="ok" value={hrSummary.employees.active || 0} />
-                  <Kpi label={t("reports.hrPendingLeave")} value={hrSummary.leave.pending || 0} />
-                  <Kpi label={t("reports.hrAbsent")} value={hrSummary.attendance.absent || 0} />
+                <FigureRow cols={4} items={[
+                  { key: "employees", label: t("reports.hrEmployees"), value: hrSummary.employee_total },
+                  { key: "active", label: t("reports.hrActive"), tone: "ok", value: hrSummary.employees.active || 0 },
+                  { key: "leave", label: t("reports.hrPendingLeave"), value: hrSummary.leave.pending || 0 },
+                  { key: "absent", label: t("reports.hrAbsent"), value: hrSummary.attendance.absent || 0 },
+                ]} />
+                <div className="grid gap-x-8 gap-y-10 lg:grid-cols-2">
+                  <DefinitionSection title={t("reports.hrAttendance")} items={[
+                    { key: "present", label: t("reports.hrPresent"), tone: "ok", value: hrSummary.attendance.present || 0 },
+                    { key: "absent", label: t("reports.hrAbsent"), value: hrSummary.attendance.absent || 0 },
+                    { key: "leave", label: t("reports.hrOnLeave"), value: hrSummary.attendance.leave || 0 },
+                    { key: "half", label: t("reports.hrHalfDay"), value: hrSummary.attendance.half_day || 0 },
+                  ]} />
+                  <DefinitionSection title={t("reports.hrFinancialActions")} items={[
+                    { key: "pending", label: t("reports.hrPendingAdvances"), value: hrSummary.advances.pending || 0 },
+                    { key: "approved", label: t("reports.hrApprovedAdvances"), value: money(hrSummary.advances.approved_total) },
+                    { key: "count", label: t("reports.hrDeductionsCount"), value: hrSummary.deductions.count || 0 },
+                    { key: "total", label: t("reports.hrDeductionsTotal"), value: money(hrSummary.deductions.total) },
+                  ]} />
                 </div>
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <SectionCard title={t("reports.hrAttendance")}>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Kpi label={t("reports.hrPresent")} tone="ok" value={hrSummary.attendance.present || 0} />
-                      <Kpi label={t("reports.hrAbsent")} value={hrSummary.attendance.absent || 0} />
-                      <Kpi label={t("reports.hrOnLeave")} value={hrSummary.attendance.leave || 0} />
-                      <Kpi label={t("reports.hrHalfDay")} value={hrSummary.attendance.half_day || 0} />
-                    </div>
-                  </SectionCard>
-                  <SectionCard title={t("reports.hrFinancialActions")}>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <Kpi label={t("reports.hrPendingAdvances")} value={hrSummary.advances.pending || 0} />
-                      <Kpi label={t("reports.hrApprovedAdvances")} value={money(hrSummary.advances.approved_total)} />
-                      <Kpi label={t("reports.hrDeductionsCount")} value={hrSummary.deductions.count || 0} />
-                      <Kpi label={t("reports.hrDeductionsTotal")} value={money(hrSummary.deductions.total)} />
-                    </div>
-                  </SectionCard>
-                </div>
-                <SectionCard title={t("reports.hrByDepartment")}>
+                <ReportSection title={t("reports.hrByDepartment")}>
                   <BarList
                     items={hrSummary.departments.map((row) => ({ label: row.name, value: row.count }))}
                     format={(v) => String(v)}
                   />
-                </SectionCard>
+                </ReportSection>
               </>
             )}
           </ReportState>
         )}
 
         {tab === payrollTab && payrollReports && (
-          <SectionCard title={t("reports.payrollTitle")} action={<CsvLink href={csv("/reports/payroll/")} />}>
+          <ReportSection title={t("reports.payrollTitle")} action={<CsvLink href={csv("/reports/payroll/")} />}>
             <ReportState slot={slot("payroll")} onRetry={() => retry("payroll")} emptyText={t("reports.noPayroll")}>
               {(payroll) => (
-                <div className="space-y-4">
+                <div className="space-y-8">
                   {payroll.map((run) => (
-                    <div key={run.id} className="rounded-control border border-line p-4">
-                      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                        <div className="font-medium text-ink">{t("reports.payrollFor", { period: run.period.slice(0, 7) })}</div>
+                    <div key={run.id}>
+                      <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+                        <h3 className="font-medium text-ink">{t("reports.payrollFor", { period: run.period.slice(0, 7) })}</h3>
                         <Badge tone={run.status === "approved" ? "ok" : "warn"}>{run.status === "approved" ? t("hr.approved") : t("hr.pending")}</Badge>
                       </div>
-                      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                        <Kpi label={t("reports.payrollEmployees")} value={run.employee_count} />
-                        <Kpi label={t("reports.payrollBase")} value={money(run.base_total)} />
-                        <Kpi label={t("reports.payrollDeductions")} value={money(run.deductions_total)} />
-                        <Kpi label={t("reports.payrollNet")} tone="ok" value={money(run.net_total)} />
-                      </div>
-                      <div className="mt-3 divide-y divide-line text-sm">
+                      <FigureRow cols={4} items={[
+                        { key: "employees", label: t("reports.payrollEmployees"), value: run.employee_count },
+                        { key: "base", label: t("reports.payrollBase"), value: money(run.base_total) },
+                        { key: "deductions", label: t("reports.payrollDeductions"), value: money(run.deductions_total) },
+                        { key: "net", label: t("reports.payrollNet"), tone: "ok", value: money(run.net_total) },
+                      ]} />
+                      <div className="mt-2 divide-y divide-line border-t border-line text-sm">
                         {run.entries.map((entry) => (
                           <div key={`${run.id}-${entry.employee_name}`} className="flex flex-wrap items-center justify-between gap-2 py-2">
                             <span className="text-ink">{entry.employee_name} <span className="text-muted">· {entry.department_name || "—"} · {entry.position_title || "—"}</span></span>
-                            <span className="tabular font-medium">{cell(entry.net_salary)}</span>
+                            <span className="tabular font-medium"><NumText value={cell(entry.net_salary)} /></span>
                           </div>
                         ))}
                       </div>
@@ -436,29 +415,32 @@ export default function ReportsPage() {
                 </div>
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
-        {/* Headline KPIs — each tile shows its own report's state. */}
-        {tab === "overview" && <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-          {salesReports && <Kpi label={t("reports.invoices")} slot={slot("summary")} onRetry={() => retry("summary")} value={summary?.totals?.invoice_count ?? "—"} />}
-          {/* The invoices' own total (tax included, before returns) — not the
-              income statement's revenue, which is on the Finance tab. */}
-          {salesReports && <Kpi label={t("reports.invoicedTotal")} tone="accent" slot={slot("summary")} onRetry={() => retry("summary")} value={money(summary?.totals?.total)} />}
-          {financeReports && <Kpi label={t("reports.grossProfit")} tone="ok" slot={slot("income")} onRetry={() => retry("income")} value={money(income?.gross_profit)} />}
-          {inventoryReports && <Kpi label={valuationAsOf(t("reports.inventoryValue"))} slot={slot("valuation")} onRetry={() => retry("valuation")} value={money(valuation?.total_value)} />}
-        </div>}
+        {/* Headline figures — each cell shows its own report's state. */}
+        {tab === "overview" && (() => {
+          const items = [
+            salesReports && fromSlot("summary", { key: "invoices", label: t("reports.invoices"), value: summary?.totals?.invoice_count ?? "—" }),
+            // The invoices' own total (tax included, before returns) — not the
+            // income statement's revenue, which is on the Finance tab.
+            salesReports && fromSlot("summary", { key: "invoiced", label: t("reports.invoicedTotal"), tone: "accent", value: money(summary?.totals?.total) }),
+            financeReports && fromSlot("income", { key: "gross", label: t("reports.grossProfit"), tone: "ok", value: money(income?.gross_profit) }),
+            inventoryReports && fromSlot("valuation", { key: "stock", label: valuationAsOf(t("reports.inventoryValue")), value: money(valuation?.total_value) }),
+          ].filter(Boolean);
+          return <FigureRow cols={Math.max(2, items.length)} items={items} />;
+        })()}
 
-        {tab === "overview" && <div className="grid gap-6 lg:grid-cols-2">
-          {salesReports && <SectionCard title={t("reports.topProductsGross")} action={<CsvLink href={csv("/reports/sales-by-product/")} />}>
+        {tab === "overview" && <div className="grid gap-x-8 gap-y-10 lg:grid-cols-2">
+          {salesReports && <ReportSection title={t("reports.topProductsGross")} action={<CsvLink href={csv("/reports/sales-by-product/")} />}>
             <ReportState slot={slot("byProduct")} onRetry={() => retry("byProduct")}>
               {(byProduct) => (
                 <BarList items={byProduct.slice(0, 8).map((r) => ({ label: r.name, value: Number(r.revenue) }))} />
               )}
             </ReportState>
-          </SectionCard>}
+          </ReportSection>}
 
-          {inventoryReports && <SectionCard
+          {inventoryReports && <ReportSection
             title={valuationAsOf(t("reports.invValueByProduct"))}
             action={<CsvLink href={csv("/reports/inventory-valuation/", {
               method: costMethod, ...(range.end ? { as_of: range.end } : {}),
@@ -482,113 +464,99 @@ export default function ReportsPage() {
                 </>
               )}
             </ReportState>
-          </SectionCard>}
+          </ReportSection>}
         </div>}
 
         {/* Profit breakdown */}
-        {tab === "finance" && financeReports && <SectionCard title={t("reports.profitTitle", { method: methodName(costMethod) })}>
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Kpi label={t("reports.revenue")} slot={slot("income")} onRetry={() => retry("income")} value={money(income?.revenue)} />
-            <Kpi label={t("reports.cogs")} slot={slot("income")} onRetry={() => retry("income")} value={money(income?.cogs)} />
-            <Kpi label={t("reports.grossProfit")} tone="ok" slot={slot("income")} onRetry={() => retry("income")} value={money(income?.gross_profit)} />
-          </div>
+        {tab === "finance" && financeReports && <ReportSection title={t("reports.profitTitle", { method: methodName(costMethod) })}>
+          <FigureRow cols={3} items={[
+            fromSlot("income", { key: "revenue", label: t("reports.revenue"), value: money(income?.revenue) }),
+            fromSlot("income", { key: "cogs", label: t("reports.cogs"), value: money(income?.cogs) }),
+            fromSlot("income", { key: "gross", label: t("reports.grossProfit"), tone: "ok", value: money(income?.gross_profit) }),
+          ]} />
           {income && (
             <p className="mt-3 text-xs text-muted">
               {t("reports.cogsMethodNote", { method: methodName(income.method) })}
             </p>
           )}
-        </SectionCard>}
+        </ReportSection>}
 
         {/* CFO financial KPIs — liquidity + profitability ratios */}
         {tab === "finance" && financeReports && (
-          <SectionCard title={t("reports.cfoTitle")}>
-            <p className="mb-3 text-xs text-muted">{t("reports.cfoHint")}</p>
+          <ReportSection title={t("reports.cfoTitle")} hint={t("reports.cfoHint")}>
             <ReportState slot={slot("kpis")} onRetry={() => retry("kpis")} isEmpty={() => false}>
               {(kpis) => (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-                    <Kpi label={t("reports.grossMargin")} tone="ok" value={pct(kpis.profitability.gross_margin_pct)} />
-                    <Kpi
-                      label={t("reports.netMargin")}
-                      tone={Number(kpis.profitability.net_profit) < 0 ? "ink" : "ok"}
-                      value={pct(kpis.profitability.net_margin_pct)}
-                    />
-                    <Kpi label={t("reports.workingCapital")} value={money(kpis.liquidity.working_capital)} />
-                    <Kpi label={t("reports.currentRatio")} value={pct(kpis.liquidity.current_ratio_pct)} />
-                  </div>
-                  <div className="mt-4 grid gap-4 sm:grid-cols-3">
-                    <Kpi label={t("reports.receivablesOutstanding")} value={money(kpis.receivables.outstanding)} />
-                    <Kpi
-                      label={t("reports.receivablesOverdue")}
-                      tone={Number(kpis.receivables.overdue) > 0 ? "ink" : "ok"}
-                      value={money(kpis.receivables.overdue)}
-                    />
-                    <Kpi label={t("reports.payablesOutstanding")} value={money(kpis.payables.outstanding)} />
-                  </div>
+                  <FigureRow cols={4} items={[
+                    { key: "gross", label: t("reports.grossMargin"), tone: "ok", value: pct(kpis.profitability.gross_margin_pct) },
+                    { key: "net", label: t("reports.netMargin"), tone: gainTone(kpis.profitability.net_profit), value: pct(kpis.profitability.net_margin_pct) },
+                    { key: "working", label: t("reports.workingCapital"), value: money(kpis.liquidity.working_capital) },
+                    { key: "ratio", label: t("reports.currentRatio"), value: pct(kpis.liquidity.current_ratio_pct) },
+                  ]} />
+                  <FigureRow cols={3} className="mt-4" items={[
+                    { key: "outstanding", label: t("reports.receivablesOutstanding"), value: money(kpis.receivables.outstanding) },
+                    { key: "overdue", label: t("reports.receivablesOverdue"), tone: Number(kpis.receivables.overdue) > 0 ? undefined : "ok", value: money(kpis.receivables.overdue) },
+                    { key: "payables", label: t("reports.payablesOutstanding"), value: money(kpis.payables.outstanding) },
+                  ]} />
                 </>
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {/* Obligations due (AP side of the worklist) */}
         {tab === "purchasing" && purchasingReports && (
-          <SectionCard title={t("reports.purchasesSummaryTitle")}>
+          <ReportSection title={t("reports.purchasesSummaryTitle")}>
             <ReportState slot={slot("purchases")} onRetry={() => retry("purchases")} isEmpty={() => false}>
               {(purchases) => (
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                  <div className="rounded-control bg-paper p-3"><div className="text-xs text-muted">{t("reports.purchasesTotal")}</div><Figure value={money(purchases.purchases_total)} size="md" className="mt-1" valueClassName="font-semibold" /></div>
-                  <div className="rounded-control bg-paper p-3"><div className="text-xs text-muted">{t("reports.billCount")}</div><Figure value={purchases.bill_count} size="md" className="mt-1" valueClassName="font-semibold" /></div>
-                  <div className="rounded-control bg-paper p-3"><div className="text-xs text-muted">{t("reports.receiptCount")}</div><Figure value={purchases.receipt_count} size="md" className="mt-1" valueClassName="font-semibold" /></div>
-                </div>
+                <FigureRow cols={3} items={[
+                  { key: "total", label: t("reports.purchasesTotal"), value: money(purchases.purchases_total) },
+                  { key: "bills", label: t("reports.billCount"), value: purchases.bill_count },
+                  { key: "receipts", label: t("reports.receiptCount"), value: purchases.receipt_count },
+                ]} />
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
         {tab === "purchasing" && purchasingReports && (
-          <SectionCard title={t("reports.apAgingTitle")}>
+          <ReportSection title={t("reports.apAgingTitle")}>
             <ReportState slot={slot("apAging")} onRetry={() => retry("apAging")} emptyText={t("reports.nothingOutstanding")}>
               {(rows) => agingTable(rows, "supplier", t("reports.supplier"))}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
         {tab === "purchasing" && purchasingReports && (
-          <SectionCard title={t("reports.payablesDue")} action={<CsvLink href={csv("/reports/payables-due/")} />}>
-            <p className="mb-3 text-xs text-muted">{t("reports.payablesHint")}</p>
+          <ReportSection title={t("reports.payablesDue")} hint={t("reports.payablesHint")} action={<CsvLink href={csv("/reports/payables-due/")} />}>
             <ReportState slot={slot("payables")} onRetry={() => retry("payables")} emptyText={t("reports.noPayables")}>
               {(payables) => dueTable(payables.rows, { key: "bill", number: "reference", party: "supplier", partyLabel: t("reports.supplier") })}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {/* Income statement (P&L) */}
         {tab === "finance" && financeReports && (
-          <SectionCard
+          <ReportSection
             title={t("reports.incomeStatement")}
             action={<CsvLink href={csv("/reports/income-statement/", { method: costMethod })} />}
           >
             <ReportState slot={slot("income")} onRetry={() => retry("income")} isEmpty={() => false}>
               {(inc) => (
                 <>
-                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                    <Kpi label={t("reports.revenue")} value={money(inc.revenue)} />
-                    <Kpi label={t("reports.cogs")} value={money(inc.cogs)} />
-                    <Kpi label={t("reports.grossProfit")} tone="ok" value={money(inc.gross_profit)} />
-                    {/* Count differences and write-offs: a shortage is a cost
-                        (positive), a surplus reduces it. Between gross and net. */}
-                    <Kpi label={t("reports.stockAdjustments")} value={money(inc.stock_adjustments)} />
-                    <Kpi
-                      label={t("reports.netProfit")}
-                      tone={Number(inc.net_profit) < 0 ? "ink" : "ok"}
-                      value={money(inc.net_profit)}
-                    />
-                  </div>
+                  <FigureRow cols={5} items={[
+                    { key: "revenue", label: t("reports.revenue"), value: money(inc.revenue) },
+                    { key: "cogs", label: t("reports.cogs"), value: money(inc.cogs) },
+                    { key: "gross", label: t("reports.grossProfit"), tone: "ok", value: money(inc.gross_profit) },
+                    // Count differences and write-offs: a shortage is a cost
+                    // (positive), a surplus reduces it. Between gross and net.
+                    { key: "adjust", label: t("reports.stockAdjustments"), value: money(inc.stock_adjustments) },
+                    { key: "net", label: t("reports.netProfit"), tone: gainTone(inc.net_profit), value: money(inc.net_profit) },
+                  ]} />
                   <p className="mt-3 text-xs text-muted">{t("reports.stockAdjustmentsHint")}</p>
                   {inc.expenses_by_category?.length > 0 && (
-                    <div className="mt-4">
-                      <div className="mb-2 text-sm font-medium text-ink">
+                    <div className="mt-6">
+                      <h3 className="mb-3 text-sm font-medium text-ink">
                         {t("reports.operatingExpenses")}
-                      </div>
+                      </h3>
                       <BarList
                         items={inc.expenses_by_category.map((e) => ({
                           label: expenseCategory(e.category, t),
@@ -600,36 +568,33 @@ export default function ReportsPage() {
                 </>
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {/* Cash flow (direct method) */}
         {tab === "finance" && financeReports && (
-          <SectionCard title={t("reports.cashFlow")} action={<CsvLink href={csv("/reports/cash-flow/")} />}>
+          <ReportSection title={t("reports.cashFlow")} action={<CsvLink href={csv("/reports/cash-flow/")} />}>
             <ReportState slot={slot("cash")} onRetry={() => retry("cash")} isEmpty={() => false}>
               {(cash) => (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
-                  <Kpi label={t("reports.cashIn")} tone="ok" value={money(cash.inflows)} />
-                  <Kpi label={t("reports.cashOutSuppliers")} value={money(cash.supplier_payments)} />
-                  <Kpi label={t("reports.cashOutRefunds")} value={money(cash.customer_refunds)} />
-                  <Kpi label={t("reports.cashOutExpenses")} value={money(cash.expenses)} />
-                  <Kpi
-                    label={t("reports.netCashFlow")}
-                    tone={Number(cash.net_cash_flow) < 0 ? "ink" : "ok"}
-                    value={money(cash.net_cash_flow)}
-                  />
-                </div>
+                <FigureRow cols={5} items={[
+                  { key: "in", label: t("reports.cashIn"), tone: "ok", value: money(cash.inflows) },
+                  { key: "suppliers", label: t("reports.cashOutSuppliers"), value: money(cash.supplier_payments) },
+                  { key: "refunds", label: t("reports.cashOutRefunds"), value: money(cash.customer_refunds) },
+                  { key: "expenses", label: t("reports.cashOutExpenses"), value: money(cash.expenses) },
+                  { key: "net", label: t("reports.netCashFlow"), tone: gainTone(cash.net_cash_flow), value: money(cash.net_cash_flow) },
+                ]} />
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {tab === "finance" && financeReports && <ZakatCard />}
 
         {/* Cash-flow forecast (committed documents, by week) */}
         {tab === "finance" && financeReports && (
-          <SectionCard
+          <ReportSection
             title={t("reports.forecastTitle")}
+            hint={t("reports.forecastHint")}
             action={
               <div className="flex items-center gap-2">
                 <select
@@ -644,15 +609,14 @@ export default function ReportsPage() {
               </div>
             }
           >
-            <p className="mb-3 text-xs text-muted">{t("reports.forecastHint")}</p>
             <ReportState slot={slot("forecast")} onRetry={() => retry("forecast")}>
               {(forecast) => (
                 <>
-                  <div className="mb-4 grid gap-4 sm:grid-cols-3">
-                    <Kpi label={t("reports.forecastOverdueIn")} tone="ok" value={money(forecast.rows[0]?.inflow)} />
-                    <Kpi label={t("reports.forecastOverdueOut")} value={money(forecast.rows[0]?.outflow)} />
-                    <Kpi label={t("reports.forecastClosing")} tone={Number(forecast.closing_position) < 0 ? "ink" : "ok"} value={money(forecast.closing_position)} />
-                  </div>
+                  <FigureRow cols={3} className="mb-6" items={[
+                    { key: "in", label: t("reports.forecastOverdueIn"), tone: "ok", value: money(forecast.rows[0]?.inflow) },
+                    { key: "out", label: t("reports.forecastOverdueOut"), value: money(forecast.rows[0]?.outflow) },
+                    { key: "closing", label: t("reports.forecastClosing"), tone: gainTone(forecast.closing_position), value: money(forecast.closing_position) },
+                  ]} />
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
@@ -668,10 +632,10 @@ export default function ReportsPage() {
                         {forecast.rows.map((r) => (
                           <tr key={r.bucket} className="border-b border-line last:border-0">
                             <td className="px-3 py-2">{r.bucket === "overdue" ? t("reports.forecastOverdue") : t("reports.forecastWeekFrom", { date: new Date(`${r.starts_on}T00:00:00`).toLocaleDateString(language === "ar" ? "ar" : "en", { day: "numeric", month: "short" }) })}</td>
-                            <td className="tabular px-3 py-2 text-end text-ok">{cell(r.inflow)}</td>
-                            <td className="tabular px-3 py-2 text-end text-danger">{cell(r.outflow)}</td>
-                            <td className={`tabular px-3 py-2 text-end ${Number(r.net) < 0 ? "text-danger" : ""}`}>{cell(r.net)}</td>
-                            <td className={`tabular px-3 py-2 text-end font-medium ${Number(r.cumulative) < 0 ? "text-danger" : ""}`}>{cell(r.cumulative)}</td>
+                            <td className="tabular px-3 py-2 text-end text-ok"><NumText value={cell(r.inflow)} /></td>
+                            <td className="tabular px-3 py-2 text-end text-danger"><NumText value={cell(r.outflow)} /></td>
+                            <td className={`tabular px-3 py-2 text-end ${Number(r.net) < 0 ? "text-danger" : ""}`}><NumText value={cell(r.net)} /></td>
+                            <td className={`tabular px-3 py-2 text-end font-medium ${Number(r.cumulative) < 0 ? "text-danger" : ""}`}><NumText value={cell(r.cumulative)} /></td>
                           </tr>
                         ))}
                       </tbody>
@@ -680,26 +644,25 @@ export default function ReportsPage() {
                 </>
               )}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {/* Collections worklist */}
         {tab === "sales" && salesReports && (
-          <SectionCard title={t("reports.collections")} action={<CsvLink href={csv("/reports/receivables-due/")} />}>
-            <p className="mb-3 text-xs text-muted">{t("reports.collectionsHint")}</p>
+          <ReportSection title={t("reports.collections")} hint={t("reports.collectionsHint")} action={<CsvLink href={csv("/reports/receivables-due/")} />}>
             <ReportState slot={slot("collections")} onRetry={() => retry("collections")} emptyText={t("reports.noOverdue")}>
               {(collections) => dueTable(collections.rows, { key: "invoice", number: "number", party: "customer", partyLabel: t("reports.customer") })}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
 
         {/* AR aging */}
         {tab === "sales" && salesReports && (
-          <SectionCard title={t("reports.arAgingTitle")}>
+          <ReportSection title={t("reports.arAgingTitle")}>
             <ReportState slot={slot("aging")} onRetry={() => retry("aging")} emptyText={t("reports.nothingOutstanding")}>
               {(rows) => agingTable(rows, "customer", t("reports.customer"))}
             </ReportState>
-          </SectionCard>
+          </ReportSection>
         )}
       </div>
       <OperationalReports range={range} areas={reportAreas.filter((area) => area === tab)} />
