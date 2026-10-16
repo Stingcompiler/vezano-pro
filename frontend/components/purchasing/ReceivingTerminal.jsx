@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { AlertTriangle, Check, Search, Trash2 } from "lucide-react";
+import { AlertTriangle, Search, Trash2 } from "lucide-react";
 
 import { inventory, purchasing } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
@@ -9,6 +9,7 @@ import { useOfflineMutation } from "@/components/sync/useOfflineMutation";
 import { useToast } from "@/components/ui/Toast";
 import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
 import BarcodeScanInput from "@/components/inventory/BarcodeScanInput";
+import SuccessCheck from "@/components/ui/SuccessCheck";
 import { cacheProducts } from "@/lib/productCache";
 import { errorText } from "@/lib/errors";
 import { formatAmount, round2 } from "@/lib/money";
@@ -179,9 +180,9 @@ export default function ReceivingTerminal({ suppliers, warehouses, onReceived, i
   if (done) {
     return (
       <Card className="mx-auto max-w-md p-6 text-center">
-        <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-ok/10 text-ok">
-          <Check />
-        </div>
+        {/* The same "done" mark as a recorded sale (SuccessCheck), not an
+            icon in a tinted circle. */}
+        <SuccessCheck size={48} className="mx-auto block" />
         <h2 className="mt-3 font-display text-xl font-semibold">{t("purchasing.receivedTitle")}</h2>
         <p className="mt-1 text-muted">{t("purchasing.purchaseInPosted")}</p>
         <Button className="mt-6 w-full" onClick={() => setDone(false)}>
