@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertTriangle, Minus, Plus, Printer, Search, Trash2, ShoppingBag, CreditCard, UserPlus } from "lucide-react";
+import { AlertTriangle, Minus, Plus, Printer, Search, Trash2, ShoppingBag, UserPlus } from "lucide-react";
 import CustomerDrawer from "@/components/sales/CustomerDrawer";
 
 import { inventory, sales } from "@/lib/api";
@@ -10,7 +10,7 @@ import { useToast } from "@/components/ui/Toast";
 import { useSync } from "@/components/sync/SyncProvider";
 import { useAuth } from "../../app/providers/AuthProvider";
 import DocumentDrawer from "@/components/print/DocumentDrawer";
-import { Badge, Button, Card, Field, Figure, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Figure, Input, Select, isZeroFigure } from "@/components/ui/kit";
 import SuccessCheck from "@/components/ui/SuccessCheck";
 import { accountLabel } from "@/lib/bankChannels";
 import BarcodeScanInput from "@/components/inventory/BarcodeScanInput";
@@ -776,10 +776,12 @@ export default function PosTerminal({
 
         <Card className="mt-4">
           {cart.length === 0 ? (
-            <div className="flex min-h-64 flex-col items-center justify-center gap-4 px-6 py-12 text-center text-sm text-muted">
-              <span className="grid h-16 w-16 place-items-center rounded-2xl border border-accent/15 bg-accent/5 text-accent"><ShoppingBag size={28} strokeWidth={1.5} /></span>
+            // One quiet line, not a tall box: on a phone the payment panel
+            // stays near the fold while the cart is still empty.
+            <p className="flex items-center justify-center gap-2 px-4 py-6 text-center text-sm text-muted">
+              <ShoppingBag size={18} strokeWidth={1.5} aria-hidden="true" className="shrink-0" />
               {t("sales.searchToAdd")}
-            </div>
+            </p>
           ) : (
             <div className="divide-y divide-line">
               {cart.map((l) => (
@@ -919,8 +921,11 @@ export default function PosTerminal({
       </div>
 
       {/* Checkout panel */}
-      <Card id="pos-payment" className="h-fit border-accent/20 p-5 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
-        <div className="mb-5 flex items-center gap-2 border-b border-line pb-4 text-sm font-semibold"><CreditCard size={18} className="text-accent" />{t("sales.payment")}</div>
+      {/* One bordered panel; inside it, sections are divided by hairlines
+          rather than boxed (docs/ui-profile.md). The total stays its
+          largest figure. */}
+      <Card id="pos-payment" className="h-fit p-5 md:sticky md:top-24 md:max-h-[calc(100vh-7rem)] md:overflow-y-auto">
+        <h2 className="mb-4 border-b border-line pb-3 font-display text-base font-bold text-ink">{t("sales.payment")}</h2>
         <div className="space-y-4">
           {/* A shop with one store shouldn't be asked which store, on every
               single sale. The value is still sent — only the question is
@@ -937,7 +942,7 @@ export default function PosTerminal({
             </Field>
           ) : (
             warehouses.length === 0 && (
-              <p className="rounded-card border border-warn/40 bg-warn/5 px-3 py-2 text-sm text-warn">
+              <p className="rounded-control bg-warn/10 px-3 py-2 text-sm text-warn">
                 {t("sales.noWarehouses")}
               </p>
             )
@@ -964,7 +969,8 @@ export default function PosTerminal({
             onSaved={async (saved) => { await onCustomersChanged?.(); setCustomer(String(saved.id)); }}
           />
 
-          <div className="rounded-xl bg-accent/5 p-4">
+          {/* The totals: set off by a hairline, not a tinted box. */}
+          <div className="border-t border-line pt-3">
             <div className="flex items-center justify-between gap-3 text-sm text-muted">
               <span>{t("sales.subtotal")}</span>
               <span className="tabular">{money(subtotal)}</span>
@@ -995,13 +1001,14 @@ export default function PosTerminal({
               </div>
             )}
             <div className="mt-2 flex items-center justify-between gap-3 border-t border-line pt-2">
-              <span className="text-sm text-muted">{t("common.total")}</span>
-              <span className="tabular whitespace-nowrap text-2xl font-semibold text-ink">{moneyTotal(grandTotal)}</span>
+              <span className="shrink-0 text-sm text-muted">{t("common.total")}</span>
+              {/* No count-up: the total follows every scan and keystroke. */}
+              <Figure value={moneyTotal(grandTotal)} size="xl" animate={false} className="min-w-0 flex-1 text-end" valueClassName={isZeroFigure(grandTotal) ? "font-normal text-muted" : "font-semibold text-ink"} />
             </div>
           </div>
 
           {credit && (
-            <div className="rounded-card border border-accent/30 bg-accent/5 p-3">
+            <div className="border-t border-line pt-3">
               <label className="flex items-center justify-between gap-3 text-sm">
                 <span className="flex items-center gap-2">
                   <input
@@ -1040,7 +1047,7 @@ export default function PosTerminal({
               rest", so the everyday single cash payment needs no typing. */}
           <div className="space-y-3">
             {tenders.map((row, index) => (
-              <div key={row.id} className={tenders.length > 1 ? "space-y-3 rounded-card border border-line p-3" : "space-y-3"}>
+              <div key={row.id} className={index > 0 ? "space-y-3 border-t border-line pt-3" : "space-y-3"}>
                 <div className="grid grid-cols-2 gap-3">
                   <Field label={t("sales.payment")}>
                     <Select value={row.method} onChange={(e) => patchTender(row.id, { method: e.target.value })}>
@@ -1114,20 +1121,20 @@ export default function PosTerminal({
           {/* Change due: only cash is handed back; a transfer above the bill
               is refused below rather than trimmed. */}
           {plan.change > 0 && !plan.overTransfer && (
-            <div className="flex items-center justify-between rounded-card border border-ok/40 bg-ok/5 px-3 py-2">
-              <span className="text-sm text-muted">{t("sales.changeDue")}</span>
-              <span className="tabular text-lg font-semibold text-ok">{moneyTotal(plan.change)}</span>
+            <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+              <span className="shrink-0 text-sm text-muted">{t("sales.changeDue")}</span>
+              <Figure value={moneyTotal(plan.change)} size="md" animate={false} className="min-w-0 flex-1 text-end" valueClassName="font-semibold text-ok" />
             </div>
           )}
           {plan.overTransfer && (
-            <p role="alert" className="rounded-card border border-danger/40 bg-danger/5 px-3 py-2 text-sm text-danger">
+            <p role="alert" className="rounded-control bg-danger/10 px-3 py-2 text-sm text-danger">
               {t("sales.transferOverDue")}
             </p>
           )}
           {!plan.overTransfer && plan.owed > 0 && (
-            <div className="flex items-center justify-between rounded-card border border-warn/40 bg-warn/5 px-3 py-2">
-              <span className="text-sm text-muted">{t("sales.stillOwed")}</span>
-              <span className="tabular text-lg font-semibold text-warn">{moneyTotal(plan.owed)}</span>
+            <div className="flex items-center justify-between gap-3 border-t border-line pt-3">
+              <span className="shrink-0 text-sm text-muted">{t("sales.stillOwed")}</span>
+              <Figure value={moneyTotal(plan.owed)} size="md" animate={false} className="min-w-0 flex-1 text-end" valueClassName="font-semibold text-warn" />
             </div>
           )}
           {!plan.overTransfer && plan.owed > 0 && !customer && (
@@ -1152,9 +1159,22 @@ export default function PosTerminal({
             );
           })()}
 
-          <Button className="min-h-12 w-full" onClick={checkout} disabled={submitting || cart.length === 0}>
-            {submitting ? t("sales.recording") : t("sales.completeSale")}
-          </Button>
+          {/* Disabled for exactly two reasons: a sale being recorded (the
+              button says so itself) or an empty cart, which is said next to
+              it. Every other problem is checked on click and named there. */}
+          <div>
+            <Button
+              className="min-h-12 w-full"
+              onClick={checkout}
+              disabled={submitting || cart.length === 0}
+              aria-describedby={!submitting && cart.length === 0 ? "pos-sale-blocked" : undefined}
+            >
+              {submitting ? t("sales.recording") : t("sales.completeSale")}
+            </Button>
+            {!submitting && cart.length === 0 && (
+              <p id="pos-sale-blocked" className="mt-1.5 text-center text-xs text-muted">{t("sales.completeSaleNeedsProduct")}</p>
+            )}
+          </div>
           <div className="text-center">
             <Badge tone="muted">{t("sales.manualOffline")}</Badge>
           </div>
