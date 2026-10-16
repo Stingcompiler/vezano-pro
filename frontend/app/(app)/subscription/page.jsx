@@ -6,7 +6,7 @@ import { useAuth } from "../../providers/AuthProvider";
 import { errorText } from "@/lib/errors";
 import { useI18n } from "../../providers/I18nProvider";
 import { subscription as subscriptionApi } from "@/lib/api";
-import { Badge, Button, Card, CountUp, FileInput, Input, PageHeader, PrimaryBlock, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, CountUp, FileInput, Input, NumText, PageHeader, PrimaryBlock, Select } from "@/components/ui/kit";
 import UsageMeter from "@/components/subscription/UsageMeter";
 import ProgressRing from "@/components/ui/ProgressRing";
 import SuccessCheck from "@/components/ui/SuccessCheck";
@@ -292,7 +292,7 @@ export default function SubscriptionPage() {
                 <div className="text-xs text-muted">{t("subscription.invoicePeriod", { start: showDate(row.period_start), end: showDate(row.period_end) })}</div>
               </div>
               <div className="text-end">
-                <div className="tabular">{formatMoney(row.amount, { currency: row.currency, language })}</div>
+                <div className="tabular"><NumText value={formatMoney(row.amount, { currency: row.currency, language })} /></div>
                 {row.status === "issued" && Number(row.allocated_amount) > 0 && (
                   <div className="text-xs text-warn">{t("subscription.invoicePaidOf", { paid: formatAmount(row.allocated_amount), amount: formatAmount(row.amount), currency: currencyLabel(row.currency, language) })}</div>
                 )}
@@ -317,7 +317,7 @@ export default function SubscriptionPage() {
               {/* The status never breaks over two lines; on a phone the date
                   goes under the amount instead of splitting it. */}
               <div className="flex items-start justify-between gap-3">
-                <span className="tabular min-w-0"><span className="whitespace-nowrap">{formatMoney(row.amount, { currency: row.currency, language })}</span> <span className="whitespace-nowrap">· {showDate(row.created_at)}</span></span>
+                <span className="tabular min-w-0"><span className="whitespace-nowrap"><NumText value={formatMoney(row.amount, { currency: row.currency, language })} /></span> <span className="whitespace-nowrap">· {showDate(row.created_at)}</span></span>
                 <Badge className="shrink-0 whitespace-nowrap" tone={row.status === "verified" ? "ok" : row.status === "rejected" ? "danger" : "warn"}>{t(`subscription.paymentStatus.${row.status}`)}</Badge>
               </div>
               {row.status === "rejected" && row.rejection_reason && <div className="mt-1 text-xs text-danger">{row.rejection_reason}</div>}
