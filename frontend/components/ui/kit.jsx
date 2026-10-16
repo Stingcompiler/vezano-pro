@@ -1,8 +1,8 @@
 "use client";
 
-import { cloneElement, forwardRef, isValidElement, useId } from "react";
+import { cloneElement, forwardRef, isValidElement, useId, useState } from "react";
 import Link from "next/link";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Upload } from "lucide-react";
 
 import { figureFitStyle, splitFigure } from "../../lib/figureFit";
 import { useCountUp } from "../../lib/useCountUp";
@@ -22,6 +22,10 @@ export function Button({ variant = "primary", className = "", ...props }) {
     ghost: "text-muted hover:bg-paper hover:text-ink",
     outline: "border border-line bg-surface text-ink shadow-sm hover:border-accent/40 hover:bg-paper",
     danger: "bg-danger text-on-danger hover:opacity-90",
+    // A destructive action that repeats down a list (remove a device): a
+    // secondary button in the danger colour; the confirmation dialog, not
+    // the button, carries the weight.
+    "danger-quiet": "border border-line bg-surface text-danger shadow-sm hover:border-danger/40 hover:bg-danger/5",
   };
   return <button className={`${base} ${variants[variant]} ${className}`} {...props} />;
 }
@@ -75,6 +79,41 @@ export const Input = forwardRef(function Input({ className = "", ...props }, ref
   const dir = props.dir ?? (LTR_TYPES.has(props.type) ? "ltr" : undefined);
   return <input ref={ref} className={`${sized(className)} ${className}`} {...props} dir={dir} />;
 });
+
+// A file picker in the page's language: the browser's own control says
+// "Choose File / No file chosen" in the browser's language, whatever the
+// page is. The real input is visually hidden (still focusable, still the
+// form control); its label is the visible button, and the chosen file's name
+// sits beside it. `fileName` makes the name controlled (a form that clears
+// its file after submitting); without it the last picked name is shown.
+// `chooseLabel` / `emptyLabel` come from the caller's i18n
+// (common.chooseFile, common.noFileChosen).
+export function FileInput({ label, hint, accept, onChange, fileName, chooseLabel, emptyLabel, disabled, className = "" }) {
+  const id = useId();
+  const [picked, setPicked] = useState("");
+  const shown = fileName === undefined ? picked : fileName;
+  return (
+    <div className={className}>
+      {label && <label htmlFor={id} className="mb-1 block text-sm font-medium text-ink">{label}</label>}
+      <div className="flex min-w-0 flex-wrap items-center gap-x-3 gap-y-1">
+        <input
+          id={id} type="file" accept={accept} disabled={disabled}
+          aria-describedby={hint ? `${id}-hint` : undefined}
+          className="peer sr-only"
+          onChange={(event) => { setPicked(event.target.files?.[0]?.name || ""); onChange?.(event); }}
+        />
+        <label
+          htmlFor={id}
+          className={`tap inline-flex min-h-10 cursor-pointer items-center gap-2 rounded-control border border-line bg-surface px-4 py-2 text-sm font-semibold text-ink shadow-sm ${BUTTON_MOTION} hover:border-accent/40 hover:bg-paper peer-focus-visible:border-accent peer-focus-visible:shadow-[0_0_0_4px_rgb(var(--accent)/0.15)] peer-disabled:pointer-events-none peer-disabled:opacity-50`}
+        >
+          <Upload size={15} aria-hidden="true" />{chooseLabel}
+        </label>
+        <span className={`min-w-0 max-w-full truncate text-sm ${shown ? "text-ink" : "text-muted"}`} dir="auto">{shown || emptyLabel}</span>
+      </div>
+      {hint && <span id={`${id}-hint`} className="mt-1 block text-xs text-muted">{hint}</span>}
+    </div>
+  );
+}
 
 export function Select({ className = "", children, ...props }) {
   return (

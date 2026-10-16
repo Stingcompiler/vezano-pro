@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ArrowUpDown } from "lucide-react";
 
 import { Badge, Button, Card, Input } from "@/components/ui/kit";
 import { subscription as api } from "@/lib/api";
@@ -66,7 +65,7 @@ export default function PlanChangePanel({ onChanged }) {
   const current = data.current;
   return (
     <Card className="mt-5 p-5">
-      <h2 className="flex items-center gap-2 font-display font-semibold"><ArrowUpDown size={18} className="text-accent" />{t("planChange.title")}</h2>
+      <h2 className="font-display font-semibold">{t("planChange.title")}</h2>
       <p className="mt-1 text-sm text-muted">{t("planChange.hint")}</p>
       {error && <p role="alert" className="mt-3 rounded-control bg-danger/10 p-3 text-sm text-danger">{error}</p>}
 

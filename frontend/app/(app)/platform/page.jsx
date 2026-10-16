@@ -2,25 +2,27 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { ArrowRight, Building2, CreditCard, FileCheck2, Lock, ShieldCheck, Timer, UsersRound } from "lucide-react";
+import { ChevronDown, Lock } from "lucide-react";
 
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { registration } from "@/lib/api";
 import { usePlatformRoleLabel } from "@/components/PlatformShell";
-import { Badge, Card, PageHeader } from "@/components/ui/kit";
+import { Badge, Card, DefinitionSection, FigureRow, PageHeader } from "@/components/ui/kit";
 import { subscriptionStateLabel } from "@/lib/labels";
 import PushPrompt from "@/components/orders/PushPrompt";
 
-function MetricCard({ href, icon: Icon, value, title, hint }) {
-  return <Link href={href}><Card className="h-full p-4 transition-transform hover:-translate-y-0.5 sm:p-6"><Icon className="text-accent" size={20} /><div className="mt-3 text-2xl font-bold tabular-nums sm:mt-5 sm:text-3xl">{value ?? "…"}</div><h2 className="mt-1 font-display text-sm font-semibold sm:mt-2 sm:text-base">{title}</h2><p className="mt-1 text-xs text-muted sm:text-sm">{hint}</p></Card></Link>;
-}
+// A count that is waiting on someone is in the warning colour; a zero is
+// quiet (FigureRow), and "…" holds the place while the overview loads.
+const waiting = (value) => (value ? "warn" : undefined);
 
 export default function PlatformPage() {
   const { user } = useAuth();
   const { t, language } = useI18n();
   const roleLabel = usePlatformRoleLabel();
-  const fmt = (value) => new Date(value).toLocaleString(language === "ar" ? "ar" : "en", { dateStyle: "medium", timeStyle: "short" });
+  // Latin digits in Arabic too (docs/ui-profile.md).
+  const locale = language === "ar" ? "ar-u-nu-latn" : "en";
+  const fmt = (value) => new Date(value).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" });
   // Unknown role names (e.g. "Django superuser") fall back to the raw label.
   const memberRole = (name) => {
     if (!name) return "";
@@ -39,32 +41,62 @@ export default function PlatformPage() {
   const expiring = overview?.expiring_subscriptions || [];
   // Only present for members who may see the team (platform.team.view).
   const team = overview?.team;
+  const count = (key) => (counts ? counts[key] ?? 0 : "…");
   return <div>
-    <PageHeader title={t("platform.title")} subtitle={t("platform.subtitle")} actions={<Badge tone="accent"><ShieldCheck size={14} /> {roleLabel}</Badge>} />
+    <PageHeader title={t("platform.title")} subtitle={t("platform.subtitle")} actions={<Badge tone="accent">{roleLabel}</Badge>} />
     {error && <p role="alert" className="mb-5 rounded-control bg-danger/10 p-3 text-sm text-danger">{error}</p>}
     <PushPrompt onKey="platform.pushOn" offKey="platform.pushOff" />
-    <Card className="mb-5 border-accent/25 p-5">
-      <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><ShieldCheck size={20} /></span>
-          <div>
-            <h2 className="font-display font-semibold">{t("platform.ownerCreationTitle")}</h2>
-            <p className="mt-1 max-w-3xl text-sm text-muted">{t("platform.ownerCreationHint")}</p>
-          </div>
-        </div>
-        <Link href="/platform-registrations" className="tap inline-flex items-center shrink-0 rounded-control bg-accent px-4 py-2 text-center text-sm font-semibold text-on-accent">{t("platform.createOwnerAction")}</Link>
-      </div>
-    </Card>
-    <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-      <MetricCard href="/platform-registrations" icon={FileCheck2} value={counts?.registration_attention} title={t("platform.registrationAttention")} hint={t("platform.registrationAttentionHint")} />
-      <MetricCard href="/platform-subscriptions" icon={CreditCard} value={counts?.pending_payments} title={t("platform.pendingPaymentsTitle")} hint={t("platform.pendingPaymentsHint")} />
-      <MetricCard href="/platform-subscriptions" icon={Building2} value={counts?.provisioned_companies} title={t("platform.provisionedCompanies")} hint={t("platform.provisionedCompaniesHint")} />
-      <MetricCard href="/platform-subscriptions" icon={Timer} value={counts?.expiring_within_7_days} title={t("platform.expiringSoon")} hint={t("platform.expiringSoonHint")} />
+    {/* The way a company's first owner is created is a one-time question:
+        a help line that opens on demand, beside the action it explains,
+        instead of a permanent card at the top of the page. */}
+    <div className="mb-6 flex flex-wrap items-start gap-x-5 gap-y-3">
+      <Link href="/platform-registrations" className="tap inline-flex min-h-10 shrink-0 items-center rounded-control bg-accent px-4 py-2 text-sm font-semibold text-on-accent shadow-sm transition-colors hover:bg-accent-strong">{t("platform.createOwnerAction")}</Link>
+      <details className="group min-w-0 flex-1 basis-64 py-2">
+        <summary className="tap inline-flex cursor-pointer list-none items-center gap-1 text-sm font-medium text-accent hover:underline [&::-webkit-details-marker]:hidden">
+          {t("platform.ownerCreationTitle")}
+          <ChevronDown size={15} aria-hidden="true" className="shrink-0 group-open:rotate-180" />
+        </summary>
+        <p className="mt-2 max-w-3xl text-sm leading-relaxed text-muted">{t("platform.ownerCreationHint")}</p>
+      </details>
     </div>
-    <div className="mt-7 grid gap-5 lg:grid-cols-2">
-      <Card className="p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-semibold">{t("platform.registrationQueue")}</h2><Link href="/platform-registrations" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">{t("platform.openQueue")}<ArrowRight size={15} /></Link></div>{attention.length ? <div className="mt-4 divide-y divide-line">{attention.map((row) => <div key={row.id} className="py-3"><div className="font-medium">{row.company_name}</div><div className="mt-1 text-sm text-muted">{row.contact_name} · {row.email}</div><Badge tone={row.status === "approved" ? "ok" : "warn"}>{t(`platformRegistration.status${row.status.charAt(0).toUpperCase()}${row.status.slice(1)}`)}</Badge></div>)}</div> : <p className="mt-4 text-sm text-muted">{t("platform.noRegistrationAttention")}</p>}</Card>
-      {team && <Card className="p-5"><div className="flex items-center justify-between gap-3"><h2 className="font-display text-lg font-semibold"><UsersRound size={18} className="me-2 inline text-accent" />{t("platform.teamPresence")}</h2><Link href="/platform-team" className="inline-flex items-center gap-1 text-sm font-medium text-accent hover:underline">{t("platform.openTeam")}<ArrowRight size={15} /></Link></div><p className="mt-1 text-sm text-muted">{t("platform.teamPresenceHint")}</p><div className="mt-4 divide-y divide-line">{team.map((row) => <div key={row.id} className="flex items-center justify-between gap-4 py-3"><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><Link href={`/platform-team/member/?id=${row.id}`} className="font-medium hover:text-accent hover:underline">{row.full_name || row.email}</Link>{row.online && <Badge tone="ok"><span className="me-1 inline-block h-2 w-2 rounded-full bg-ok" />{t("platformTeam.online")}</Badge>}</div><div className="mt-1 truncate text-sm text-muted">{row.email}{row.role_name && <> · {memberRole(row.role_name)}</>}</div></div><div className="shrink-0 text-end text-xs text-muted">{row.online ? "" : row.last_seen_at ? t("platformTeam.lastSeen", { date: fmt(row.last_seen_at) }) : t("platformTeam.neverSignedIn")}</div></div>)}</div></Card>}
-      <Card className="p-5"><h2 className="font-display text-lg font-semibold">{t("platform.expiringQueue")}</h2>{expiring.length ? <div className="mt-4 divide-y divide-line">{expiring.map((row) => <div key={row.id} className="flex items-center justify-between gap-4 py-3"><div><div className="font-medium">{row.company_name}</div><div className="mt-1 text-sm text-muted">{subscriptionStateLabel(t, row.status)}</div></div><time className="text-sm text-muted">{new Date(row.ends_at).toLocaleDateString()}</time></div>)}</div> : <p className="mt-4 text-sm text-muted">{t("platform.noExpiringSubscriptions")}</p>}</Card>
+    <FigureRow cols={4} items={[
+      { key: "registrations", href: "/platform-registrations", label: t("platform.registrationAttention"), value: count("registration_attention"), tone: waiting(counts?.registration_attention), hint: t("platform.registrationAttentionHint") },
+      { key: "payments", href: "/platform-subscriptions", label: t("platform.pendingPaymentsTitle"), value: count("pending_payments"), tone: waiting(counts?.pending_payments), hint: t("platform.pendingPaymentsHint") },
+      { key: "companies", href: "/platform-subscriptions", label: t("platform.provisionedCompanies"), value: count("provisioned_companies"), hint: t("platform.provisionedCompaniesHint") },
+      { key: "expiring", href: "/platform-subscriptions", label: t("platform.expiringSoon"), value: count("expiring_within_7_days"), tone: waiting(counts?.expiring_within_7_days), hint: t("platform.expiringSoonHint") },
+    ]} />
+    <div className="mt-8 grid gap-x-10 gap-y-8 lg:grid-cols-2">
+      <DefinitionSection title={t("platform.registrationQueue")} link={{ href: "/platform-registrations", label: t("platform.openQueue") }}>
+        {attention.length ? <ul className="divide-y divide-line">{attention.map((row) => (
+          <li key={row.id} className="flex flex-wrap items-start justify-between gap-x-4 gap-y-1 py-3">
+            <div className="min-w-0">
+              <div className="font-medium text-ink">{row.company_name}</div>
+              <div className="mt-0.5 text-sm text-muted">{row.contact_name} · <bdi dir="ltr">{row.email}</bdi></div>
+            </div>
+            <Badge className="shrink-0" tone={row.status === "approved" ? "ok" : "warn"}>{t(`platformRegistration.status${row.status.charAt(0).toUpperCase()}${row.status.slice(1)}`)}</Badge>
+          </li>
+        ))}</ul> : <p className="py-3 text-sm text-muted">{t("platform.noRegistrationAttention")}</p>}
+      </DefinitionSection>
+      {team && <DefinitionSection title={t("platform.teamPresence")} link={{ href: "/platform-team", label: t("platform.openTeam") }}>
+        <p className="mt-2 text-sm text-muted">{t("platform.teamPresenceHint")}</p>
+        <ul className="mt-1 divide-y divide-line">{team.map((row) => (
+          <li key={row.id} className="flex items-center justify-between gap-4 py-3">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2"><Link href={`/platform-team/member/?id=${row.id}`} className="font-medium hover:text-accent hover:underline">{row.full_name || row.email}</Link>{row.online && <Badge tone="ok"><span className="me-1 inline-block h-2 w-2 rounded-full bg-ok" />{t("platformTeam.online")}</Badge>}</div>
+              <div className="mt-1 truncate text-sm text-muted"><bdi dir="ltr">{row.email}</bdi>{row.role_name && <> · {memberRole(row.role_name)}</>}</div>
+            </div>
+            <div className="shrink-0 text-end text-xs text-muted">{row.online ? "" : row.last_seen_at ? t("platformTeam.lastSeen", { date: fmt(row.last_seen_at) }) : t("platformTeam.neverSignedIn")}</div>
+          </li>
+        ))}</ul>
+      </DefinitionSection>}
+      <DefinitionSection title={t("platform.expiringQueue")}>
+        {expiring.length ? <ul className="divide-y divide-line">{expiring.map((row) => (
+          <li key={row.id} className="flex items-center justify-between gap-4 py-3">
+            <div className="min-w-0"><div className="font-medium text-ink">{row.company_name}</div><div className="mt-0.5 text-sm text-muted">{subscriptionStateLabel(t, row.status)}</div></div>
+            <time className="shrink-0 text-sm text-muted tabular" dateTime={row.ends_at}>{new Date(row.ends_at).toLocaleDateString(locale)}</time>
+          </li>
+        ))}</ul> : <p className="py-3 text-sm text-muted">{t("platform.noExpiringSubscriptions")}</p>}
+      </DefinitionSection>
     </div>
   </div>;
 }

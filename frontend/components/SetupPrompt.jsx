@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { Building2, Store } from "lucide-react";
 
 import { settings } from "@/lib/api";
 import { useI18n } from "../app/providers/I18nProvider";
@@ -23,28 +22,32 @@ import { Button } from "@/components/ui/kit";
  * Only shown to someone who can act on it (settings write); everyone else
  * works normally while the owner decides.
  */
-function Choice({ icon: Icon, title, blurb, points, selected, onSelect }) {
+// One of the two answers: a row of the dialog's list, not a card inside the
+// dialog's card. The chosen one is marked by a filled radio dot and its
+// title in the accent colour.
+function Choice({ title, blurb, points, selected, onSelect }) {
   return (
     <button
       type="button"
       onClick={onSelect}
       aria-pressed={selected}
-      className={`flex-1 rounded-card border p-4 text-start transition-colors ${
-        selected
-          ? "border-accent bg-accent/5"
-          : "border-line bg-surface hover:bg-paper"
-      }`}
+      className="tap flex w-full items-start gap-3 px-1 py-4 text-start transition-colors hover:bg-paper sm:px-3"
     >
-      <div className="flex items-center gap-2">
-        <Icon size={18} className={selected ? "text-accent" : "text-muted"} />
-        <span className="font-display font-semibold text-ink">{title}</span>
-      </div>
-      <p className="mt-1 text-sm text-muted">{blurb}</p>
-      <ul className="mt-2 space-y-0.5 text-xs text-muted">
-        {points.map((p) => (
-          <li key={p}>· {p}</li>
-        ))}
-      </ul>
+      <span
+        aria-hidden="true"
+        className={`mt-1 grid h-4 w-4 shrink-0 place-items-center rounded-full border-2 ${selected ? "border-accent" : "border-muted/50"}`}
+      >
+        {selected && <span className="h-2 w-2 rounded-full bg-accent" />}
+      </span>
+      <span className="min-w-0">
+        <span className={`block font-display font-semibold ${selected ? "text-accent" : "text-ink"}`}>{title}</span>
+        <span className="mt-1 block text-sm text-muted">{blurb}</span>
+        <span className="mt-2 block space-y-0.5 text-xs text-muted">
+          {points.map((p) => (
+            <span key={p} className="block">· {p}</span>
+          ))}
+        </span>
+      </span>
     </button>
   );
 }
@@ -77,9 +80,8 @@ export default function SetupPrompt({ onDone }) {
         </h2>
         <p className="mt-1 text-sm text-muted">{t("setup.subtitle")}</p>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-5 divide-y divide-line border-y border-line">
           <Choice
-            icon={Store}
             title={t("setup.shopTitle")}
             blurb={t("setup.shopBlurb")}
             points={[
@@ -91,7 +93,6 @@ export default function SetupPrompt({ onDone }) {
             onSelect={() => setChoice("shop")}
           />
           <Choice
-            icon={Building2}
             title={t("setup.enterpriseTitle")}
             blurb={t("setup.enterpriseBlurb")}
             points={[

@@ -23,10 +23,17 @@ const matchesCompany = (typed, row) => {
   return Boolean(value) && (value === fold(row.name) || value === fold(row.slug));
 };
 
-function Cell({ cell }) {
+// "1/∞": one isolated left-to-right run (bdi), so the Arabic table cannot
+// reorder it into "∞/1"; the limit's name is said for screen readers.
+function Cell({ cell, t }) {
   const tone = usageTone(cell);
-  const cls = { danger: "text-danger font-semibold", warn: "text-warn font-semibold", ok: "", muted: "text-muted" }[tone];
-  return <span dir="ltr" className={`tabular ${cls}`}>{cell.used}<span className="text-muted">/{cell.limit ?? "∞"}</span></span>;
+  const cls = { danger: "text-danger font-semibold", warn: "text-warn font-semibold", ok: "", muted: "" }[tone];
+  const limit = cell.limit ?? "∞";
+  return (
+    <bdi dir="ltr" className={`tabular whitespace-nowrap ${cls}`} aria-label={`${cell.used} / ${cell.limit ?? t("usage.unlimited")}`}>
+      {cell.used}<span className="text-muted">/{limit}</span>
+    </bdi>
+  );
 }
 
 export default function PlatformCompaniesPage() {
@@ -140,11 +147,21 @@ export default function PlatformCompaniesPage() {
           {t("platformCompanies.policyWarning", { policy: data.policy })}
         </div>
       )}
-      <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <Card className="p-4"><div className="text-xs text-muted">{t("platformCompanies.total")}</div><div className="mt-1 font-display text-2xl font-semibold tabular">{data?.companies?.length ?? "—"}</div></Card>
-        <Card className="p-4"><div className="text-xs text-muted">{t("platformCompanies.overLimit")}</div><div className={`mt-1 font-display text-2xl font-semibold tabular ${overCount ? "text-danger" : ""}`}>{data ? overCount : "—"}</div></Card>
-        <Card className="p-4"><div className="text-xs text-muted">{t("platformCompanies.devicesTotal")}</div><div className="mt-1 font-display text-2xl font-semibold tabular">{data ? data.companies.reduce((n, r) => n + (r.usage?.devices?.used || 0), 0) : "—"}</div></Card>
-      </div>
+      {/* Three counts as one summary line, not three cards that pushed the
+          list below the first phone screen. Zero is quiet; companies over
+          their plan are in the danger colour only when there are some. */}
+      <dl className="mb-4 flex flex-wrap items-baseline gap-x-6 gap-y-1 text-sm" aria-busy={!data}>
+        {[
+          { key: "total", label: t("platformCompanies.total"), value: data?.companies?.length },
+          { key: "over", label: t("platformCompanies.overLimit"), value: data ? overCount : undefined, danger: overCount > 0 },
+          { key: "devices", label: t("platformCompanies.devicesTotal"), value: data ? data.companies.reduce((n, r) => n + (r.usage?.devices?.used || 0), 0) : undefined },
+        ].map((item) => (
+          <div key={item.key} className="flex items-baseline gap-1.5">
+            <dt className="text-muted">{item.label}</dt>
+            <dd className={`tabular ${item.danger ? "font-semibold text-danger" : item.value ? "font-semibold text-ink" : "text-muted"}`}><bdi dir="ltr">{item.value ?? "—"}</bdi></dd>
+          </div>
+        ))}
+      </dl>
       <div className="relative mb-4 max-w-md">
         <Search size={16} className="pointer-events-none absolute start-3 top-1/2 -translate-y-1/2 text-muted" />
         <Input className="ps-9" placeholder={t("platformCompanies.search")} value={query} onChange={(e) => setQuery(e.target.value)} />
@@ -173,7 +190,7 @@ export default function PlatformCompaniesPage() {
                     <div className="mt-0.5 text-xs text-muted">{t(`platformCompanies.type.${r.business_type}`)} · {t("platformCompanies.since")} {fmtDate(r.created_at)}{r.over_limit.length > 0 && <> · <span className="text-danger">{t("platformCompanies.overOn", { what: r.over_limit.map((k) => t(`usage.${k}`)).join("، ") })}</span></>}</div>
                   </td>
                   <td className="px-4 py-3">{r.plan ? <><div>{r.plan.name || "—"}</div><Badge tone={STATUS_TONE[r.plan.status] || "muted"}>{t(`platformCompanies.status.${r.plan.status}`)}</Badge></> : <Badge tone="muted">{t("platformCompanies.noPlan")}</Badge>}</td>
-                  {USAGE_KEYS.map((key) => <td key={key} className="px-3 py-3 text-center"><Cell cell={r.usage[key]} /></td>)}
+                  {USAGE_KEYS.map((key) => <td key={key} className="px-3 py-3 text-center"><Cell cell={r.usage[key]} t={t} /></td>)}
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>{r.owner ? <><div>{r.owner.name || r.owner.email}</div><div className="text-xs text-muted"><a className="hover:underline" href={`mailto:${r.owner.email}`}>{r.owner.email}</a>{r.owner.phone && <> · <PhoneLink phone={r.owner.phone} /></>}</div></> : "—"}</td>
                   <td className="px-4 py-3 text-xs text-muted"><div>{t("platformCompanies.lastActive")}: {fmt(r.last_active_at)}</div><div>{t("platformCompanies.invoices30d", { n: r.invoices_30d })}</div></td>
                   <td className="px-2 text-muted">{open === r.id ? <ChevronUp size={16} /> : <ChevronDown size={16} />}</td>
@@ -182,7 +199,7 @@ export default function PlatformCompaniesPage() {
                   <tr key={`${r.id}-detail`} className="bg-paper/60">
                     <td colSpan={5 + USAGE_KEYS.length} className="px-4 py-4">
                       {(canSuspend || canDelete) && (
-                        <div className="mb-4 rounded-control border border-line bg-surface p-3">
+                        <div className="mb-4 border-b border-line pb-4">
                           <h3 className="mb-2 font-display text-sm font-semibold">{t("platformCompanies.ownerControls")}</h3>
                           {r.suspension?.kind === "unpaid" && <p className="mb-2 text-sm text-danger">{t("platformCompanies.suspendedSince", { date: fmtDate(r.suspension.since), reason: r.suspension.reason })}</p>}
                           {r.suspension?.kind === "manual" && <p className="mb-2 text-sm text-muted">{t("platformCompanies.manualSuspendHint", { reason: r.suspension.reason || "—" })}</p>}

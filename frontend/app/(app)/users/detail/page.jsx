@@ -31,17 +31,14 @@ function Row({ label, children }) {
   );
 }
 
-function Section({ icon: Icon, title, hint, children }) {
+// A titled block of the page. No icon beside the heading (docs/ui-profile.md):
+// the title says what it is. Callers may still pass `icon`; it is unused.
+function Section({ title, hint, children }) {
   return (
     <Card className="p-5">
-      <div className="flex items-start gap-3">
-        <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><Icon size={20} /></span>
-        <div className="min-w-0 flex-1">
-          <h2 className="font-display font-semibold">{title}</h2>
-          {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
-          <div className="mt-3">{children}</div>
-        </div>
-      </div>
+      <h2 className="font-display font-semibold">{title}</h2>
+      {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
+      <div className="mt-3">{children}</div>
     </Card>
   );
 }

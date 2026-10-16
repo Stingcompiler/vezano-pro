@@ -59,8 +59,10 @@ export default function DeviceList({ devices, onLabel, onRevoke, onReactivate, o
             {d.is_active
               ? onRevoke && <Button variant="outline" disabled={busyId === d.id} onClick={() => onRevoke(d)}>{t("devices.revoke")}</Button>
               : onReactivate && <Button variant="outline" disabled={busyId === d.id} onClick={() => onReactivate(d)}>{t("devices.allowAgain")}</Button>}
+            {/* Repeats on every device: a secondary button in the danger
+                colour; the confirmation dialog carries the weight. */}
             {onRemove && (
-              <Button variant="danger" disabled={busyId === d.id} onClick={() => onRemove(d)}>
+              <Button variant="danger-quiet" disabled={busyId === d.id} onClick={() => onRemove(d)}>
                 <Trash2 size={15} />{t("devices.remove")}
               </Button>
             )}

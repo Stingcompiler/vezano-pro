@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Bot, ChartColumn, Filter, Globe, MonitorSmartphone, MousePointerClick, TrendingDown, TrendingUp, UsersRound } from "lucide-react";
+import { TrendingDown, TrendingUp } from "lucide-react";
 
 import { platformAnalytics } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Card, PageHeader } from "@/components/ui/kit";
+import { Badge, Card, Figure, FigureRow, PageHeader } from "@/components/ui/kit";
 
 const WINDOWS = [7, 30, 90];
 
@@ -45,17 +45,18 @@ function Sparkline({ points, field }) {
   );
 }
 
-function KpiCard({ icon: Icon, label, value, deltaValue, spark, sparkField, hint }) {
+/** One cell of the headline figure row: the number, its change against
+ * the previous window, and a sparkline or a line of explanation. Flat (no
+ * card per number, no icon): FigureRow draws the hairlines. */
+function KpiBody({ value, deltaValue, spark, sparkField, hint }) {
   return (
-    <Card className="p-4 sm:p-5">
-      <div className="flex items-center justify-between gap-2">
-        <span className="grid h-8 w-8 place-items-center rounded-control bg-accent/10 text-accent"><Icon size={16} /></span>
-        {deltaValue !== undefined && <DeltaBadge value={deltaValue} />}
-      </div>
-      <div className="mt-3 text-2xl font-bold tabular-nums sm:text-3xl">{value}</div>
-      <div className="mt-0.5 text-sm text-muted">{label}</div>
-      {spark ? <div className="mt-2"><Sparkline points={spark} field={sparkField} /></div> : hint ? <p className="mt-2 text-xs text-muted">{hint}</p> : null}
-    </Card>
+    <>
+      {/* The figure sizes itself to its box (figure-fit): it needs the full
+          cell width, so the change goes on its own line under it. */}
+      <Figure value={value} size="md" animate={false} className="mt-1" valueClassName={value === 0 ? "font-normal text-muted" : "font-semibold text-ink"} />
+      {deltaValue !== undefined && <div className="mt-0.5"><DeltaBadge value={deltaValue} /></div>}
+      {spark ? <div className="mt-2"><Sparkline points={spark} field={sparkField} /></div> : hint ? <p className="mt-1 text-xs text-muted">{hint}</p> : null}
+    </>
   );
 }
 
@@ -133,11 +134,11 @@ function RankedList({ rows, labelFor, max }) {
   );
 }
 
-function SplitBar({ title, icon: Icon, parts }) {
+function SplitBar({ title, parts }) {
   const total = parts.reduce((sum, part) => sum + part.value, 0) || 1;
   return (
     <Card className="p-5">
-      <h2 className="flex items-center gap-2 font-display text-base font-semibold"><Icon size={16} className="text-accent" />{title}</h2>
+      <h2 className="font-display text-base font-semibold">{title}</h2>
       <div className="mt-4 flex h-2.5 overflow-hidden rounded-full bg-paper" dir="ltr">
         {parts.map((part) => (
           <div key={part.label} className={part.cls} style={{ width: `${(part.value / total) * 100}%` }} />
@@ -201,26 +202,12 @@ export default function PlatformAnalyticsPage() {
       />
       {error && <p role="alert" className="mb-5 rounded-control bg-danger/10 p-3 text-sm text-danger">{error}</p>}
 
-      <div className="grid grid-cols-2 gap-3 sm:gap-4 xl:grid-cols-4">
-        <KpiCard
-          icon={MousePointerClick} label={t("platformAnalytics.visits")} value={totals ? totals.visits : "…"}
-          deltaValue={totals ? delta(totals.visits, totals.previous_visits) : undefined}
-          spark={data?.series} sparkField="visits"
-        />
-        <KpiCard
-          icon={UsersRound} label={t("platformAnalytics.visitors")} value={totals ? totals.visitors : "…"}
-          deltaValue={totals ? delta(totals.visitors, totals.previous_visitors) : undefined}
-          spark={data?.series} sparkField="visitors"
-        />
-        <KpiCard
-          icon={ChartColumn} label={t("platformAnalytics.pagesPerVisitor")} value={totals ? totals.pages_per_visitor : "…"}
-          hint={t("platformAnalytics.pagesPerVisitorHint")}
-        />
-        <KpiCard
-          icon={Bot} label={t("platformAnalytics.botVisits")} value={totals ? totals.bot_visits : "…"}
-          hint={t("platformAnalytics.botVisitsHint")}
-        />
-      </div>
+      <FigureRow cols={4} items={[
+        { key: "visits", label: t("platformAnalytics.visits"), content: <KpiBody value={totals ? totals.visits : "…"} deltaValue={totals ? delta(totals.visits, totals.previous_visits) : undefined} spark={data?.series} sparkField="visits" /> },
+        { key: "visitors", label: t("platformAnalytics.visitors"), content: <KpiBody value={totals ? totals.visitors : "…"} deltaValue={totals ? delta(totals.visitors, totals.previous_visitors) : undefined} spark={data?.series} sparkField="visitors" /> },
+        { key: "pages", label: t("platformAnalytics.pagesPerVisitor"), content: <KpiBody value={totals ? totals.pages_per_visitor : "…"} hint={t("platformAnalytics.pagesPerVisitorHint")} /> },
+        { key: "bots", label: t("platformAnalytics.botVisits"), content: <KpiBody value={totals ? totals.bot_visits : "…"} hint={t("platformAnalytics.botVisitsHint")} /> },
+      ]} />
 
       <Card className="mt-5 p-5">
         <h2 className="font-display text-lg font-semibold">{t("platformAnalytics.trendTitle")}</h2>
@@ -245,14 +232,14 @@ export default function PlatformAnalyticsPage() {
 
       <div className="mt-5 grid gap-5 lg:grid-cols-2">
         <SplitBar
-          title={t("platformAnalytics.devices")} icon={MonitorSmartphone}
+          title={t("platformAnalytics.devices")}
           parts={[
             { label: t("platformAnalytics.phone"), value: data?.devices?.phone || 0, cls: "bg-accent" },
             { label: t("platformAnalytics.desktop"), value: data?.devices?.desktop || 0, cls: "bg-ink/30" },
           ]}
         />
         <SplitBar
-          title={t("platformAnalytics.languages")} icon={Globe}
+          title={t("platformAnalytics.languages")}
           parts={[
             { label: "العربية", value: data?.languages?.ar || 0, cls: "bg-accent" },
             { label: "English", value: data?.languages?.en || 0, cls: "bg-ink/30" },
@@ -262,17 +249,15 @@ export default function PlatformAnalyticsPage() {
 
       {funnel && (
         <Card className="mt-5 p-5">
-          <h2 className="flex items-center gap-2 font-display text-lg font-semibold">
-            <Filter size={17} className="text-accent" />{t("platformAnalytics.funnelTitle")}
-          </h2>
+          <h2 className="font-display text-lg font-semibold">{t("platformAnalytics.funnelTitle")}</h2>
           <p className="mt-1 text-sm text-muted">{t("platformAnalytics.funnelHint")}</p>
-          <div className="mt-5 grid gap-2 sm:grid-cols-3 xl:grid-cols-6">
+          <div className="mt-4 grid grid-cols-2 gap-x-4 sm:grid-cols-3 xl:grid-cols-6">
             {funnel.map((stage, index) => {
               const max = funnel[0]?.count || 1;
               return (
-                <div key={stage.key} className="rounded-card border border-line bg-paper/60 p-3">
+                <div key={stage.key} className="border-t border-line py-3">
                   <div className="text-xs text-muted">{index + 1}. {t(`platformAnalytics.stage.${stage.key}`)}</div>
-                  <div className="mt-1 text-xl font-bold tabular-nums">{stage.count}</div>
+                  <div className={`mt-1 text-xl tabular-nums ${stage.count ? "font-bold text-ink" : "font-normal text-muted"}`}>{stage.count}</div>
                   <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-line/60">
                     <div className="h-full rounded-full bg-accent" style={{ width: `${Math.max((stage.count / max) * 100, stage.count ? 2 : 0)}%` }} />
                   </div>

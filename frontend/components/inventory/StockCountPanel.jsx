@@ -172,7 +172,7 @@ export default function StockCountPanel({ warehouses, canWrite }) {
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("inventory.searchPlaceholder")} />
           </Field>
           {results.length > 0 && (
-            <ul className="divide-y divide-line rounded-card border border-line">
+            <ul className="divide-y divide-line border-y border-line">
               {results.map((p) => <li key={p.id}><button type="button" className="tap flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-paper" onClick={() => addLine(p)}><span>{p.name}</span><span className="text-muted">{p.sku}</span></button></li>)}
             </ul>
           )}
