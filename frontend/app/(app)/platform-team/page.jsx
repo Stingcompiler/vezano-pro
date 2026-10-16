@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { CheckCircle2, Copy, KeyRound, Lock, MailCheck, Send, ShieldCheck, UserPlus } from "lucide-react";
+import { CheckCircle2, Copy, KeyRound, Lock, MailCheck, Send, ShieldCheck } from "lucide-react";
 
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
@@ -151,9 +151,8 @@ export default function PlatformTeamPage() {
       )}
 
       {canManage && <Card className="mb-5 p-5">
-        <div className="flex items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><UserPlus size={20} /></span>
-          <div className="min-w-0 flex-1">
+        <div>
+          <div className="min-w-0">
             <h2 className="font-display font-semibold">{t("platformTeam.invite")}</h2>
             <p className="mt-1 text-sm text-muted">{t("platformTeam.inviteHint")}</p>
             <form onSubmit={submitInvite} className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-[1fr_1fr_1fr_auto] lg:items-start">

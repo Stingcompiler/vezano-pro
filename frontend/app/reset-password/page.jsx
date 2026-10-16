@@ -8,7 +8,6 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { MailCheck } from "lucide-react";
 
 import LogoMark from "@/components/brand/LogoMark";
 import Wordmark from "@/components/brand/Wordmark";
@@ -40,10 +39,7 @@ export default function ResetPasswordPage() {
           <Wordmark />
         </Link>
         <section className="enter-rise rounded-card border border-line bg-surface p-6 text-center shadow-card sm:p-8">
-          <span className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-accent/10 text-accent">
-            <MailCheck size={28} aria-hidden="true" />
-          </span>
-          <h1 className="mt-4 font-display text-2xl font-semibold">{t("passwordReset.retiredTitle")}</h1>
+          <h1 className="font-display text-2xl font-semibold">{t("passwordReset.retiredTitle")}</h1>
           <p className="mt-2 text-sm text-muted">{t("passwordReset.retiredBody")}</p>
           <Link
             href="/forgot-password/"

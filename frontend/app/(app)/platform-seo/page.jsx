@@ -6,7 +6,7 @@
 // health check and the redirects. Django applies all of it while serving
 // the public pages, so a save is live at once.
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ExternalLink, Eye, EyeOff, Globe, Lock, MessageCircle, Pencil, Plus, SearchCheck, Trash2 } from "lucide-react";
+import { ExternalLink, Eye, EyeOff, Globe, Lock, MessageCircle, Pencil, Plus, Trash2 } from "lucide-react";
 
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
@@ -274,9 +274,8 @@ export default function PlatformSeoPage() {
       ) : (
         <>
           <Card className="mb-5 p-5">
-            <div className="flex items-start gap-3">
-              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><SearchCheck size={20} /></span>
-              <div className="min-w-0 flex-1">
+            <div>
+              <div className="min-w-0">
                 <h2 className="font-display font-semibold">{t("platformSeo.siteCard")}</h2>
                 <p className="mt-1 text-sm text-muted">{t("platformSeo.siteHint")}</p>
                 <form onSubmit={saveSettings} className="mt-4 grid gap-4 lg:grid-cols-[1fr_320px]">

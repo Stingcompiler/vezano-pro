@@ -1,14 +1,14 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Lock, Plus, ArrowUpRight, Receipt, Wallet, Scale } from "lucide-react";
+import { Lock, Plus, Receipt } from "lucide-react";
 
 import { finance } from "@/lib/api";
 import { errorText } from "@/lib/errors";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Field, Figure, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, FigureRow, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import Drawer from "@/components/ui/Drawer";
 import PaymentVerificationPanel from "@/components/finance/PaymentVerificationPanel";
 import StatementReconcilePanel from "@/components/finance/StatementReconcilePanel";
@@ -23,16 +23,6 @@ import BankAccounts from "@/components/sales/BankAccounts";
 import { formatAmount } from "@/lib/money";
 import { useMoney } from "@/lib/useMoney";
 import { paymentMethodLabel } from "@/lib/labels";
-
-function StatTile({ label, value, tone = "ink", icon: Icon }) {
-  const toneClass = tone === "ok" ? "text-ok" : tone === "danger" ? "text-danger" : "text-ink";
-  return (
-    <Card className={`relative overflow-hidden p-4 sm:p-5 ${tone === "ok" ? "border-accent/30 bg-accent/5" : ""}`}>
-      <div className="mb-3 flex items-center justify-between gap-2"><span className="text-sm font-medium text-muted">{label}</span><span className="grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-paper text-accent"><Icon size={17} /></span></div>
-      <Figure value={value} size="xl" className="mt-1" valueClassName={`font-semibold ${toneClass}`} />
-    </Card>
-  );
-}
 
 function ExpenseDrawer({ open, writable, onClose, onSaved, categories = [] }) {
   const { t } = useI18n();
@@ -199,11 +189,15 @@ export default function FinancePage() {
     </Card>
     {invalidDates && <p role="alert" className="mb-4 text-danger">{t("improvements.invalidDates")}</p>}
     {error && <Card className="mb-4 p-4"><p role="alert" className="mb-3 text-danger">{error}</p><Button onClick={load}>{t("improvements.retry")}</Button></Card>}
-    <div className="grid grid-cols-2 gap-3 xl:grid-cols-4" aria-busy={loading}>
-      <StatTile label={t("finance.revenue")} value={money(summary?.revenue)} icon={ArrowUpRight} />
-      <StatTile icon={Receipt} label={t("improvements.cogs")} value={money(summary?.cogs)} />
-      <StatTile icon={Wallet} label={t("finance.expenses")} value={money(summary?.expenses)} />
-      <StatTile icon={Scale} label={t("improvements.netProfit")} value={money(summary?.net)} tone={Number(summary?.net) < 0 ? "danger" : "ok"} />
+    {/* The period's four figures as one row divided by hairlines: no card
+        per number, no icons; a loss is in the danger colour, a zero quiet. */}
+    <div aria-busy={loading}>
+      <FigureRow cols={4} size="lg" items={[
+        { key: "revenue", label: t("finance.revenue"), value: money(summary?.revenue) },
+        { key: "cogs", label: t("improvements.cogs"), value: money(summary?.cogs) },
+        { key: "expenses", label: t("finance.expenses"), value: money(summary?.expenses) },
+        { key: "net", label: t("improvements.netProfit"), value: money(summary?.net), tone: Number(summary?.net) < 0 ? "danger" : undefined },
+      ]} />
     </div>
     <p className="mb-5 mt-3 text-xs text-muted">{t("improvements.revenueHint")} · {t("improvements.accountingNote")}</p>
     {/* The summary comes first; the verification worklist sits under it,

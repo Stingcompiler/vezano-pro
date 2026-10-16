@@ -29,16 +29,14 @@ function SeverityBadge({ severity, t }) {
   return <Badge tone={severityTone(severity)}>{t(`platformSeo.health.severity.${severity}`)}</Badge>;
 }
 
-function Section({ icon: Icon, title, hint, children, actions }) {
+// No icon beside the heading (docs/ui-profile.md); `icon` is accepted and unused.
+function Section({ title, hint, children, actions }) {
   return (
     <Card className="mb-5 p-5">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="flex min-w-0 items-start gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent"><Icon size={20} /></span>
-          <div className="min-w-0">
-            <h2 className="font-display font-semibold">{title}</h2>
-            {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
-          </div>
+        <div className="min-w-0">
+          <h2 className="font-display font-semibold">{title}</h2>
+          {hint && <p className="mt-1 text-sm text-muted">{hint}</p>}
         </div>
         {actions}
       </div>

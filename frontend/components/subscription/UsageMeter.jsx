@@ -14,28 +14,40 @@ export function usageTone(cell) {
   return "ok";
 }
 
+// "3 / 5" is one left-to-right run (bdi), so an Arabic line cannot reorder
+// it into "5 / 3". A counter with no limit has nothing to fill: it shows the
+// count and "unlimited" in words, and no bar.
 export default function UsageMeter({ usage, compact = false }) {
   const { t } = useI18n();
   if (!usage) return null;
   return (
-    <div className={compact ? "grid gap-2 sm:grid-cols-2" : "space-y-3"}>
+    <div className={compact ? "grid gap-x-6 gap-y-3 sm:grid-cols-2" : "space-y-3"}>
       {USAGE_KEYS.filter((key) => usage[key]).map((key) => {
         const cell = usage[key];
         const tone = usageTone(cell);
-        const pct = cell.limit ? Math.min(100, Math.round((cell.used / cell.limit) * 100)) : 0;
-        const bar = { ok: "bg-ok", warn: "bg-warn", danger: "bg-danger", muted: "bg-ink/20" }[tone];
+        const unlimited = cell.limit == null;
+        const pct = unlimited ? 0 : cell.limit ? Math.min(100, Math.round((cell.used / cell.limit) * 100)) : 100;
+        const bar = { ok: "bg-ok", warn: "bg-warn", danger: "bg-danger" }[tone];
         return (
           <div key={key}>
-            <div className="flex items-baseline justify-between text-sm">
+            <div className="flex items-baseline justify-between gap-3 text-sm">
               <span>{t(`usage.${key}`)}</span>
-              <span dir="ltr" className={`tabular font-semibold ${tone === "danger" ? "text-danger" : ""}`}>
-                {cell.used}
-                <span className="text-muted"> / {cell.limit == null ? t("usage.unlimited") : cell.limit}</span>
-              </span>
+              {unlimited ? (
+                <span className="whitespace-nowrap">
+                  <bdi dir="ltr" className="tabular font-semibold">{cell.used}</bdi>
+                  <span className="text-muted"> · {t("usage.unlimited")}</span>
+                </span>
+              ) : (
+                <bdi dir="ltr" className={`tabular whitespace-nowrap font-semibold ${tone === "danger" ? "text-danger" : tone === "warn" ? "text-warn" : ""}`}>
+                  {cell.used}<span className="font-normal text-muted"> / {cell.limit}</span>
+                </bdi>
+              )}
             </div>
-            <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
-              <div className={`h-full ${bar}`} style={{ width: cell.limit == null ? "0%" : `${pct}%` }} />
-            </div>
+            {!unlimited && (
+              <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-line">
+                <div className={`h-full ${bar}`} style={{ width: `${pct}%` }} />
+              </div>
+            )}
           </div>
         );
       })}

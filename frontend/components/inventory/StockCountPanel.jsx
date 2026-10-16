@@ -8,7 +8,7 @@ import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 
 const TONES = { draft: "muted", submitted: "warn", approved: "ok", cancelled: "danger" };
@@ -138,7 +138,9 @@ export default function StockCountPanel({ warehouses, canWrite }) {
                     <td className="tabular px-2 py-2">{row.lines.length}</td>
                     <td className="px-2 py-2 text-muted">{row.counted_by_name || "—"} · {fmt(row.submitted_at || row.created_at)}</td>
                     <td className="px-2 py-2 text-muted">
-                      {row.status === "draft" ? "—" : variances.length === 0 ? t("count.noVariance") : variances.map((l) => `${l.product_sku}: ${Number(l.variance) > 0 ? "+" : ""}${l.variance}`).join(" · ")}
+                      {row.status === "draft" ? "—" : variances.length === 0 ? t("count.noVariance") : variances.map((l, i) => (
+                        <span key={`${l.product_sku}-${i}`}>{i > 0 && " · "}<bdi>{l.product_sku}</bdi>: <NumText value={`${Number(l.variance) > 0 ? "+" : ""}${l.variance}`} /></span>
+                      ))}
                     </td>
                     <td className="px-2 py-2">
                       <div className="flex justify-end gap-1">
@@ -172,7 +174,7 @@ export default function StockCountPanel({ warehouses, canWrite }) {
             <Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t("inventory.searchPlaceholder")} />
           </Field>
           {results.length > 0 && (
-            <ul className="divide-y divide-line rounded-card border border-line">
+            <ul className="divide-y divide-line border-y border-line">
               {results.map((p) => <li key={p.id}><button type="button" className="tap flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-paper" onClick={() => addLine(p)}><span>{p.name}</span><span className="text-muted">{p.sku}</span></button></li>)}
             </ul>
           )}

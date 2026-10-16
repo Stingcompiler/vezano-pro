@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Download, Smartphone, X } from "lucide-react";
+import { Download, X } from "lucide-react";
 
 import { installRoute } from "@/lib/installRoute";
 import { useInstallPrompt } from "@/lib/installPrompt";
@@ -51,11 +51,8 @@ export default function InstallCard({ className = "" }) {
     <div
       role="region"
       aria-label={t("install.cardTitle")}
-      className={`flex items-start gap-3 rounded-card border border-line bg-surface p-3 text-sm shadow-card ${className}`}
+      className={`flex items-start gap-3 rounded-card border border-line bg-surface p-3 text-sm ${className}`}
     >
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-accent/15 text-accent">
-        <Smartphone size={18} />
-      </span>
       <div className="min-w-0 flex-1">
         <p className="font-medium text-ink">{t("install.cardTitle")}</p>
         <p className="mt-0.5 text-muted">

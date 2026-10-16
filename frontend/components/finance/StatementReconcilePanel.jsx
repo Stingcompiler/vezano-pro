@@ -7,7 +7,7 @@ import { bankAccounts as bankAccountsApi, sales } from "@/lib/api";
 import { accountLabel } from "@/lib/bankChannels";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Field, NumText, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, FileInput, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { formatAmount } from "@/lib/money";
 
@@ -74,13 +74,12 @@ export default function StatementReconcilePanel({ onApplied }) {
             {accounts.map((a) => <option key={a.id} value={a.id}>{accountLabel(t, a)}</option>)}
           </Select>
         </Field>
-        <Field label={t("finance.reconcileFile")} hint={t("finance.reconcileFileHint")}>
-          <input
-            type="file" accept=".xlsx,.xlsm,.csv,.txt"
-            className="block w-full text-sm text-muted file:me-3 file:rounded-control file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-sm file:text-ink"
-            onChange={(e) => { setFile(e.target.files?.[0] || null); setResult(null); }}
-          />
-        </Field>
+        <FileInput
+          label={t("finance.reconcileFile")} hint={t("finance.reconcileFileHint")}
+          accept=".xlsx,.xlsm,.csv,.txt" fileName={file?.name || ""}
+          chooseLabel={t("common.chooseFile")} emptyLabel={t("common.noFileChosen")}
+          onChange={(e) => { setFile(e.target.files?.[0] || null); setResult(null); }}
+        />
         <div className="flex items-end gap-2">
           <Button variant="outline" onClick={() => run(true)} disabled={busy}>
             <Upload size={15} /> {t("finance.reconcilePreview")}

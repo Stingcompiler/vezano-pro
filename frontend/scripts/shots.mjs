@@ -107,6 +107,10 @@ const SCREENS = [
   },
   { name: "platform", account: "platform", path: "/platform/", ready: "main h1" },
   { name: "platform-companies", account: "platform", path: "/platform-companies/", ready: "main h1" },
+  { name: "platform-analytics", account: "platform", path: "/platform-analytics/", ready: "main h1" },
+  { name: "platform-seo", account: "platform", path: "/platform-seo/", ready: "main h1" },
+  { name: "platform-team", account: "platform", path: "/platform-team/", ready: "main h1" },
+  { name: "finance", account: "owner", path: "/finance/", ready: "main h1" },
 ].filter((s) => !ONLY.length || ONLY.includes(s.name));
 
 function clock() {

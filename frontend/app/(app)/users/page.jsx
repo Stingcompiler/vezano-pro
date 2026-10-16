@@ -144,11 +144,8 @@ export default function UsersPage() {
       />
 
       {canAssignOwner && (
-        <Card className="mb-5 border-accent/25 p-5">
-          <div className="flex items-start gap-3">
-            <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent">
-              <ShieldCheck size={20} />
-            </span>
+        <Card className="mb-5 p-5">
+          <div>
             <div>
               <h2 className="font-display font-semibold">{t("users.ownersTitle")}</h2>
               <p className="mt-1 text-sm text-muted">
