@@ -334,14 +334,12 @@ body {
 /* Cards that are links lift a hair under a mouse.
    Phones have no hover, and reduced motion keeps them still. */
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
-  a:hover > .workspace-card,
-  a:hover .dashboard-stat {
+  a:hover > .workspace-card {
     transform: translateY(-2px);
     box-shadow: 0 2px 3px rgba(18,37,59,0.03), 0 14px 28px -16px rgba(18,37,59,0.22);
   }
 }
-a:focus-visible > .workspace-card,
-a:focus-visible .dashboard-stat { border-color: rgb(var(--accent) / .5); }
+a:focus-visible > .workspace-card { border-color: rgb(var(--accent) / .5); }
 
 /* ---- Navigation motion (lib/navMotion.js, components/ui/NavMotion.jsx) ----
    The sidebar's active item is marked by one pill (.nav-indicator) that a
@@ -605,8 +603,7 @@ body { line-height: 1.6; }
   background-image: radial-gradient(ellipse at 95% 0%, rgb(var(--accent) / .055), transparent 45%);
 }
 .workspace-main > * { width: 100%; max-width: 1600px; margin-inline: auto; }
-.workspace-card,
-.dashboard-stat { transition: border-color 160ms ease, box-shadow 160ms ease, transform var(--motion-fast) var(--motion-ease); }
+.workspace-card { transition: border-color 160ms ease, box-shadow 160ms ease, transform var(--motion-fast) var(--motion-ease); }
 .workspace-main table { border-collapse: separate; border-spacing: 0; }
 .workspace-main thead { background: rgb(var(--paper) / .8); }
 .workspace-main th { font-size: .75rem; font-weight: 600; white-space: nowrap; }
@@ -616,27 +613,15 @@ body { line-height: 1.6; }
 .workspace-main input::placeholder { color: rgb(var(--muted) / .8); }
 .workspace-main input[type="checkbox"] { accent-color: rgb(var(--accent)); }
 .workspace-main .tabular { letter-spacing: -.035em; }
-.dashboard-overview { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; }
-.dashboard-overview > * { min-width: 0; margin-top: 0; margin-bottom: 0; }
-/* A stat fills its grid cell (and the link around it) so a row lines up.
-   Only there: `height: 100%` on the top-products chart box resolved against
-   the whole section (heading included), so the chart ran past its section
-   and covered the next heading (review 2026-10-15). */
-.dashboard-stat { position: relative; overflow: hidden; }
-.grid > .dashboard-stat,
-.grid > a > .dashboard-stat { height: 100%; }
-a:hover .dashboard-stat { border-color: rgb(var(--accent) / .5); }
-.dashboard-section { padding: 20px; border: 1px solid rgb(var(--line)); border-radius: 20px; background: rgb(var(--surface)); }
-.dashboard-section .dashboard-stat { background: rgb(var(--paper) / .65); box-shadow: none; border-color: transparent; }
-/* Phones: two stat cards share ~340px, so every pixel of padding is figure. */
-@media (max-width: 639px) {
-  .dashboard-section { padding: 14px; }
-}
-.dashboard-hero { background: linear-gradient(115deg, rgb(var(--surface)), rgb(var(--accent) / .08)); }
-@media (min-width: 1280px) {
-  .dashboard-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .dashboard-overview > * { grid-column: 1 / -1; }
-  .dashboard-overview > .dashboard-section { grid-column: auto; }
+/* The overview (app/(app)/dashboard): today's block, needs attention, then
+   reference sections — two columns from 1024px, one on phones. */
+.dashboard-c { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px; }
+.dashboard-c > * { min-width: 0; }
+.dashboard-c__sections { display: grid; grid-template-columns: minmax(0, 1fr); gap: 28px 40px; align-items: start; }
+@media (min-width: 1024px) {
+  .dashboard-c { gap: 36px; }
+  .dashboard-c__sections { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .dashboard-c__wide { grid-column: 1 / -1; }
 }
 @media (prefers-reduced-motion: no-preference) {
   .workspace-main { animation: workspace-enter 220ms ease-out; }

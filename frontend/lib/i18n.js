@@ -2993,6 +2993,10 @@ const en = {
     revenueMonth: "Net revenue this month",
     financeMonth: "Finance — this month",
     topProductsMonth: "Top products this month (gross, before returns)",
+    today: "Today",
+    attention: "Needs your attention",
+    allClear: "Nothing needs your attention right now.",
+    setupNext: "Next: {step}",
   },
   records: {
     customerTitle: "Customer records",
@@ -6139,6 +6143,10 @@ const ar = {
     revenueMonth: "صافي الإيراد هذا الشهر",
     financeMonth: "المالية — هذا الشهر",
     topProductsMonth: "أعلى المنتجات هذا الشهر (إجمالي قبل المرتجعات)",
+    today: "اليوم",
+    attention: "يحتاج انتباهك",
+    allClear: "لا شيء يحتاج انتباهك الآن.",
+    setupNext: "التالي: {step}",
   },
   records: {
     customerTitle: "سجلات العملاء",

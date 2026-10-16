@@ -6,6 +6,8 @@
     "components/ui/kit.jsx",
     "components/ui/EmptyState.jsx",
     "components/ui/Skeleton.jsx",
-    "components/ui/ConfirmDialog.jsx"
+    "components/ui/ConfirmDialog.jsx",
+    "app/(app)/dashboard/page.jsx",
+    "components/reports/BarList.jsx"
   ]
 }

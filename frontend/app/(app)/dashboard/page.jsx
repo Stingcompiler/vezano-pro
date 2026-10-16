@@ -1,57 +1,75 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import {
-  AlertTriangle,
-  Boxes,
-  CalendarClock,
-  Contact,
-  Globe,
-  LayoutList,
-  Package,
-  Receipt,
-  RotateCcw,
-  Scale,
-  TrendingDown,
-  UsersRound,
-  UserPlus,
-  Wallet,
-} from "lucide-react";
-
 import Link from "next/link";
-import { Button, Figure, PageHeader } from "@/components/ui/kit";
+import { UserPlus } from "lucide-react";
 
+import {
+  AttentionItem,
+  AttentionList,
+  Button,
+  DefinitionSection,
+  Figure,
+  FigureRow,
+  PageHeader,
+  PrimaryBlock,
+} from "@/components/ui/kit";
 import { dashboard } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { translateRole } from "@/lib/i18n";
 import BarList from "@/components/reports/BarList";
-import { SkeletonCard } from "@/components/ui/Skeleton";
+import { SkeletonBar } from "@/components/ui/Skeleton";
 import { formatMoney } from "@/lib/money";
 
-function Stat({ icon: Icon, label, value, tone = "ink", sub }) {
-  const toneClass =
-    tone === "warn" ? "text-warn" : tone === "ok" ? "text-ok" : tone === "accent" ? "text-accent" : "text-ink";
-  return (
-    <div className="dashboard-stat rounded-card border border-line bg-surface p-3 shadow-card sm:p-5">
-      <div className="flex items-center gap-2 text-muted">
-        <span className={`grid h-8 w-8 shrink-0 place-items-center rounded-lg bg-paper ${toneClass}`}><Icon size={17} strokeWidth={1.8} /></span>
-        <span className="text-sm">{label}</span>
-      </div>
-      <Figure value={value} size="xl" className="mt-3" valueClassName={`font-semibold ${toneClass}`} />
-      {sub && <div className="mt-1 text-xs text-muted">{sub}</div>}
+// The overview, in the chosen direction (docs/ui-profile.md): what matters
+// now first — today's block (the one raised surface) — then what needs
+// attention as a list of rows, then reference sections as definition lists
+// and divided figure rows. Same data and the same role gates as before:
+// a section shows only when the API sends it (the server filters by role),
+// and the links and actions keep their permission checks.
+
+const LINK_PRIMARY =
+  "tap inline-flex min-h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-control bg-accent px-4 py-2 text-sm font-semibold text-on-accent transition-colors hover:bg-accent-strong sm:flex-none";
+const LINK_SECONDARY =
+  "tap inline-flex min-h-11 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-control border border-line bg-surface px-4 py-2 text-sm font-medium text-ink transition-colors hover:border-accent/40 hover:bg-paper sm:flex-none";
+
+// Loading: the same shape as the page — today's block, three rows, two
+// reference sections — so nothing jumps when the figures land.
+function DashboardSkeleton() {
+  const { t } = useI18n();
+  const row = (w, k) => (
+    <div key={k} className="flex min-h-11 items-center justify-between gap-4 py-2">
+      <SkeletonBar className={w} />
+      <SkeletonBar className="h-3.5 w-20 shrink-0" />
     </div>
   );
-}
-
-function Section({ title, children }) {
   return (
-    <section className="dashboard-section">
-      <h2 className="mb-4 font-display text-base font-bold text-ink">
-        {title}
-      </h2>
-      <div className="grid grid-cols-2 gap-3">{children}</div>
-    </section>
+    <div role="status" aria-live="polite" className="dashboard-c">
+      <span className="sr-only">{t("common.loading")}</span>
+      <div className="rounded-card bg-surface p-4 shadow-raise sm:p-6" aria-hidden="true">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div className="space-y-2"><SkeletonBar className="h-5 w-24" /><SkeletonBar className="h-3 w-36" /></div>
+          <div className="flex w-full gap-2 sm:w-auto"><SkeletonBar className="h-11 flex-1 sm:w-28" /><SkeletonBar className="h-11 flex-1 sm:w-28" /></div>
+        </div>
+        <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end">
+          <div className="space-y-2"><SkeletonBar className="h-3 w-28" /><SkeletonBar className="h-8 w-48" /></div>
+          <div className="grid grid-cols-2 gap-4"><SkeletonBar className="h-12" /><SkeletonBar className="h-12" /></div>
+        </div>
+      </div>
+      <div aria-hidden="true">
+        <SkeletonBar className="mb-3 h-4 w-32" />
+        <div className="divide-y divide-line border-y border-line">{["w-1/2", "w-2/3", "w-2/5"].map((w, i) => row(w, i))}</div>
+      </div>
+      <div className="dashboard-c__sections" aria-hidden="true">
+        {[0, 1].map((s) => (
+          <div key={s}>
+            <SkeletonBar className="mb-2 h-4 w-28" />
+            <div className="divide-y divide-line border-t border-line">{["w-1/3", "w-2/5", "w-1/4", "w-1/3"].map((w, i) => row(w, i))}</div>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -63,7 +81,7 @@ export default function DashboardPage() {
   const [advanceAlertDismissed, setAdvanceAlertDismissed] = useState(false);
 
   // One money rule app-wide (lib/money.js): two decimals and the currency
-  // label ("ج.س" / "SDG") on every figure, instead of a code under one card.
+  // label ("ج.س" / "SDG") on every figure.
   const money = (v) => formatMoney(v, { currency: data?.currency || user?.currency, language });
 
   const load = () => {
@@ -103,6 +121,7 @@ export default function DashboardPage() {
   };
   const setupTotal = data?.setup?.length || 1;
   const setupDone = data?.setup?.filter((step) => step.done).length || 0;
+  const setupNext = data?.setup?.find((step) => !step.done);
 
   const dismissAdvanceRequestAlert = () => {
     const key = `vezano.advance-request-alert:${user.company}:${user.id}`;
@@ -110,304 +129,196 @@ export default function DashboardPage() {
     setAdvanceAlertDismissed(true);
   };
 
+  const notShop = user?.business_type !== "shop";
+  const { sales, debts, inventory, purchasing, returns, crm, hr, finance, website } = sections;
+  const today = new Date().toLocaleDateString(language === "ar" ? "ar-u-nu-latn" : "en-GB", {
+    weekday: "long", day: "numeric", month: "long",
+  });
+
+  // Today's actions: the two things people start here (the owner's team
+  // link sits in the page header). Low stock, negative stock and returns are states, not
+  // actions — they live in "needs attention" below.
+  const actions = [
+    canWrite("sales") && <Link key="sale" className={LINK_PRIMARY} href="/sales?tab=pos">{t("improvements.newSale")}</Link>,
+    canWrite("purchasing") && <Link key="receive" className={LINK_SECONDARY} href="/purchasing?tab=receive">{t("improvements.receiveStock")}</Link>,
+  ].filter(Boolean);
+
+  const n = (v) => Number(v || 0);
+  const attention = data ? [
+    canRead("inventory") && n(inventory?.negative_stock_count) > 0 && (
+      <AttentionItem key="negative" tone="danger" count={inventory.negative_stock_count} title={t("dashboard.negativeStock")} href="/inventory?negative=1" action={t("common.view")} />
+    ),
+    n(sales?.overdue_count) > 0 && (
+      <AttentionItem key="overdue" count={sales.overdue_count} title={t("improvements.overdue")} href="/sales?tab=invoices&overdue=1" action={t("common.view")} />
+    ),
+    sections.salary_advances?.pending_count > 0 && (
+      <AttentionItem key="advances" count={sections.salary_advances.pending_count} title={t("dashboard.pendingAdvancesTitle")}
+        detail={t("dashboard.pendingAdvancesMessage", { count: sections.salary_advances.pending_count })}
+        href="/hr?tab=advances" action={t("dashboard.reviewAdvances")} />
+    ),
+    canRead("inventory") && n(inventory?.low_stock_count) > 0 && (
+      <AttentionItem key="low" count={inventory.low_stock_count} title={t("dashboard.lowStock")} href="/inventory?low_stock=1" action={t("common.view")} />
+    ),
+    n(inventory?.expiring_batch_count) > 0 && (
+      <AttentionItem key="expiring" count={inventory.expiring_batch_count} title={t("dashboard.expiringBatches")} />
+    ),
+    n(returns?.pending_disposition_count) > 0 && (
+      canRead("sales_returns")
+        ? <AttentionItem key="returns" count={returns.pending_disposition_count} title={t("dashboard.awaitingDisposition")} detail={t("dashboard.quarantined")} href="/returns" action={t("improvements.reviewReturns")} />
+        : <AttentionItem key="returns" count={returns.pending_disposition_count} title={t("dashboard.awaitingDisposition")} detail={t("dashboard.quarantined")} />
+    ),
+    notShop && n(hr?.pending_leave_count) > 0 && (
+      <AttentionItem key="leave" count={hr.pending_leave_count} title={t("dashboard.pendingLeave")} detail={t("dashboard.awaitingApproval")} />
+    ),
+    sections.advance_requests && !advanceAlertDismissed && (
+      <AttentionItem key="requests" tone="accent" title={t("dashboard.advanceRequestStatus")}
+        detail={t("dashboard.advanceRequestMessage", sections.advance_requests)}
+        href="/hr?tab=advances" onClick={dismissAdvanceRequestAlert} action={t("dashboard.viewAdvanceRequests")} />
+    ),
+    data.setup?.some((step) => !step.done) && !setupHidden && (
+      <AttentionItem key="setup" tone="accent"
+        count={`${setupDone}/${setupTotal}`}
+        title={t("improvements.checklist")}
+        detail={<>
+          {setupNext && t("dashboard.setupNext", { step: t(`improvements.${setupNext.key}`) })}
+          {/* ui-allow: progress indicator (setup checklist) */}
+          <span className="mt-2 block h-1.5 max-w-xs overflow-hidden rounded-full bg-line" role="progressbar" aria-label={t("improvements.checklist")} aria-valuetext={t("improvements.checklistProgress", { done: setupDone, total: setupTotal })} aria-valuemin={0} aria-valuemax={setupTotal} aria-valuenow={setupDone}>
+            <span className="block h-full rounded-full bg-accent" style={{ width: `${(setupDone / setupTotal) * 100}%` }} />
+          </span>
+        </>}
+        actions={<>
+          {setupNext && <Link href={setupNext.href} className="tap inline-flex min-h-10 items-center rounded-control px-3 text-sm font-medium text-accent hover:bg-surface">{t("improvements.openStep")}</Link>}
+          <Button variant="ghost" onClick={hideSetup}>{t("improvements.checklistHide")}</Button>
+        </>}
+      />
+    ),
+  ].filter(Boolean) : [];
+
+  const purchasingReturnsTitle = [purchasing && t("dashboard.purchasing"), returns && t("dashboard.returns")].filter(Boolean).join(" · ");
+  const hasSections = Object.keys(sections).length > 0;
+
   return (
     <div>
-      <div className="dashboard-hero mb-6 rounded-card border border-line p-5 sm:p-7">
-        <div className="mb-3 flex items-center gap-2 text-xs font-semibold text-accent"><span className="h-1.5 w-1.5 rounded-full bg-accent" />{user?.company_name || t("shell.workspace")}</div>
-        <PageHeader title={t("dashboard.title")}
-          subtitle={language === "ar" ? "صورة واضحة لأعمالك، وخطوتك التالية في مكان واحد." : "A clear view of your business. Your next action, all in one place."}
-          actions={<span className="rounded-full border border-line bg-surface px-3 py-1.5 text-xs text-muted">{translateRole(user?.role_name, t)}</span>} />
-      </div>
+      <PageHeader
+        title={t("dashboard.title")}
+        subtitle={[user?.company_name || t("shell.workspace"), translateRole(user?.role_name, t)].filter(Boolean).join(" · ")}
+        actions={can("users.assign_owner") && (
+          <Link className="tap inline-flex min-h-10 items-center gap-2 rounded-control border border-line bg-surface px-3 py-2 text-sm font-medium text-ink transition-colors hover:border-accent/40" href="/users">
+            <UserPlus size={16} aria-hidden="true" />{t("users.manageOwners")}
+          </Link>
+        )}
+      />
 
       {error && (
-        <div className="mt-6 rounded-card border border-line bg-surface p-6 text-muted">
+        <div className="rounded-card border border-line bg-surface p-6 text-muted">
           <p role="alert">{t("dashboard.loadError")}</p><Button className="mt-3" onClick={load}>{t("improvements.retry")}</Button>
         </div>
       )}
 
-      {!data && !error && <SkeletonCard className="mt-6" />}
+      {!data && !error && <DashboardSkeleton />}
 
       {data && (
-        <div className="dashboard-overview">
-          {data.setup?.some((step) => !step.done) && !setupHidden && <section className="mb-6 rounded-card border border-accent/30 bg-surface p-5">
-            <div className="flex flex-wrap items-start justify-between gap-3">
-              <div className="min-w-0">
-                <h2 className="font-display text-lg font-semibold">{t("improvements.checklist")}</h2>
-                <p className="mt-1 text-sm text-muted">{t("improvements.checklistHint")}</p>
-              </div>
-              <Button variant="ghost" onClick={hideSetup}>{t("improvements.checklistHide")}</Button>
-            </div>
-            <div className="mt-4 flex items-center gap-3">
-              <div className="h-2 flex-1 overflow-hidden rounded-full bg-line" role="progressbar" aria-label={t("improvements.checklist")} aria-valuetext={t("improvements.checklistProgress", { done: setupDone, total: setupTotal })} aria-valuemin={0} aria-valuemax={setupTotal} aria-valuenow={setupDone}>
-                <div className="h-full rounded-full bg-accent transition-all" style={{ width: `${(setupDone / setupTotal) * 100}%` }} />
-              </div>
-              <span className="shrink-0 text-xs font-medium text-muted">{t("improvements.checklistProgress", { done: setupDone, total: setupTotal })}</span>
-            </div>
-            <ol className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">{data.setup.map((step,index) =>
-              <li key={step.key}><Link href={step.href} className="block h-full rounded-control border border-line p-3 hover:border-accent">
-                <span className={step.done ? "text-ok" : "text-muted"}>{step.done ? "✓" : index+1}</span>
-                <span className="mt-2 block text-sm font-medium">{t(`improvements.${step.key}`)}</span>
-                <span className="mt-1 block text-xs text-muted">{t(step.done ? "improvements.done" : "improvements.openStep")}</span>
-              </Link></li>)}</ol>
-          </section>}
-          <section className="mb-6">
-            <h2 className="mb-3 font-display text-sm font-semibold text-muted">{t("improvements.quickActions")}</h2>
-            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-              {canWrite("sales") && <Link className="flex min-h-12 items-center justify-center rounded-control bg-accent px-4 py-3 text-sm font-medium text-on-accent" href="/sales?tab=pos">{t("improvements.newSale")}</Link>}
-              {canWrite("purchasing") && <Link className="flex min-h-12 items-center justify-center rounded-control border border-line bg-surface px-4 py-3 transition-colors hover:border-accent/50 hover:bg-accent/5 text-sm" href="/purchasing?tab=receive">{t("improvements.receiveStock")}</Link>}
-              {canRead("inventory") && <Link className="flex min-h-12 items-center justify-center rounded-control border border-line bg-surface px-4 py-3 transition-colors hover:border-accent/50 hover:bg-accent/5 text-sm" href="/inventory?low_stock=1">{t("dashboard.lowStock")} · {sections.inventory?.low_stock_count ?? "—"}</Link>}
-              {canRead("inventory") && sections.inventory?.negative_stock_count > 0 && <Link className="flex min-h-12 items-center justify-center rounded-control border border-danger/40 bg-danger/5 px-4 py-3 text-sm text-danger transition-colors hover:border-danger" href="/inventory?negative=1">{t("dashboard.negativeStock")} · {sections.inventory.negative_stock_count}</Link>}
-              {canRead("sales_returns") && <Link className="flex min-h-12 items-center justify-center rounded-control border border-line bg-surface px-4 py-3 transition-colors hover:border-accent/50 hover:bg-accent/5 text-sm" href="/returns">{t("improvements.reviewReturns")} · {sections.returns?.pending_disposition_count ?? "—"}</Link>}
-              {can("users.assign_owner") && <Link className="flex min-h-12 items-center justify-center gap-2 rounded-control border border-accent/30 bg-accent/5 px-4 py-3 text-sm font-medium text-accent transition-colors hover:border-accent" href="/users"><UserPlus size={16} />{t("users.manageOwners")}</Link>}
-            </div>
-          </section>
-          {sections.salary_advances?.pending_count > 0 && (
-            <Link
-              href="/hr?tab=advances"
-              className="mb-6 flex items-center justify-between gap-4 rounded-card border border-warn/30 bg-warn/10 p-5 transition-colors hover:border-warn/60"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-warn/20 text-warn">
-                  <AlertTriangle size={20} />
-                </span>
-                <div>
-                  <h2 className="font-display text-base font-bold text-ink">{t("dashboard.pendingAdvancesTitle")}</h2>
-                  <p className="mt-1 text-sm text-muted">
-                    {t("dashboard.pendingAdvancesMessage", { count: sections.salary_advances.pending_count })}
-                  </p>
+        <div className="dashboard-c">
+          {(sales || actions.length > 0) && (
+            <PrimaryBlock title={t("dashboard.today")} meta={today} actions={actions.length ? actions : null}>
+              {sales && (
+                <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)] lg:items-end">
+                  <Link href="/sales?tab=invoices" className="tap block min-w-0 rounded-control">
+                    <span className="text-sm text-muted">{t("improvements.todaySales")}</span>
+                    <Figure value={money(sales.today_total)} size="xl" className="mt-1" valueClassName="font-bold text-ink" />
+                  </Link>
+                  <FigureRow cols={2} items={[
+                    { key: "month", label: t("dashboard.revenueMonth"), value: money(sales.revenue_total) },
+                    { key: "invoices", label: t("dashboard.invoices"), value: sales.invoice_count, href: "/sales?tab=invoices" },
+                  ]} />
                 </div>
-              </div>
-              <span className="shrink-0 text-sm font-semibold text-warn">{t("dashboard.reviewAdvances")}</span>
-            </Link>
-          )}
-          {sections.advance_requests && !advanceAlertDismissed && (
-            <Link
-              href="/hr?tab=advances"
-              onClick={dismissAdvanceRequestAlert}
-              className="mb-6 flex items-center justify-between gap-4 rounded-card border border-accent/25 bg-accent/5 p-5 transition-colors hover:border-accent/50"
-            >
-              <div className="flex min-w-0 items-start gap-3">
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-accent/10 text-accent">
-                  <Wallet size={20} />
-                </span>
-                <div>
-                  <h2 className="font-display text-base font-bold text-ink">{t("dashboard.advanceRequestStatus")}</h2>
-                  <p className="mt-1 text-sm text-muted">
-                    {t("dashboard.advanceRequestMessage", sections.advance_requests)}
-                  </p>
-                </div>
-              </div>
-              <span className="shrink-0 text-sm font-semibold text-accent">{t("dashboard.viewAdvanceRequests")}</span>
-            </Link>
-          )}
-          {sections.sales && <div className="mb-6 grid grid-cols-2 gap-3">
-            <Link href="/sales?tab=invoices"><Stat icon={Receipt} label={t("improvements.todaySales")} value={money(sections.sales.today_total)} tone="accent" /></Link>
-            <Link href="/sales?tab=invoices&overdue=1"><Stat icon={CalendarClock} label={t("improvements.overdue")} value={sections.sales.overdue_count} /></Link>
-          </div>}
-          {sections.sales && (
-            <Section title={t("dashboard.sales")}>
-              <Stat
-                icon={Receipt}
-                label={t("dashboard.invoices")}
-                value={sections.sales.invoice_count}
-              />
-              <Stat
-                icon={Wallet}
-                label={t("dashboard.revenueMonth")}
-                tone="accent"
-                value={money(sections.sales.revenue_total)}
-              />
-            </Section>
-          )}
-
-          {sections.debts && (
-            <section className="mt-8">
-              <div className="mb-4 flex items-center justify-between gap-3">
-                <h2 className="font-display text-base font-bold text-ink">{t("dashboard.debtLedger")}</h2>
-                <Link href="/debts" className="tap inline-flex items-center text-sm font-medium text-accent hover:underline">{t("common.view")}</Link>
-              </div>
-              <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
-                <Link href="/debts"><Stat icon={Wallet} label={t("dashboard.outstandingReceivables")} tone="accent" value={money(sections.debts.outstanding)} /></Link>
-                <Link href="/debts?status=overdue"><Stat icon={AlertTriangle} label={t("dashboard.overdueReceivables")} tone={Number(sections.debts.overdue) > 0 ? "warn" : "ink"} value={money(sections.debts.overdue)} /></Link>
-                <Link href="/debts?status=owing"><Stat icon={UsersRound} label={t("dashboard.customersOwing")} value={sections.debts.debtor_count} /></Link>
-                <Link href="/debts?status=credit"><Stat icon={Wallet} label={t("dashboard.customerCredit")} tone="ok" value={money(sections.debts.credit_balance)} /></Link>
-              </div>
-            </section>
-          )}
-
-          {/* Chart — this month's top products by invoiced amount (gross,
-              before returns), scoped like the sales totals above. */}
-          {sections.sales?.top_products?.length > 0 && (
-            <section className="mt-8">
-              <h2 className="mb-4 font-display text-base font-bold text-ink">
-                {t("dashboard.topProductsMonth")}
-              </h2>
-              <div className="dashboard-stat rounded-card border border-line bg-surface p-4 shadow-card sm:p-5">
-                <BarList
-                  items={sections.sales.top_products.map((p) => ({
-                    label: p.label,
-                    value: Number(p.value),
-                  }))}
-                />
-              </div>
-            </section>
-          )}
-
-          {sections.inventory && (
-            <Section title={t("dashboard.inventory")}>
-              <Stat
-                icon={Package}
-                label={t("dashboard.products")}
-                value={sections.inventory.product_count}
-              />
-              <Stat
-                icon={AlertTriangle}
-                label={t("dashboard.lowStock")}
-                tone={sections.inventory.low_stock_count > 0 ? "warn" : "ink"}
-                value={sections.inventory.low_stock_count}
-                sub={sections.inventory.low_stock_count > 0 ? undefined : t("dashboard.aboveReorder")}
-              />
-              <Stat
-                icon={AlertTriangle}
-                label={t("dashboard.expiringBatches")}
-                tone={sections.inventory.expiring_batch_count > 0 ? "warn" : "ink"}
-                value={sections.inventory.expiring_batch_count ?? 0}
-              />
-              <Stat
-                icon={AlertTriangle}
-                label={t("dashboard.negativeStock")}
-                tone={sections.inventory.negative_stock_count > 0 ? "danger" : "ink"}
-                value={sections.inventory.negative_stock_count ?? 0}
-              />
-            </Section>
-          )}
-
-          {sections.purchasing && (
-            <Section title={t("dashboard.purchasing")}>
-              <Stat
-                icon={Boxes}
-                label={t("dashboard.suppliers")}
-                value={sections.purchasing.supplier_count}
-              />
-              <Stat
-                icon={Receipt}
-                label={t("dashboard.bills")}
-                value={sections.purchasing.bill_count}
-              />
-            </Section>
-          )}
-
-          {sections.returns && (
-            <Section title={t("dashboard.returns")}>
-              <Stat
-                icon={RotateCcw}
-                label={t("dashboard.awaitingDisposition")}
-                tone={sections.returns.pending_disposition_count > 0 ? "warn" : "ink"}
-                value={sections.returns.pending_disposition_count}
-                sub={t("dashboard.quarantined")}
-              />
-            </Section>
-          )}
-
-          {user?.business_type !== "shop" && sections.crm && (
-            <Section title={t("dashboard.crm")}>
-              <Stat
-                icon={Contact}
-                label={t("dashboard.openLeads")}
-                value={sections.crm.open_lead_count}
-              />
-              <Stat
-                icon={Wallet}
-                label={t("dashboard.pipelineValue")}
-                tone="accent"
-                value={money(sections.crm.pipeline_value)}
-              />
-            </Section>
-          )}
-
-          {user?.business_type !== "shop" && sections.hr && (
-            <Section title={t("dashboard.hr")}>
-              <Stat
-                icon={UsersRound}
-                label={t("dashboard.employees")}
-                value={sections.hr.employee_count}
-              />
-              <Stat
-                icon={CalendarClock}
-                label={t("dashboard.pendingLeave")}
-                tone={sections.hr.pending_leave_count > 0 ? "warn" : "ink"}
-                value={sections.hr.pending_leave_count}
-                sub={sections.hr.pending_leave_count > 0 ? t("dashboard.awaitingApproval") : undefined}
-              />
-            </Section>
-          )}
-
-          {sections.finance && (
-            <Section title={t("dashboard.financeMonth")}>
-              <Stat
-                icon={Wallet}
-                label={t("dashboard.revenueLabel")}
-                tone="accent"
-                value={money(sections.finance.revenue)}
-              />
-              <Stat
-                icon={TrendingDown}
-                label={t("dashboard.expensesLabel")}
-                value={money(sections.finance.expenses)}
-              />
-              {/* Count differences and damage at cost (review 2026-09-24):
-                  part of net profit, shown so the net figure adds up. */}
-              {Number(sections.finance.stock_adjustments || 0) !== 0 && (
-                <Stat
-                  icon={TrendingDown}
-                  label={t("dashboard.stockAdjustments")}
-                  tone={Number(sections.finance.stock_adjustments) > 0 ? "warn" : "ink"}
-                  value={money(sections.finance.stock_adjustments)}
-                />
               )}
-              <Stat
-                icon={Scale}
-                label={t("improvements.netProfit")}
-                tone={Number(sections.finance.net) < 0 ? "warn" : "ink"}
-                value={money(sections.finance.net)}
-              />
-            </Section>
+            </PrimaryBlock>
           )}
 
-          {user?.business_type !== "shop" && sections.website && (
-            <Section title={t("dashboard.website")}>
-              <Stat
-                icon={Globe}
-                label={t("dashboard.siteStatus")}
-                tone={sections.website.is_published ? "ok" : "warn"}
-                value={
-                  sections.website.is_published
-                    ? t("dashboard.published")
-                    : t("dashboard.draft")
-                }
-                sub={
-                  sections.website.is_published
-                    ? undefined
-                    : t("dashboard.publishHint")
-                }
-              />
-              <Stat
-                icon={LayoutList}
-                label={t("dashboard.pageSections")}
-                value={sections.website.section_count}
-                sub={
-                  sections.website.section_count === 0
-                    ? t("dashboard.addSectionsHint")
-                    : undefined
-                }
-              />
-            </Section>
-          )}
+          {hasSections && (attention.length > 0 ? (
+            <AttentionList title={t("dashboard.attention")}>{attention}</AttentionList>
+          ) : (
+            <p className="text-sm text-muted">{t("dashboard.allClear")}</p>
+          ))}
 
-          {Object.keys(sections).length === 0 && (
-            <div className="rounded-card border border-line bg-surface p-6 text-muted">
-              {t("dashboard.noSections")}
-            </div>
+          <div className="dashboard-c__sections">
+            {debts && (
+              <DefinitionSection title={t("dashboard.debtLedger")} link={{ href: "/debts", label: t("common.view") }} className="dashboard-c__wide">
+                <FigureRow cols={4} items={[
+                  { key: "outstanding", label: t("dashboard.outstandingReceivables"), value: money(debts.outstanding), href: "/debts" },
+                  { key: "overdue", label: t("dashboard.overdueReceivables"), value: money(debts.overdue), tone: "warn", href: "/debts?status=overdue" },
+                  { key: "owing", label: t("dashboard.customersOwing"), value: debts.debtor_count, href: "/debts?status=owing" },
+                  { key: "credit", label: t("dashboard.customerCredit"), value: money(debts.credit_balance), href: "/debts?status=credit" },
+                ]} />
+              </DefinitionSection>
+            )}
+
+            {finance && (
+              <DefinitionSection title={t("dashboard.financeMonth")} items={[
+                { key: "revenue", label: t("dashboard.revenueLabel"), value: money(finance.revenue) },
+                { key: "expenses", label: t("dashboard.expensesLabel"), value: money(finance.expenses) },
+                // Count differences and damage at cost (review 2026-09-24):
+                // part of net profit, shown so the net figure adds up.
+                n(finance.stock_adjustments) !== 0 && { key: "adjust", label: t("dashboard.stockAdjustments"), value: money(finance.stock_adjustments), tone: n(finance.stock_adjustments) > 0 ? "warn" : undefined },
+                { key: "net", label: t("improvements.netProfit"), value: money(finance.net), tone: n(finance.net) < 0 ? "danger" : undefined },
+              ]} />
+            )}
+
+            {sales && (
+              <DefinitionSection title={t("dashboard.sales")} link={{ href: "/sales?tab=invoices", label: t("common.view") }}>
+                {/* This month's top products by invoiced amount (gross,
+                    before returns), scoped like the sales totals. */}
+                {sales.top_products?.length > 0 && (
+                  <div className="pt-3">
+                    <h3 className="mb-3 text-sm text-muted">{t("dashboard.topProductsMonth")}</h3>
+                    <BarList items={sales.top_products.map((p) => ({ label: p.label, value: Number(p.value) }))} />
+                  </div>
+                )}
+              </DefinitionSection>
+            )}
+
+            {inventory && (
+              <DefinitionSection title={t("dashboard.inventory")} link={canRead("inventory") ? { href: "/inventory", label: t("common.view") } : null} items={[
+                { key: "products", label: t("dashboard.products"), value: inventory.product_count },
+                { key: "low", label: t("dashboard.lowStock"), value: inventory.low_stock_count, tone: "warn", hint: n(inventory.low_stock_count) > 0 ? undefined : t("dashboard.aboveReorder") },
+                { key: "expiring", label: t("dashboard.expiringBatches"), value: inventory.expiring_batch_count ?? 0, tone: "warn" },
+                { key: "negative", label: t("dashboard.negativeStock"), value: inventory.negative_stock_count ?? 0, tone: "danger" },
+              ]} />
+            )}
+
+            {(purchasing || returns) && (
+              <DefinitionSection title={purchasingReturnsTitle} items={[
+                purchasing && { key: "suppliers", label: t("dashboard.suppliers"), value: purchasing.supplier_count },
+                purchasing && { key: "bills", label: t("dashboard.bills"), value: purchasing.bill_count },
+                returns && { key: "returns", label: t("dashboard.awaitingDisposition"), value: returns.pending_disposition_count, tone: "warn", hint: t("dashboard.quarantined") },
+              ]} />
+            )}
+
+            {notShop && crm && (
+              <DefinitionSection title={t("dashboard.crm")} items={[
+                { key: "leads", label: t("dashboard.openLeads"), value: crm.open_lead_count },
+                { key: "pipeline", label: t("dashboard.pipelineValue"), value: money(crm.pipeline_value) },
+              ]} />
+            )}
+
+            {notShop && hr && (
+              <DefinitionSection title={t("dashboard.hr")} items={[
+                { key: "employees", label: t("dashboard.employees"), value: hr.employee_count },
+                { key: "leave", label: t("dashboard.pendingLeave"), value: hr.pending_leave_count, tone: "warn" },
+              ]} />
+            )}
+
+            {notShop && website && (
+              <DefinitionSection title={t("dashboard.website")} items={[
+                { key: "status", label: t("dashboard.siteStatus"), value: website.is_published ? t("dashboard.published") : t("dashboard.draft"), tone: website.is_published ? "ok" : "warn", hint: website.is_published ? undefined : t("dashboard.publishHint") },
+                { key: "sections", label: t("dashboard.pageSections"), value: website.section_count, hint: website.section_count === 0 ? t("dashboard.addSectionsHint") : undefined },
+              ]} />
+            )}
+          </div>
+
+          {!hasSections && (
+            <p className="text-muted">{t("dashboard.noSections")}</p>
           )}
         </div>
       )}
