@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# Production health check for the OVH VPS, run by vezano-healthcheck.timer
+# every 5 minutes. Alerts through Telegram on the healthy -> failed edge and
+# again on recovery.
+#
+# The web check follows Caddy: in docker mode (deploy/docker/vezano-docker.sh
+# caddy-mode docker) it checks the container slot Caddy proxies to, and the
+# systemd web service only while systemd is the one serving. A failing run is
+# retried (ATTEMPTS x RETRY_DELAY) before it counts, so a deploy restart of a
+# few seconds is not reported as an outage.
+#
+# Installed by deploy/ovh/install.sh to /usr/local/sbin/vezano-healthcheck.
+# The VEZANO_HC_* variables exist for deploy/tests/test_healthcheck.py only.
+
+set -u
+
+STATE_DIR="${VEZANO_HC_STATE_DIR:-/var/lib/vezano/monitoring}"
+STATE_FILE="$STATE_DIR/health.state"
+ALERT="${VEZANO_HC_ALERT:-/usr/local/sbin/vezano-telegram-alert}"
+CADDY_SNIPPET="${VEZANO_HC_CADDY_SNIPPET:-/etc/caddy/vezano-upstream.caddy}"
+BACKUP_DIR="${VEZANO_HC_BACKUP_DIR:-/var/backups/vezano}"
+R2_MARKER="${VEZANO_HC_R2_MARKER:-/var/lib/vezano/offsite-backup.last-success}"
+MEMINFO="${VEZANO_HC_MEMINFO:-/proc/meminfo}"
+ATTEMPTS="${VEZANO_HC_ATTEMPTS:-3}"
+RETRY_DELAY="${VEZANO_HC_RETRY_DELAY:-20}"
+HEALTH_HOST=pro.vezano.app
+MAX_BACKUP_AGE=$((30 * 60 * 60))
+
+REASONS=()
+
+fail() {
+    REASONS+=("$1")
+}
+
+# The upstream Caddy proxies Vezano to: the snippet's reverse_proxy line, or
+# the systemd port when the Caddyfile does not use the snippet yet.
+web_upstream() {
+    local upstream=""
+    if [[ -r "$CADDY_SNIPPET" ]]; then
+        upstream=$(awk '$1 == "reverse_proxy" {print $2; exit}' "$CADDY_SNIPPET")
+    fi
+    printf '%s\n' "${upstream:-127.0.0.1:8000}"
+}
+
+check_all() {
+    REASONS=()
+    local now upstream
+    now=$(date +%s)
+    upstream=$(web_upstream)
+
+    # Web: whatever Caddy proxies to must answer its health endpoint.
+    if [[ "$upstream" == "127.0.0.1:8000" ]]; then
+        systemctl is-active --quiet vezano-web.service ||
+            fail "Django/Gunicorn service is down"
+    fi
+    if ! curl -fsS --max-time 10 -H "Host: $HEALTH_HOST" \
+        "http://$upstream/api/health/" | grep -q '"status":"ok"'
+    then
+        fail "Web upstream $upstream is not healthy"
+    fi
+
+    systemctl is-active --quiet caddy.service ||
+        fail "Caddy service is down"
+
+    pg_isready -q -h 127.0.0.1 -p 5432 ||
+        fail "PostgreSQL is not accepting connections"
+
+    if ! curl -fsS --max-time 10 "https://$HEALTH_HOST/api/health/" |
+        grep -q '"status":"ok"'
+    then
+        fail "Public HTTPS health endpoint failed"
+    fi
+
+    local disk_used
+    disk_used=$(df --output=pcent / | tail -1 | tr -dc '0-9')
+    if (( disk_used >= 80 )); then
+        fail "Root disk usage is ${disk_used}%"
+    fi
+
+    local mem_total mem_available
+    read -r mem_total mem_available < <(
+        awk '/MemTotal:/ {t=$2} /MemAvailable:/ {a=$2} END {print t, a}' "$MEMINFO"
+    )
+    if (( mem_available * 100 / mem_total <= 10 )); then
+        fail "Available memory is 10% or lower"
+    fi
+
+    local latest_local
+    latest_local=$(
+        find "$BACKUP_DIR" -maxdepth 1 -mindepth 1 -type d -name '*-nightly' \
+            -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | cut -d' ' -f2-
+    )
+    if [[ -z "$latest_local" ]]; then
+        fail "No local nightly backup found"
+    elif (( now - $(stat -c %Y "$latest_local") > MAX_BACKUP_AGE )); then
+        fail "Latest local backup is older than 30 hours"
+    fi
+
+    if [[ ! -f "$R2_MARKER" ]]; then
+        fail "No successful R2 backup marker found"
+    elif (( now - $(stat -c %Y "$R2_MARKER") > MAX_BACKUP_AGE )); then
+        fail "Latest R2 backup is older than 30 hours"
+    fi
+
+    # Optional safe manual test.
+    if [[ "${VEZANO_TEST_FAILURE:-0}" == "1" ]]; then
+        fail "Manual monitoring test failure"
+    fi
+
+    (( ${#REASONS[@]} == 0 ))
+}
+
+mkdir -p "$STATE_DIR"
+chmod 700 "$STATE_DIR"
+
+attempt=1
+until check_all; do
+    if (( attempt >= ATTEMPTS )); then
+        break
+    fi
+    logger -t vezano-healthcheck "retry $attempt/$ATTEMPTS: ${REASONS[*]}"
+    attempt=$((attempt + 1))
+    sleep "$RETRY_DELAY"
+done
+
+PREVIOUS_STATE="unknown"
+if [[ -f "$STATE_FILE" ]]; then
+    PREVIOUS_STATE=$(cat "$STATE_FILE" 2>/dev/null || echo unknown)
+fi
+
+if (( ${#REASONS[@]} )); then
+    CURRENT_STATE="failed"
+    for reason in "${REASONS[@]}"; do
+        logger -t vezano-healthcheck "FAIL: $reason"
+    done
+
+    if [[ "$PREVIOUS_STATE" != "failed" ]]; then
+        MESSAGE="🚨 VEZANO PRODUCTION ALERT
+
+Server: ovh-prod-01
+Domain: $HEALTH_HOST
+
+Detected problems (failed $ATTEMPTS checks in a row):"
+        for reason in "${REASONS[@]}"; do
+            MESSAGE+=$'\n'"• $reason"
+        done
+        "$ALERT" "$MESSAGE" ||
+            logger -t vezano-healthcheck "WARNING: Telegram failure alert could not be sent"
+    fi
+else
+    CURRENT_STATE="healthy"
+    if [[ "$PREVIOUS_STATE" == "failed" ]]; then
+        "$ALERT" "✅ VEZANO RECOVERED
+
+Server: ovh-prod-01
+Domain: $HEALTH_HOST
+
+All production health checks are healthy again." ||
+            logger -t vezano-healthcheck "WARNING: Telegram recovery alert could not be sent"
+    fi
+    logger -t vezano-healthcheck \
+        "OK: web ($(web_upstream)), PostgreSQL, Caddy, HTTPS, disk, memory, local backup and R2 backup healthy"
+fi
+
+printf '%s\n' "$CURRENT_STATE" > "$STATE_FILE"
+chmod 600 "$STATE_FILE"
+
+[[ "$CURRENT_STATE" == "healthy" ]]

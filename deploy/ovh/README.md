@@ -176,6 +176,29 @@ To stop future automatic deployments, set `OVH_AUTO_DEPLOY_ENABLED=false`.
 An upgrade already running is allowed to finish rather than being cancelled
 during its writer pause.
 
+## Health check and alerts
+
+`vezano-healthcheck` (installed by `install.sh` to
+`/usr/local/sbin/vezano-healthcheck`) runs from `vezano-healthcheck.timer`
+every 5 minutes and sends a Telegram alert through
+`/usr/local/sbin/vezano-telegram-alert` when production turns unhealthy, and a
+recovery message when it is healthy again. The unit, the timer and the alert
+script are server-owned and are not changed by `install.sh`.
+
+- **Web check follows Caddy.** It reads `/etc/caddy/vezano-upstream.caddy` and
+  checks the health endpoint of the upstream Caddy proxies to: the active
+  container slot in docker mode, or the systemd web service on :8000 (which is
+  then also required to be active). The systemd fallback is not checked while
+  a container serves.
+- **Retries.** A failing run is checked again up to 3 times, 20 seconds apart,
+  before it counts, so the few seconds of a deploy restart are not reported as
+  an outage (this happened on 2026-10-16).
+- Also checked: Caddy, PostgreSQL, the public HTTPS endpoint, disk (< 80%),
+  memory (> 10% available), the latest local nightly backup and the R2 marker
+  (both newer than 30 hours).
+- Safe test: `sudo VEZANO_TEST_FAILURE=1 /usr/local/sbin/vezano-healthcheck`
+  (sends one alert, then the next timer run sends the recovery).
+
 ## Verification
 
 ```bash
