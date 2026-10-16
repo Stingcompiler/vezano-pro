@@ -11,40 +11,28 @@ import { Download } from "lucide-react";
 import { API_BASE, reports } from "@/lib/api";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Badge, Card } from "@/components/ui/kit";
+import { Badge, FigureRow, NumText } from "@/components/ui/kit";
 import BarList from "@/components/reports/BarList";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 import { ReportFailed } from "@/components/reports/ReportState";
+import ReportSection from "@/components/reports/ReportSection";
 import { slotFromError } from "@/lib/reportSlots";
 import { formatAmount } from "@/lib/money";
 
+// A report with its CSV link at the end of its heading line.
 function Section({ title, hint, csvHref, children }) {
-  const { t } = useI18n();
   return (
-    <Card className="p-5">
-      <div className="mb-4 flex flex-wrap items-start justify-between gap-2">
-        <div className="min-w-0">
-          <h2 className="font-display text-sm font-semibold uppercase tracking-wide text-muted">{title}</h2>
-          {hint && <p className="mt-1 text-xs text-muted">{hint}</p>}
-        </div>
-        {csvHref && (
-          <a href={csvHref} className="tap inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-xs text-ink hover:bg-paper">
-            <Download size={13} />CSV
-          </a>
-        )}
-      </div>
+    <ReportSection
+      title={title}
+      hint={hint}
+      action={csvHref && (
+        <a href={csvHref} className="tap inline-flex h-8 items-center gap-1 rounded-control border border-line px-2.5 text-xs text-ink hover:bg-paper">
+          <Download size={13} />CSV
+        </a>
+      )}
+    >
       {children}
-    </Card>
-  );
-}
-
-function Stat({ label, value, tone = "ink" }) {
-  const toneClass = { ok: "text-ok", warn: "text-warn", danger: "text-danger", ink: "text-ink" }[tone];
-  return (
-    <div className="rounded-control bg-paper px-3 py-2.5">
-      <div className="text-xs text-muted">{label}</div>
-      <div className={`tabular mt-1 text-lg font-medium ${toneClass}`}>{value}</div>
-    </div>
+    </ReportSection>
   );
 }
 
@@ -109,18 +97,18 @@ export default function OperationalReports({ range, areas }) {
 
   return (
     <div aria-busy={refreshing > 0 || undefined}
-      className={`mt-6 grid gap-4 transition-opacity duration-200 lg:grid-cols-2 ${refreshing > 0 ? "opacity-60" : ""}`}>
+      className={`mt-10 grid gap-x-8 gap-y-10 transition-opacity duration-200 lg:grid-cols-2 ${refreshing > 0 ? "opacity-60" : ""}`}>
       {finance && (
         <div className="lg:col-span-2">
           <Section title={t("reports.ops.reconciliation")} hint={t("reports.ops.reconciliationHint")} csvHref={csv("/reports/payment-reconciliation/")}>
             {body("reconciliation", reconciliation, (d) => (
               <>
-                <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
-                  <Stat label={t("reports.ops.recorded")} value={`${count(d.recorded.count)} · ${money(d.recorded.amount)}`} />
-                  <Stat label={t("reports.ops.verified")} value={`${count(d.verified.count)} · ${money(d.verified.amount)}`} tone="ok" />
-                  <Stat label={t("reports.ops.unverified")} value={`${count(d.unverified.count)} · ${money(d.unverified.amount)}`} tone={d.unverified.count ? "warn" : "ink"} />
-                  <Stat label={t("reports.ops.verifiedRate")} value={pct(d.verified_rate)} />
-                </div>
+                <FigureRow cols={4} items={[
+                  { key: "recorded", label: t("reports.ops.recorded"), value: `${count(d.recorded.count)} · ${money(d.recorded.amount)}` },
+                  { key: "verified", label: t("reports.ops.verified"), value: `${count(d.verified.count)} · ${money(d.verified.amount)}`, tone: "ok" },
+                  { key: "unverified", label: t("reports.ops.unverified"), value: `${count(d.unverified.count)} · ${money(d.unverified.amount)}`, tone: d.unverified.count ? "warn" : undefined },
+                  { key: "rate", label: t("reports.ops.verifiedRate"), value: pct(d.verified_rate) },
+                ]} />
                 {d.oldest_unverified_days != null && (
                   <p className="mt-3 text-sm text-warn">{t("reports.ops.oldestUnverified", { days: d.oldest_unverified_days })}</p>
                 )}
@@ -139,9 +127,9 @@ export default function OperationalReports({ range, areas }) {
                         {d.by_account.map((row) => (
                           <tr key={row.account ?? "none"} className="border-b border-line last:border-0">
                             <td className="px-2 py-2 text-ink">{row.name || t(`reports.ops.method.${row.method || "cash"}`)}</td>
-                            <td className="tabular px-2 py-2 text-end">{money(row.recorded)}</td>
-                            <td className="tabular px-2 py-2 text-end text-ok">{money(row.verified)}</td>
-                            <td className={`tabular px-2 py-2 text-end ${Number(row.unverified) ? "text-warn" : "text-muted"}`}>{money(row.unverified)}</td>
+                            <td className="tabular px-2 py-2 text-end"><NumText value={money(row.recorded)} /></td>
+                            <td className="tabular px-2 py-2 text-end text-ok"><NumText value={money(row.verified)} /></td>
+                            <td className={`tabular px-2 py-2 text-end ${Number(row.unverified) ? "text-warn" : "text-muted"}`}><NumText value={money(row.unverified)} /></td>
                           </tr>
                         ))}
                       </tbody>
@@ -158,12 +146,12 @@ export default function OperationalReports({ range, areas }) {
         <Section title={t("reports.ops.salesReturns")} hint={t("reports.ops.salesReturnsHint")} csvHref={csv("/reports/sales-returns/")}>
           {body("salesReturns", salesReturns, (d) => (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                <Stat label={t("reports.ops.returns")} value={count(d.return_count)} />
-                <Stat label={t("reports.ops.quantity")} value={count(d.quantity)} />
-                <Stat label={t("reports.ops.credited")} value={money(d.credit_total)} />
-                <Stat label={t("reports.ops.refunded")} value={money(d.refund_total)} />
-              </div>
+              <FigureRow cols={2} items={[
+                { key: "returns", label: t("reports.ops.returns"), value: count(d.return_count) },
+                { key: "quantity", label: t("reports.ops.quantity"), value: count(d.quantity) },
+                { key: "credited", label: t("reports.ops.credited"), value: money(d.credit_total) },
+                { key: "refunded", label: t("reports.ops.refunded"), value: money(d.refund_total) },
+              ]} />
               <div className="mt-3 flex flex-wrap gap-1.5">
                 {d.by_disposition.map((row) => (
                   <Badge key={row.disposition} tone={row.disposition === "scrapped" ? "danger" : row.disposition === "restocked" ? "ok" : "warn"}>
@@ -174,7 +162,7 @@ export default function OperationalReports({ range, areas }) {
               {Number(d.written_off_total) > 0 && (
                 <p className="mt-2 text-xs text-danger">{t("reports.ops.writtenOff", { amount: money(d.written_off_total) })}</p>
               )}
-              <h3 className="mb-2 mt-4 text-xs font-semibold text-muted">{t("reports.ops.topReturned")}</h3>
+              <h3 className="mb-3 mt-6 text-sm font-medium text-ink">{t("reports.ops.topReturned")}</h3>
               <BarList items={d.top_products} labelKey="name" valueKey="quantity" format={count} />
             </>
           ))}
@@ -185,11 +173,11 @@ export default function OperationalReports({ range, areas }) {
         <Section title={t("reports.ops.purchaseReturns")} hint={t("reports.ops.purchaseReturnsHint")} csvHref={csv("/reports/purchase-returns/")}>
           {body("purchaseReturns", purchaseReturns, (d) => (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                <Stat label={t("reports.ops.returns")} value={count(d.return_count)} />
-                <Stat label={t("reports.ops.debited")} value={money(d.debit_total)} />
-              </div>
-              <h3 className="mb-2 mt-4 text-xs font-semibold text-muted">{t("reports.ops.bySupplier")}</h3>
+              <FigureRow cols={2} items={[
+                { key: "returns", label: t("reports.ops.returns"), value: count(d.return_count) },
+                { key: "debited", label: t("reports.ops.debited"), value: money(d.debit_total) },
+              ]} />
+              <h3 className="mb-3 mt-6 text-sm font-medium text-ink">{t("reports.ops.bySupplier")}</h3>
               <BarList items={d.by_supplier} labelKey="name" valueKey="amount" format={money} />
             </>
           ))}
@@ -200,13 +188,13 @@ export default function OperationalReports({ range, areas }) {
         <Section title={t("reports.ops.crm")} hint={t("reports.ops.crmHint")} csvHref={csv("/reports/crm/")}>
           {body("crm", crm, (d) => (
             <>
-              <div className="grid grid-cols-2 gap-2">
-                <Stat label={t("reports.ops.newLeads")} value={count(d.new_leads)} />
-                <Stat label={t("reports.ops.pipeline")} value={money(d.pipeline_value)} />
-                <Stat label={t("reports.ops.conversion")} value={pct(d.conversion_rate)} />
-                <Stat label={t("reports.ops.overdueFollowUps")} value={count(d.follow_ups.overdue)} tone={d.follow_ups.overdue ? "warn" : "ink"} />
-              </div>
-              <h3 className="mb-2 mt-4 text-xs font-semibold text-muted">{t("reports.ops.byStage")}</h3>
+              <FigureRow cols={2} items={[
+                { key: "leads", label: t("reports.ops.newLeads"), value: count(d.new_leads) },
+                { key: "pipeline", label: t("reports.ops.pipeline"), value: money(d.pipeline_value) },
+                { key: "conversion", label: t("reports.ops.conversion"), value: pct(d.conversion_rate) },
+                { key: "overdue", label: t("reports.ops.overdueFollowUps"), value: count(d.follow_ups.overdue), tone: d.follow_ups.overdue ? "warn" : undefined },
+              ]} />
+              <h3 className="mb-3 mt-6 text-sm font-medium text-ink">{t("reports.ops.byStage")}</h3>
               <BarList
                 items={d.stages.map((row) => ({ ...row, label: t(`reports.ops.stage.${row.stage}`) }))}
                 valueKey="count"
