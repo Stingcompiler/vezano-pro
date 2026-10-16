@@ -16,7 +16,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Validate shell scripts
-        run: bash -n deploy/standalone/upgrade.sh && bash -n deploy/standalone/backup.sh && bash -n deploy/ovh/install.sh && bash -n deploy/docker/install-docker.sh && bash -n deploy/docker/vezano-docker.sh
+        run: bash -n deploy/standalone/upgrade.sh && bash -n deploy/standalone/backup.sh && bash -n deploy/ovh/install.sh && bash -n deploy/ovh/vezano-healthcheck && bash -n deploy/docker/install-docker.sh && bash -n deploy/docker/vezano-docker.sh
       - name: Test deployment and recovery controls
         run: python3 -m unittest discover -s deploy/tests -v
 

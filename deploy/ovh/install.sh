@@ -34,6 +34,8 @@ install -m 0755 "$SOURCE/../standalone/backup.sh" /usr/local/libexec/vezano/back
 install -m 0755 "$SOURCE/../docker/vezano-docker.sh" /usr/local/libexec/vezano/vezano-docker.sh
 install -m 0644 "$SOURCE/../docker/docker-compose.prod.yml" /usr/local/libexec/vezano/docker-compose.prod.yml
 install -d -o root -g root -m 0755 /var/lib/vezano-docker
+# Health check run by vezano-healthcheck.timer (unit and timer stay as installed).
+install -m 0755 "$SOURCE/vezano-healthcheck" /usr/local/sbin/vezano-healthcheck
 # Keep the operator copy from phase 2 identical, when it exists.
 if [ -d /opt/vezano-docker ]; then
     install -m 0755 "$SOURCE/../docker/vezano-docker.sh" "$SOURCE/../docker/install-docker.sh" /opt/vezano-docker/
