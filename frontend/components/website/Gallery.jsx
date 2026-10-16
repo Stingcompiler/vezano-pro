@@ -70,13 +70,14 @@ export default function Gallery({ writable, onChanged }) {
       ) : (
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
           {rows.map((item) => (
-            <figure key={item.id} className="m-0 overflow-hidden rounded-card border border-line bg-paper">
+            <figure key={item.id} className="m-0 min-w-0">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={item.url} alt={item.caption || ""} className="aspect-square w-full object-cover" />
-              <div className="flex items-center gap-1 p-2">
+              <img src={item.url} alt={item.caption || ""} className="aspect-square w-full rounded-control object-cover" />
+              <figcaption className="mt-1 flex items-center gap-1 border-b border-line transition-colors focus-within:border-accent">
                 <input
                   defaultValue={item.caption || ""}
                   placeholder={t("website.captionPlaceholder")}
+                  aria-label={t("website.captionPlaceholder")}
                   disabled={!writable}
                   onBlur={(event) => caption(item, event.target.value)}
                   className="min-w-0 flex-1 bg-transparent text-xs text-ink outline-none"
@@ -84,7 +85,7 @@ export default function Gallery({ writable, onChanged }) {
                 {writable && (
                   <Button variant="ghost" onClick={() => remove(item)} aria-label={t("website.removeImage")}><Trash2 size={14} /></Button>
                 )}
-              </div>
+              </figcaption>
             </figure>
           ))}
         </div>

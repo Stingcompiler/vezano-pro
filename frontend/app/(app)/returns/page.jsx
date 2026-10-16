@@ -6,7 +6,7 @@ import { Lock, Plus, Undo2 } from "lucide-react";
 import { returns } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
-import { Badge, Button, Card, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, NumText, PageHeader } from "@/components/ui/kit";
 import NewReturnDrawer from "@/components/returns/NewReturnDrawer";
 import DispositionDrawer from "@/components/returns/DispositionDrawer";
 import NotesList from "@/components/returns/NotesList";
@@ -135,9 +135,9 @@ export default function ReturnsPage() {
                   return (
                     <tr key={r.id} className="border-b border-line last:border-0">
                       <td className="tabular px-4 py-3 text-ink">#{r.id}</td>
-                      <td className="tabular px-4 py-3 text-muted">{r.invoice}</td>
+                      <td className="tabular px-4 py-3 text-muted"><NumText value={r.invoice} /></td>
                       <td className="px-4 py-3 text-muted">{r.reason || "—"}</td>
-                      <td className="tabular px-4 py-3 text-end text-ink">{r.lines?.length ?? 0}</td>
+                      <td className="tabular px-4 py-3 text-end text-ink"><NumText value={r.lines?.length ?? 0} /></td>
                       <td className="px-4 py-3 text-end">
                         {pending > 0 ? (
                           <Badge tone="warn">{pending} {t("returns.quarantined")}</Badge>

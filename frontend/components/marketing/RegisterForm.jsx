@@ -66,9 +66,7 @@ function DuplicatePanel({ whatsapp, onEdit }) {
   const waHref = whatsapp ? whatsappUrl(whatsapp) : contact.whatsappHref;
   return (
     <div role="status" className="enter-rise mx-auto max-w-lg rounded-card border border-line bg-paper p-6 text-center shadow-card sm:p-8">
-      <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-accent/10 text-accent">
-        <UserRoundCheck size={24} aria-hidden="true" />
-      </span>
+      <UserRoundCheck size={32} aria-hidden="true" className="mx-auto text-accent" />
       <h2 className="mt-4 font-display text-xl font-semibold">{t("register.duplicateTitle")}</h2>
       <p className="mt-2 text-sm text-muted">{t("register.duplicateBody")}</p>
       <div className="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-center">

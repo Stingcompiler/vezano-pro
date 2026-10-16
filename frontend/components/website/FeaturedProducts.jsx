@@ -8,7 +8,7 @@ import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
 import ImagePicker from "@/components/website/ImagePicker";
 import Drawer from "@/components/ui/Drawer";
-import { Button, Card, Field, Input } from "@/components/ui/kit";
+import { Button, Card, Field, Input, NumText } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { useConfirm } from "@/components/ui/ConfirmDialog";
 import { SkeletonLines } from "@/components/ui/Skeleton";
@@ -125,7 +125,7 @@ function FeaturedForm({ open, onClose, onSaved, websiteId, item }) {
                       className="tap flex w-full items-center justify-between px-3 py-2 text-start text-sm hover:bg-paper"
                     >
                       <span className="text-ink">{p.name}</span>
-                      <span className="tabular text-muted">{p.sku}</span>
+                      <span className="tabular text-muted"><NumText value={p.sku} /></span>
                     </button>
                   ))}
                 </div>
@@ -242,7 +242,7 @@ export default function FeaturedProducts({ websiteId, writable, onChanged }) {
         <div className="divide-y divide-line">
           {rows.map((item) => (
             <div key={item.id} className="flex items-center gap-3 py-3">
-              <span className="tabular w-8 text-center text-xs text-muted">{item.order}</span>
+              <span className="tabular w-8 text-center text-xs text-muted"><NumText value={item.order} /></span>
               <div className="w-16 shrink-0">
                 <ImagePicker
                   url={photo(item)}

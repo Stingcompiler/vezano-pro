@@ -250,7 +250,7 @@ function Modules() {
                 href={href(`/product#${module.anchor}`)}
                 className="group flex h-full gap-4 rounded-card border border-line bg-surface p-4 shadow-card transition-colors hover:border-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent/40 sm:flex-col sm:gap-0 sm:p-5"
               >
-                <span className="grid h-10 w-10 shrink-0 place-items-center rounded-control bg-accent/10 text-accent"><Icon size={20} aria-hidden="true" /></span>
+                <Icon size={24} aria-hidden="true" className="mt-0.5 shrink-0 text-accent sm:mt-0" />
                 <div className="flex flex-1 flex-col">
                   <h3 className="font-display text-lg font-semibold sm:mt-4">{module.title}</h3>
                   <p className="mt-1 flex-1 text-sm text-muted sm:mt-2">{module.body}</p>
@@ -333,15 +333,15 @@ function SudanFit() {
   return (
     <section id="sudan" className="mx-auto max-w-6xl px-4 py-12 sm:px-6 sm:py-24">
       <h2 className="text-center font-display text-2xl font-bold tracking-tight sm:text-3xl">{t("home.sudanTitle")}</h2>
-      <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <div className="mt-10 grid gap-x-8 gap-y-6 sm:grid-cols-2 lg:grid-cols-4">
         {items.map(([title, body], index) => {
           const Icon = SUDAN_ICONS[index] || Check;
           return (
             <Reveal key={title} index={index} className="h-full">
-              <div className="h-full rounded-card border border-line bg-paper p-4 shadow-card sm:p-5">
-                <div className="flex items-center gap-3 sm:block">
-                  <span className="grid h-9 w-9 shrink-0 place-items-center rounded-control bg-accent/10 text-accent"><Icon size={18} aria-hidden="true" /></span>
-                  <h3 className="font-display font-semibold sm:mt-3">{title}</h3>
+              <div className="h-full border-t border-line pt-4">
+                <div className="flex items-center gap-2.5">
+                  <Icon size={20} aria-hidden="true" className="shrink-0 text-accent" />
+                  <h3 className="font-display font-semibold">{title}</h3>
                 </div>
                 <p className="mt-2 text-sm text-muted">{body}</p>
               </div>
@@ -486,14 +486,14 @@ function GetStarted() {
       <div className="relative overflow-hidden rounded-card bg-ink px-6 py-10 text-paper shadow-card sm:px-12 sm:py-14">
         <div className="pointer-events-none absolute -end-24 -top-24 h-72 w-72 rounded-full bg-accent/30 blur-3xl" />
         <h2 className="relative text-center font-display text-2xl font-bold tracking-tight sm:text-4xl">{t("home.finalTitle")}</h2>
-        <div className="relative mx-auto mt-8 grid max-w-3xl gap-4 sm:grid-cols-2">
-          <div className="flex flex-col rounded-card border border-paper/15 bg-paper/5 p-5">
+        <div className="relative mx-auto mt-8 grid max-w-3xl gap-6 sm:grid-cols-2 sm:gap-0">
+          <div className="flex flex-col sm:pe-8">
             <p className="flex-1 text-sm text-paper/80">{t("home.startTrialBody")}</p>
             <Link href={href("/register")} className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control bg-accent px-5 py-3 font-medium text-on-accent hover:bg-accent-strong">
               {t("home.finalPrimary")}
             </Link>
           </div>
-          <div className="flex flex-col rounded-card border border-paper/15 bg-paper/5 p-5">
+          <div className="flex flex-col border-t border-paper/15 pt-6 sm:border-s sm:border-t-0 sm:ps-8 sm:pt-0">
             <p className="flex-1 text-sm text-paper/80">{t("home.startWalkBody")}</p>
             <a href="#walkthrough" className="mt-4 inline-flex min-h-11 items-center justify-center rounded-control border border-paper/25 px-5 py-3 font-medium text-paper hover:bg-paper/10">
               {t("home.finalSecondary")}

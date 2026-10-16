@@ -7,7 +7,7 @@ import { purchasing, sales } from "@/lib/api";
 import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Field, Input } from "@/components/ui/kit";
+import { Badge, Button, Field, Input, NumText } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { localToday } from "@/lib/dates";
 import { formatAmount } from "@/lib/money";
@@ -58,7 +58,7 @@ export default function OpeningBalanceForm({ kind, account, onSaved }) {
       <div className="flex items-center gap-2 text-sm font-semibold"><Scale size={15} className="text-accent" />{t("openingBalance.title")}</div>
       {existing ? (
         <p className="mt-2 text-sm">
-          <span className="tabular font-medium">{money(existing.amount)}</span>
+          <span className="tabular font-medium"><NumText value={money(existing.amount)} /></span>
           <span className="text-muted"> · {t("openingBalance.asOf", { date: fmt(existing.as_of) })}</span>
           {existing.number && <Badge tone="muted">{existing.number}</Badge>}
           <span className="mt-1 block text-xs text-muted">{kind === "supplier" ? t("openingBalance.correctSupplier") : t("openingBalance.correctCustomer")}</span>

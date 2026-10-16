@@ -7,7 +7,7 @@ import { purchasing, sales } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button } from "@/components/ui/kit";
+import { Badge, Button, NumText } from "@/components/ui/kit";
 
 const TONE = { created: "ok", updated: "accent", skipped: "muted", error: "danger" };
 
@@ -97,11 +97,11 @@ export default function ImportPartiesDrawer({ kind, open, onClose, onImported })
                 </tr></thead>
                 <tbody>{preview.rows.map((r) => (
                   <tr key={r.row} className="border-b border-line last:border-0">
-                    <td className="tabular px-3 py-2 text-muted">{r.row}</td>
+                    <td className="tabular px-3 py-2 text-muted"><NumText value={r.row} /></td>
                     <td className="px-3 py-2">{r.name || "—"}</td>
-                    <td className="tabular px-3 py-2 text-muted">{r.phone || "—"}</td>
+                    <td className="tabular px-3 py-2 text-muted"><NumText value={r.phone || "—"} /></td>
                     <td className="px-3 py-2"><Badge tone={TONE[r.status]}>{t(`importParties.status.${r.status}`)}</Badge></td>
-                    <td className="px-3 py-2 text-xs text-muted">{[r.balance ? t("importParties.balanceOf", { amount: r.balance }) : null, r.message].filter(Boolean).join(" · ") || "—"}</td>
+                    <td className="px-3 py-2 text-xs text-muted">{[r.balance ? t("importParties.balanceOf", { amount: `\u2066${r.balance}\u2069` }) : null, r.message].filter(Boolean).join(" · ") || "—"}</td>
                   </tr>
                 ))}</tbody>
               </table>

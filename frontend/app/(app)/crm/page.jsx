@@ -7,7 +7,7 @@ import { crm } from "@/lib/api";
 import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card, Figure, PageHeader } from "@/components/ui/kit";
+import { Badge, Button, Card, Figure, NumText, PageHeader } from "@/components/ui/kit";
 import LeadDrawer from "@/components/crm/LeadDrawer";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
@@ -201,7 +201,7 @@ export default function CrmPage() {
                 </div>
                 <div className="hidden text-end sm:block">
                   <div className="tabular text-sm font-medium text-ink">
-                    {money(lead.estimated_value)}
+                    <NumText value={money(lead.estimated_value)} />
                   </div>
                   {lead.open_followups > 0 && (
                     <div className="text-xs text-muted">

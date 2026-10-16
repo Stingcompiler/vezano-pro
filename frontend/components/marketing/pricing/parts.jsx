@@ -286,7 +286,7 @@ export function StandaloneBand({ compact = false }) {
     >
       <div className="min-w-0">
         <div className="flex items-center gap-3">
-          <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-paper/10"><Server size={20} aria-hidden="true" /></span>
+          <Server size={22} aria-hidden="true" className="shrink-0 text-pro-inverse" />
           <h3 id="standalone-offer" className="font-display text-lg font-semibold">{t("pricing.standaloneName")}</h3>
         </div>
         <p className="mt-2 text-sm text-paper/70">{t("pricing.standaloneTagline")}</p>

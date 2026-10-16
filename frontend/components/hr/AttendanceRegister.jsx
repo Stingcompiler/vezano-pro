@@ -9,7 +9,7 @@ import { useOfflineMutation } from "@/components/sync/useOfflineMutation";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import TabBar from "@/components/ui/TabBar";
-import { Badge, Card, Input, Select } from "@/components/ui/kit";
+import { Badge, Card, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { localToday } from "@/lib/dates";
@@ -170,7 +170,7 @@ export default function AttendanceRegister({ writable }) {
             <tbody>{summary.rows.map((r) => (
               <tr key={r.employee} className="border-b border-line last:border-0">
                 <td className="px-3 py-2 font-medium text-ink">{r.employee_name}</td>
-                {STATUSES.map((s) => <td key={s} className={`tabular px-3 py-2 text-end ${r[s] ? "" : "text-muted"}`}>{r[s]}</td>)}
+                {STATUSES.map((s) => <td key={s} className={`tabular px-3 py-2 text-end ${r[s] ? "" : "text-muted"}`}><NumText value={r[s]} /></td>)}
               </tr>
             ))}</tbody>
           </table>

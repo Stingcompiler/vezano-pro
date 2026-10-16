@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import { hr } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 
 const types = { annual: "hr.typeAnnual", casual: "hr.typeCasual", sick: "hr.typeSick", unpaid: "hr.typeUnpaid", other: "hr.typeOther" };
@@ -72,7 +72,7 @@ export default function LeaveBalances({ writable }) {
       {data.results.length === 0 && <Card className="p-6 text-muted">{t("hr.noBalances")}</Card>}
       {data.results.map((row) => <Card key={row.id} className="space-y-3 p-4">
         <div className="flex items-center justify-between gap-3"><strong>{row.employee_name} · {t(types[row.leave_type])}</strong>{writable && <Button variant="outline" onClick={() => setForm({ ...row, note: "" })}>{t("hr.adjustBalance")}</Button>}</div>
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[["total_days", "hr.totalDays"], ["used_days", "hr.usedDays"], ["pending_days", "hr.pendingDays"], ["remaining_days", "hr.remainingDays"]].map(([key, label]) => <div key={key}><div className="text-sm text-muted">{t(label)}</div><div className="tabular text-xl font-semibold">{row.balance[key]}</div></div>)}</div>
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">{[["total_days", "hr.totalDays"], ["used_days", "hr.usedDays"], ["pending_days", "hr.pendingDays"], ["remaining_days", "hr.remainingDays"]].map(([key, label]) => <div key={key}><div className="text-sm text-muted">{t(label)}</div><div className="tabular text-xl font-semibold"><NumText value={row.balance[key]} /></div></div>)}</div>
         <p className="text-sm text-muted">{row.note}</p>
       </Card>)}
       <div className="flex items-center gap-3"><Button aria-label={t("hr.previousPage")} variant="outline" disabled={page === 1} onClick={() => setPage(page - 1)}>←</Button><span>{page}</span><Button aria-label={t("hr.nextPage")} variant="outline" disabled={!data.next} onClick={() => setPage(page + 1)}>→</Button></div>

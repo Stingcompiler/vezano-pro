@@ -5,7 +5,7 @@ import { Plus } from "lucide-react";
 
 import { returns } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
-import { Button, Card } from "@/components/ui/kit";
+import { Button, Card, NumText } from "@/components/ui/kit";
 import NewPurchaseReturnDrawer from "./NewPurchaseReturnDrawer";
 import { SkeletonTableRows } from "@/components/ui/Skeleton";
 
@@ -75,7 +75,7 @@ export default function PurchaseReturnList({ writable }) {
                     </td>
                     <td className="px-4 py-3 text-muted">{r.reason || "—"}</td>
                     <td className="tabular px-4 py-3 text-end text-ink">
-                      {r.lines?.length ?? 0}
+                      <NumText value={r.lines?.length ?? 0} />
                     </td>
                   </tr>
                 ))}

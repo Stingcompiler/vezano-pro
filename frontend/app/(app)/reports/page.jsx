@@ -279,9 +279,9 @@ export default function ReportsPage() {
         <tbody>
           {rows.map((r) => (
             <tr key={r[key]} className="border-b border-line last:border-0">
-              <td className="tabular px-3 py-2 text-ink">{r[number]}</td>
+              <td className="tabular px-3 py-2 text-ink"><NumText value={r[number]} /></td>
               <td className="px-3 py-2 text-muted">{r[party]}</td>
-              <td className="tabular px-3 py-2 text-muted">{r.due_date || "—"}</td>
+              <td className="tabular px-3 py-2 text-muted"><NumText value={r.due_date || "—"} /></td>
               <td className="px-3 py-2 text-end">
                 {r.days_overdue > 0 ? (
                   <Badge tone="danger">{r.days_overdue}</Badge>

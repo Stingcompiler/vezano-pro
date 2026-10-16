@@ -8,7 +8,7 @@ import { useAuth } from "../../providers/AuthProvider";
 import { useI18n } from "../../providers/I18nProvider";
 import { ean13Svg, isValidEan13 } from "@/lib/ean13";
 import { code128Svg } from "@/lib/code128";
-import { Button, Card, Input, PageHeader, Select } from "@/components/ui/kit";
+import { Button, Card, Input, NumText, PageHeader, Select } from "@/components/ui/kit";
 import PrintSheet from "@/components/print/PrintSheet";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
@@ -220,7 +220,7 @@ export default function LabelsPage() {
                 />
                 <div className="min-w-0 flex-1">
                   <div className="truncate font-medium text-ink">{item.name}</div>
-                  <div className="tabular text-xs text-muted">{item.barcode}</div>
+                  <div className="tabular text-xs text-muted"><NumText value={item.barcode} /></div>
                 </div>
               </label>
             ))}

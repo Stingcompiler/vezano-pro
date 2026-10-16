@@ -9,7 +9,7 @@ import { useAuth } from "../../app/providers/AuthProvider";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
 import Drawer from "@/components/ui/Drawer";
-import { Badge, Button, Card, Field, Input, Select } from "@/components/ui/kit";
+import { Badge, Button, Card, Field, Input, NumText, Select } from "@/components/ui/kit";
 import { errorText } from "@/lib/errors";
 import { SkeletonRows } from "@/components/ui/Skeleton";
 import { formatAmount } from "@/lib/money";
@@ -99,8 +99,8 @@ function NewQuotationDrawer({ open, onClose, customers, onSaved }) {
             <Card className="absolute z-10 mt-1 w-full overflow-hidden">
               {results.map((p) => (
                 <button key={p.id} onClick={() => add(p)} className="tap flex w-full items-center justify-between px-4 py-2 text-start text-sm hover:bg-paper">
-                  <span><span className="tabular text-muted">{p.sku}</span> {p.name}</span>
-                  <span className="tabular text-muted">{money(p.sale_price)}</span>
+                  <span><span className="tabular text-muted"><NumText value={p.sku} /></span> {p.name}</span>
+                  <span className="tabular text-muted"><NumText value={money(p.sale_price)} /></span>
                 </button>
               ))}
             </Card>
@@ -111,7 +111,7 @@ function NewQuotationDrawer({ open, onClose, customers, onSaved }) {
             {lines.map((l) => (
               <div key={l.product} className="flex flex-wrap items-center gap-3 px-3 py-2 text-sm">
                 <div className="min-w-0 flex-1">
-                  <div className="truncate">{l.name}</div><div className="tabular text-xs text-muted">{l.sku}</div>
+                  <div className="truncate">{l.name}</div><div className="tabular text-xs text-muted"><NumText value={l.sku} /></div>
                   {overLimit(l) && (
                     <div className="mt-0.5 flex items-center gap-1 text-xs text-danger">
                       <AlertTriangle size={12} />{t("quotes.overLimit", { limit: Number(discountLimit) })}
@@ -120,11 +120,11 @@ function NewQuotationDrawer({ open, onClose, customers, onSaved }) {
                 </div>
                 <div className="w-20"><Input type="number" inputMode="decimal" min="0" value={l.qty} onChange={(e) => patch(l.product, { qty: e.target.value })} aria-label={t("sales.quantity")} /></div>
                 <div className="w-24"><Input type="number" inputMode="decimal" min="0" step="0.01" value={l.price} onChange={(e) => patch(l.product, { price: e.target.value })} aria-label={t("sales.unitPrice")} /></div>
-                <div className="tabular w-24 text-end">{money(Number(l.qty || 0) * Number(l.price || 0))}</div>
+                <div className="tabular w-24 text-end"><NumText value={money(Number(l.qty || 0) * Number(l.price || 0))} /></div>
                 <button onClick={() => setLines((ls) => ls.filter((x) => x.product !== l.product))} className="text-muted hover:text-danger" aria-label={t("common.remove")}><Trash2 size={15} /></button>
               </div>
             ))}
-            <div className="flex justify-between px-3 py-2 text-sm font-semibold"><span>{t("common.total")}</span><span className="tabular">{money(total)}</span></div>
+            <div className="flex justify-between px-3 py-2 text-sm font-semibold"><span>{t("common.total")}</span><span className="tabular"><NumText value={money(total)} /></span></div>
           </div>
         )}
         <Field label={t("quotes.note")}><Input value={note} onChange={(e) => setNote(e.target.value)} /></Field>
@@ -173,7 +173,7 @@ export default function QuotesOrders({ customers, writable, onInvoice, refreshKe
         </div>
         {sub && <div className="mt-0.5 text-xs text-muted">{sub}</div>}
       </div>
-      <div className="tabular font-semibold">{money(total)}</div>
+      <div className="tabular font-semibold"><NumText value={money(total)} /></div>
       {writable && <div className="flex flex-wrap items-center gap-1">{actions}</div>}
     </div>
   );

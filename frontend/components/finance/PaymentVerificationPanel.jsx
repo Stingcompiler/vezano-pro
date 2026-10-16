@@ -6,7 +6,7 @@ import { BadgeCheck, ChevronDown, ShieldCheck } from "lucide-react";
 import { sales } from "@/lib/api";
 import { useI18n } from "../../app/providers/I18nProvider";
 import { useToast } from "@/components/ui/Toast";
-import { Badge, Button, Card } from "@/components/ui/kit";
+import { Badge, Button, Card, NumText } from "@/components/ui/kit";
 import { SkeletonLines } from "@/components/ui/Skeleton";
 import { channelLabel } from "@/lib/bankChannels";
 import { errorText } from "@/lib/errors";
@@ -117,7 +117,7 @@ export default function PaymentVerificationPanel({ refreshKey }) {
                   )}
                 </div>
               </div>
-              <div className="tabular text-base font-semibold">{money(p.amount)}</div>
+              <div className="tabular text-base font-semibold"><NumText value={money(p.amount)} /></div>
               <Button variant="outline" onClick={() => verify(p)} disabled={busyId === p.id}>
                 <BadgeCheck size={15} />{busyId === p.id ? t("finance.verifying") : t("finance.verify")}
               </Button>
